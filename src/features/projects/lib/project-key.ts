@@ -12,7 +12,9 @@ export function assertProjectKey(projectKey: string): string {
   const normalizedProjectKey = normalizeProjectKey(projectKey);
 
   if (!PROJECT_KEY_PATTERN.test(normalizedProjectKey)) {
-    throw new Error("Project key must contain only uppercase letters and numbers.");
+    throw new Error(
+      "Project key must contain only uppercase letters and numbers."
+    );
   }
 
   return normalizedProjectKey;

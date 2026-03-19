@@ -18,6 +18,8 @@ export interface CreateCommentInput {
 export interface IssuesRepository {
   createIssue(input: CreateIssueInput): Promise<Issue>;
   createComment(input: CreateCommentInput): Promise<Comment>;
-  appendActivityLog(entry: Omit<ActivityLogEntry, "id" | "createdAt">): Promise<ActivityLogEntry>;
+  appendActivityLog(
+    entry: Omit<ActivityLogEntry, "id" | "createdAt">
+  ): Promise<ActivityLogEntry>;
   getIssueById(issueId: string): Promise<Issue | null>;
 }

@@ -9,13 +9,13 @@ describe("buildIssueIdentifier", () => {
 
   it("rejects invalid project keys", () => {
     expect(() => buildIssueIdentifier("web-app", 1)).toThrowError(
-      "Project key must contain only uppercase letters and numbers.",
+      "Project key must contain only uppercase letters and numbers."
     );
   });
 
   it("rejects non-positive sequences", () => {
     expect(() => buildIssueIdentifier("WEB", 0)).toThrowError(
-      "Issue sequence must be a positive integer.",
+      "Issue sequence must be a positive integer."
     );
   });
 });

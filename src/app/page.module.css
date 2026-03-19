@@ -6,7 +6,11 @@
   font-family: var(--font-geist-sans);
   background:
     radial-gradient(circle at top left, rgba(20, 92, 86, 0.15), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(202, 164, 92, 0.18), transparent 26%),
+    radial-gradient(
+      circle at bottom right,
+      rgba(202, 164, 92, 0.18),
+      transparent 26%
+    ),
     var(--background);
 }
 
@@ -27,7 +31,11 @@
   padding: 2rem;
   border: 1px solid var(--border);
   border-radius: 2rem;
-  background: linear-gradient(180deg, rgba(255, 250, 241, 0.95), rgba(255, 250, 241, 0.8));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 250, 241, 0.95),
+    rgba(255, 250, 241, 0.8)
+  );
   box-shadow: var(--shadow);
 }
 

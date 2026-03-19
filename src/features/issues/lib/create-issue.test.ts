@@ -13,7 +13,7 @@ describe("createIssueDraft", () => {
         title: "  Add invite acceptance flow  ",
         description: "  Accept token and create member row  ",
         createdBy: "user-1",
-      }),
+      })
     ).toEqual({
       projectId: "project-1",
       title: "Add invite acceptance flow",
@@ -29,7 +29,7 @@ describe("createIssueDraft", () => {
         projectId: "project-1",
         title: "   ",
         createdBy: "user-1",
-      }),
+      })
     ).toThrowError("Issue title is required.");
   });
 });
@@ -40,7 +40,7 @@ describe("isIssueCreationReady", () => {
       isIssueCreationReady({
         status: "Triage",
         priority: "No Priority",
-      }),
+      })
     ).toBe(true);
   });
 
@@ -49,7 +49,7 @@ describe("isIssueCreationReady", () => {
       isIssueCreationReady({
         status: "Todo",
         priority: "No Priority",
-      }),
+      })
     ).toBe(false);
   });
 });

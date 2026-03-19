@@ -7,18 +7,17 @@ import type {
   CreateIssueInput,
   IssuesRepository,
 } from "@/features/issues/contracts";
-import type {
-  ActivityLogEntry,
-  Comment,
-  Issue,
-} from "@/features/issues/types";
+import type { ActivityLogEntry, Comment, Issue } from "@/features/issues/types";
 import {
-  createServiceRoleSupabaseClient,
   type AppSupabaseServerClient,
+  createServiceRoleSupabaseClient,
 } from "@/lib/supabase/server-client";
 import type { Json, TableRow } from "@/lib/supabase/types";
 
-function assertQuerySucceeded(context: string, error: PostgrestError | null): void {
+function assertQuerySucceeded(
+  context: string,
+  error: PostgrestError | null
+): void {
   if (error) {
     throw new Error(`${context}: ${error.message}`);
   }
@@ -78,7 +77,7 @@ function mapActivityLogEntry(row: TableRow<"activity_logs">): ActivityLogEntry {
 
 export class SupabaseIssuesRepository implements IssuesRepository {
   constructor(
-    private readonly client: AppSupabaseServerClient = createServiceRoleSupabaseClient(),
+    private readonly client: AppSupabaseServerClient = createServiceRoleSupabaseClient()
   ) {}
 
   async createIssue(input: CreateIssueInput): Promise<Issue> {
@@ -118,7 +117,7 @@ export class SupabaseIssuesRepository implements IssuesRepository {
   }
 
   async appendActivityLog(
-    entry: Omit<ActivityLogEntry, "id" | "createdAt">,
+    entry: Omit<ActivityLogEntry, "id" | "createdAt">
   ): Promise<ActivityLogEntry> {
     const { data, error } = await this.client
       .from("activity_logs")
@@ -137,7 +136,9 @@ export class SupabaseIssuesRepository implements IssuesRepository {
 
     assertQuerySucceeded("Failed to append activity log", error);
 
-    return mapActivityLogEntry(assertDataPresent("Failed to append activity log", data));
+    return mapActivityLogEntry(
+      assertDataPresent("Failed to append activity log", data)
+    );
   }
 
   async getIssueById(issueId: string): Promise<Issue | null> {

@@ -12,7 +12,7 @@
 - [x] `src/lib/supabase/` 환경 변수, 타입, 브라우저/서버 클라이언트 추가
 - [x] `ProjectsRepository` Supabase 구현 추가
 - [x] `IssuesRepository` Supabase 구현 추가
-- [x] `eslint`
+- [x] `biome check .`
 - [x] `tsc --noEmit`
 - [x] `vitest run`
 

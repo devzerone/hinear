@@ -15,7 +15,9 @@ function assertNonEmptyValue(value: string, label: string): string {
   return normalizedValue;
 }
 
-export function createProjectDraft(input: CreateProjectInput): CreateProjectInput {
+export function createProjectDraft(
+  input: CreateProjectInput
+): CreateProjectInput {
   return {
     ...input,
     key: assertProjectKey(input.key),
@@ -26,7 +28,7 @@ export function createProjectDraft(input: CreateProjectInput): CreateProjectInpu
 
 export function createInitialProjectMembership(
   projectId: string,
-  userId: string,
+  userId: string
 ): ProjectMember {
   return {
     projectId: assertNonEmptyValue(projectId, "Project id"),
@@ -38,11 +40,14 @@ export function createInitialProjectMembership(
 
 export async function createProjectWithOwner(
   repository: ProjectsRepository,
-  input: CreateProjectInput,
+  input: CreateProjectInput
 ) {
   const draft = createProjectDraft(input);
   const project = await repository.createProject(draft);
-  const ownerMembership = createInitialProjectMembership(project.id, draft.createdBy);
+  const ownerMembership = createInitialProjectMembership(
+    project.id,
+    draft.createdBy
+  );
 
   await repository.addProjectMember(ownerMembership);
 

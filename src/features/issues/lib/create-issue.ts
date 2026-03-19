@@ -22,6 +22,8 @@ export function createIssueDraft(input: CreateIssueInput): CreateIssueInput {
   };
 }
 
-export function isIssueCreationReady(issue: Pick<Issue, "status" | "priority">): boolean {
+export function isIssueCreationReady(
+  issue: Pick<Issue, "status" | "priority">
+): boolean {
   return issue.status === "Triage" && issue.priority === "No Priority";
 }

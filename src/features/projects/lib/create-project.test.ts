@@ -15,7 +15,7 @@ describe("createProjectDraft", () => {
         name: "  Frontend Platform  ",
         type: "team",
         createdBy: "user-1",
-      }),
+      })
     ).toEqual({
       key: "WEB",
       name: "Frontend Platform",
@@ -31,18 +31,20 @@ describe("createProjectDraft", () => {
         name: "   ",
         type: "team",
         createdBy: "user-1",
-      }),
+      })
     ).toThrowError("Project name is required.");
   });
 });
 
 describe("createInitialProjectMembership", () => {
   it("creates an owner membership for the creator", () => {
-    expect(createInitialProjectMembership("project-1", "user-1")).toMatchObject({
-      projectId: "project-1",
-      userId: "user-1",
-      role: "owner",
-    });
+    expect(createInitialProjectMembership("project-1", "user-1")).toMatchObject(
+      {
+        projectId: "project-1",
+        userId: "user-1",
+        role: "owner",
+      }
+    );
   });
 });
 
@@ -87,7 +89,7 @@ describe("createProjectWithOwner", () => {
         projectId: "project-1",
         userId: "user-1",
         role: "owner",
-      }),
+      })
     );
     expect(project.id).toBe("project-1");
   });

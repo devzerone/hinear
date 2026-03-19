@@ -21,7 +21,7 @@ describe("projectKey", () => {
 
   it("throws for invalid project keys", () => {
     expect(() => assertProjectKey("1WEB")).toThrowError(
-      "Project key must contain only uppercase letters and numbers.",
+      "Project key must contain only uppercase letters and numbers."
     );
   });
 });

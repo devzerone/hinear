@@ -2,12 +2,18 @@ import "server-only";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { getSupabasePublicEnv, getSupabaseServiceRoleKey } from "@/lib/supabase/env";
+import {
+  getSupabasePublicEnv,
+  getSupabaseServiceRoleKey,
+} from "@/lib/supabase/env";
 import type { Database } from "@/lib/supabase/types";
 
 export type AppSupabaseServerClient = SupabaseClient<Database>;
 
-function createServerClient(apiKey: string, accessToken?: string): AppSupabaseServerClient {
+function createServerClient(
+  apiKey: string,
+  accessToken?: string
+): AppSupabaseServerClient {
   const { url } = getSupabasePublicEnv();
 
   return createClient<Database>(url, apiKey, {
@@ -26,7 +32,7 @@ function createServerClient(apiKey: string, accessToken?: string): AppSupabaseSe
 }
 
 export function createServerSupabaseClient(
-  accessToken?: string,
+  accessToken?: string
 ): AppSupabaseServerClient {
   const { anonKey } = getSupabasePublicEnv();
 
