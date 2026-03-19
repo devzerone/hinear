@@ -8,7 +8,10 @@ function assertSequence(sequence: number): number {
   return sequence;
 }
 
-export function buildIssueIdentifier(projectKey: string, sequence: number): string {
+export function buildIssueIdentifier(
+  projectKey: string,
+  sequence: number
+): string {
   const safeProjectKey = assertProjectKey(projectKey);
   const safeSequence = assertSequence(sequence);
 

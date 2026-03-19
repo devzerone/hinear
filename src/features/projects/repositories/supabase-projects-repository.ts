@@ -13,12 +13,15 @@ import type {
   ProjectMember,
 } from "@/features/projects/types";
 import {
-  createServiceRoleSupabaseClient,
   type AppSupabaseServerClient,
+  createServiceRoleSupabaseClient,
 } from "@/lib/supabase/server-client";
 import type { TableInsert, TableRow } from "@/lib/supabase/types";
 
-function assertQuerySucceeded(context: string, error: PostgrestError | null): void {
+function assertQuerySucceeded(
+  context: string,
+  error: PostgrestError | null
+): void {
   if (error) {
     throw new Error(`${context}: ${error.message}`);
   }
@@ -54,7 +57,9 @@ function mapProjectMember(row: TableRow<"project_members">): ProjectMember {
   };
 }
 
-function mapProjectInvitation(row: TableRow<"project_invitations">): ProjectInvitation {
+function mapProjectInvitation(
+  row: TableRow<"project_invitations">
+): ProjectInvitation {
   return {
     id: row.id,
     projectId: row.project_id,
@@ -70,7 +75,7 @@ function mapProjectInvitation(row: TableRow<"project_invitations">): ProjectInvi
 }
 
 function createInvitationDraft(
-  input: InviteProjectMemberInput,
+  input: InviteProjectMemberInput
 ): TableInsert<"project_invitations"> {
   return {
     project_id: input.projectId,
@@ -85,7 +90,7 @@ function createInvitationDraft(
 
 export class SupabaseProjectsRepository implements ProjectsRepository {
   constructor(
-    private readonly client: AppSupabaseServerClient = createServiceRoleSupabaseClient(),
+    private readonly client: AppSupabaseServerClient = createServiceRoleSupabaseClient()
   ) {}
 
   async createProject(input: CreateProjectInput): Promise<Project> {
@@ -119,11 +124,13 @@ export class SupabaseProjectsRepository implements ProjectsRepository {
 
     assertQuerySucceeded("Failed to add project member", error);
 
-    return mapProjectMember(assertDataPresent("Failed to add project member", data));
+    return mapProjectMember(
+      assertDataPresent("Failed to add project member", data)
+    );
   }
 
   async inviteProjectMember(
-    input: InviteProjectMemberInput,
+    input: InviteProjectMemberInput
   ): Promise<ProjectInvitation> {
     const { data, error } = await this.client
       .from("project_invitations")
@@ -134,7 +141,7 @@ export class SupabaseProjectsRepository implements ProjectsRepository {
     assertQuerySucceeded("Failed to invite project member", error);
 
     return mapProjectInvitation(
-      assertDataPresent("Failed to invite project member", data),
+      assertDataPresent("Failed to invite project member", data)
     );
   }
 

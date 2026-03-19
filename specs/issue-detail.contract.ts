@@ -91,7 +91,7 @@ export interface IssueRepository {
 }
 
 export function createNewIssueDefaults(
-  input: Pick<Issue, "id" | "identifier" | "title" | "createdAt" | "updatedAt">,
+  input: Pick<Issue, "id" | "identifier" | "title" | "createdAt" | "updatedAt">
 ): Issue {
   return {
     ...input,

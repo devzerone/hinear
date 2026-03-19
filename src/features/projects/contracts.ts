@@ -21,6 +21,8 @@ export interface InviteProjectMemberInput {
 export interface ProjectsRepository {
   createProject(input: CreateProjectInput): Promise<Project>;
   addProjectMember(member: ProjectMember): Promise<ProjectMember>;
-  inviteProjectMember(input: InviteProjectMemberInput): Promise<ProjectInvitation>;
+  inviteProjectMember(
+    input: InviteProjectMemberInput
+  ): Promise<ProjectInvitation>;
   getProjectById(projectId: string): Promise<Project | null>;
 }

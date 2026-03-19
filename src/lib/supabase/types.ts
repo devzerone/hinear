@@ -37,7 +37,9 @@ export interface Database {
           to_value?: Json | null;
           type: string;
         };
-        Update: Partial<Database["public"]["Tables"]["activity_logs"]["Insert"]>;
+        Update: Partial<
+          Database["public"]["Tables"]["activity_logs"]["Insert"]
+        >;
         Relationships: [];
       };
       comments: {
@@ -119,7 +121,9 @@ export interface Database {
           status?: Database["public"]["Enums"]["invitation_status"];
           token: string;
         };
-        Update: Partial<Database["public"]["Tables"]["project_invitations"]["Insert"]>;
+        Update: Partial<
+          Database["public"]["Tables"]["project_invitations"]["Insert"]
+        >;
         Relationships: [];
       };
       project_members: {
@@ -135,7 +139,9 @@ export interface Database {
           role: Database["public"]["Enums"]["project_member_role"];
           user_id: string;
         };
-        Update: Partial<Database["public"]["Tables"]["project_members"]["Insert"]>;
+        Update: Partial<
+          Database["public"]["Tables"]["project_members"]["Insert"]
+        >;
         Relationships: [];
       };
       projects: {
@@ -189,5 +195,7 @@ export interface Database {
 
 export type TableName = keyof Database["public"]["Tables"];
 
-export type TableRow<Name extends TableName> = Database["public"]["Tables"][Name]["Row"];
-export type TableInsert<Name extends TableName> = Database["public"]["Tables"][Name]["Insert"];
+export type TableRow<Name extends TableName> =
+  Database["public"]["Tables"][Name]["Row"];
+export type TableInsert<Name extends TableName> =
+  Database["public"]["Tables"][Name]["Insert"];

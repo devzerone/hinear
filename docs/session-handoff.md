@@ -44,13 +44,13 @@
 
 These passed before handoff:
 
-- `eslint`
+- `biome check .`
 - `tsc --noEmit`
 - `vitest run`
 
 In this environment, `pnpm` was not on PATH in the later session, so checks were run via:
 
-- `/opt/homebrew/bin/node ./node_modules/eslint/bin/eslint.js .`
+- `/opt/homebrew/bin/npm exec pnpm lint`
 - `/opt/homebrew/bin/node ./node_modules/typescript/bin/tsc --noEmit`
 - `/opt/homebrew/bin/node ./node_modules/vitest/vitest.mjs run`
 

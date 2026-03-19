@@ -9,7 +9,8 @@ export const PROJECT_INVITATION_STATUSES = [
 
 export type ProjectType = (typeof PROJECT_TYPES)[number];
 export type ProjectMemberRole = (typeof PROJECT_MEMBER_ROLES)[number];
-export type ProjectInvitationStatus = (typeof PROJECT_INVITATION_STATUSES)[number];
+export type ProjectInvitationStatus =
+  (typeof PROJECT_INVITATION_STATUSES)[number];
 
 export interface Project {
   id: string;
