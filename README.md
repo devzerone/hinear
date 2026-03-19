@@ -23,6 +23,21 @@ pnpm test
 
 Copy `.env.example` to `.env.local` and fill in the values you need.
 
+## CI/CD
+
+GitHub Actions is configured for:
+
+- `CI`
+  - runs on every push and pull request
+  - installs dependencies, then runs `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`
+
+Deployment is expected to use Vercel Git Integration:
+
+- pull requests create Vercel preview deployments
+- pushes to `main` trigger Vercel production deployments
+
+No GitHub Actions Vercel deploy workflow is checked in right now to avoid duplicating Vercel's default deployment pipeline.
+
 ## Docs
 
 - `docs/issue-detail/overview.md`
