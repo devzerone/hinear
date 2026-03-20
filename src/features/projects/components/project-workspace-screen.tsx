@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import { Button } from "@/components/atoms/Button";
+import { ProjectOperationsSection } from "@/components/organisms/ProjectOperationsSection";
 import { KanbanBoardView } from "@/features/issues/components/KanbanBoardView";
-import { ProjectAccessCard } from "@/features/projects/components/project-operation-cards";
+import { ProjectIssueCreatePanel } from "@/features/projects/components/project-issue-create-panel";
 import type { Project } from "@/features/projects/types";
 
 interface ProjectWorkspaceScreenProps {
@@ -33,34 +33,8 @@ export function ProjectWorkspaceScreen({
         </section>
 
         <section className="app-grid app-grid-two">
-          <section className="app-panel">
-            <h2 className="app-section-title">New issue</h2>
-            <form action={action} className="app-form">
-              <div className="app-field">
-                <label htmlFor="issue-title">Issue title</label>
-                <input
-                  id="issue-title"
-                  name="title"
-                  type="text"
-                  placeholder="Add issue detail page"
-                  required
-                />
-              </div>
-
-              <div className="app-field">
-                <label htmlFor="issue-description">Issue description</label>
-                <textarea
-                  id="issue-description"
-                  name="description"
-                  placeholder="Describe the work that needs triage."
-                  rows={6}
-                />
-              </div>
-
-              <div className="app-actions">
-                <Button type="submit">Create issue</Button>
-              </div>
-            </form>
+          <section className="app-panel" id="new-issue-form">
+            <ProjectIssueCreatePanel action={action} projectKey={project.key} />
           </section>
 
           <aside className="app-panel">
@@ -94,7 +68,13 @@ export function ProjectWorkspaceScreen({
           />
         </section>
 
-        {project.type === "team" && <ProjectAccessCard />}
+        {project.type === "team" && (
+          <ProjectOperationsSection
+            acceptHref={`/projects/${project.id}`}
+            projectName={project.name}
+            projectType={project.type}
+          />
+        )}
       </div>
     </main>
   );

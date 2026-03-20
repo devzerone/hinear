@@ -1,5 +1,9 @@
+import { redirect } from "next/navigation";
+
+import { buildAuthPath } from "@/features/auth/lib/next-path";
 import { ProjectWorkspaceScreen } from "@/features/projects/components/project-workspace-screen";
 import type { Project } from "@/features/projects/types";
+import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
 
 interface ProjectPageProps {
   params: Promise<{
@@ -27,6 +31,11 @@ function getMockProject(projectId: string): Project | null {
 
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { projectId } = await params;
+
+  if (!(await getAuthenticatedActorIdOrNull())) {
+    redirect(buildAuthPath(`/projects/${projectId}`));
+  }
+
   const project = getMockProject(projectId);
 
   if (!project) {

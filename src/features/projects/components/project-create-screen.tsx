@@ -1,7 +1,4 @@
-import {
-  CreateProjectFormCard,
-  CreateProjectNextStepsCard,
-} from "@/features/projects/components/project-operation-cards";
+import { CreateProjectSection } from "@/components/organisms/CreateProjectSection";
 import type { ProjectType } from "@/features/projects/types";
 
 interface ProjectCreateScreenProps {
@@ -26,10 +23,7 @@ export function ProjectCreateScreen({
         </section>
 
         <section className="app-panel">
-          <div className="app-grid app-grid-two">
-            <CreateProjectFormCard action={action} defaultType={defaultType} />
-            <CreateProjectNextStepsCard projectType={defaultType} />
-          </div>
+          <CreateProjectSection action={action} defaultType={defaultType} />
         </section>
       </div>
     </main>

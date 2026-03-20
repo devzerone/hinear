@@ -1,10 +1,31 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ProjectWorkspaceScreen } from "@/features/projects/components/project-workspace-screen";
 
 describe("ProjectWorkspaceScreen", () => {
-  it("renders the project context and issue creation form", () => {
+  beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ issues: [], total: 0 }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      )
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("renders the project context and opens the issue creation modal", async () => {
+    const user = userEvent.setup();
+
     render(
       <ProjectWorkspaceScreen
         action={vi.fn()}
@@ -27,10 +48,16 @@ describe("ProjectWorkspaceScreen", () => {
     expect(
       screen.getByText("Create a new triage issue for WEB.")
     ).toBeInTheDocument();
-    expect(screen.getByLabelText("Issue title")).toBeInTheDocument();
-    expect(screen.getByLabelText("Issue description")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Create issue" })
     ).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Create issue" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Create issue" })
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Title")).toBeInTheDocument();
+    expect(screen.getByLabelText("Description")).toBeInTheDocument();
   });
 });
