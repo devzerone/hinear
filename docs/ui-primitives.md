@@ -53,6 +53,9 @@
 - `BoardAddCard`
   - 기준 노드: `cmpBoardCardAdd`
   - 파일: [src/components/primitives/BoardAddCard.tsx](/home/choiho/zerone/hinear/src/components/primitives/BoardAddCard.tsx)
+- `BoardIssueCard`
+  - 기준 노드: `cmpBoardCardIssue`
+  - 파일: [src/components/primitives/BoardIssueCard.tsx](/home/choiho/zerone/hinear/src/components/primitives/BoardIssueCard.tsx)
 - `Avatar`
   - 기준 노드: `T0CIx`
   - 동작: `src`가 있으면 이미지, 없으면 `name` 또는 `fallback`에서 두 글자 이니셜 표시
@@ -77,6 +80,7 @@
 - [src/components/primitives/SidebarDesktop.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/SidebarDesktop.stories.tsx)
 - [src/components/primitives/HeaderAction.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/HeaderAction.stories.tsx)
 - [src/components/primitives/BoardAddCard.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/BoardAddCard.stories.tsx)
+- [src/components/primitives/BoardIssueCard.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/BoardIssueCard.stories.tsx)
 - [src/components/primitives/Avatar.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/Avatar.stories.tsx)
 
 ## 현재 주의사항
