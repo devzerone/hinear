@@ -1,9 +1,6 @@
 import * as React from "react";
 
-import {
-  OpenDashboardLink,
-  ProjectSwitcher,
-} from "@/components/primitives/ProjectSelect";
+import { OpenDashboardLink, ProjectSwitcher } from "@/components/ProjectSelect";
 import {
   SidebarItem,
   type SidebarItemVariant,

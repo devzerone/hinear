@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
-import { Avatar } from "@/components/primitives/Avatar";
+import { Avatar } from "@/components/Avatar";
 
 const profileImageDataUrl =
   "data:image/svg+xml;utf8," +

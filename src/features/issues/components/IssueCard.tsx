@@ -1,7 +1,7 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { BoardIssueCard } from "@/components/primitives";
+import { BoardIssueCard } from "@/components/BoardIssueCard";
 import type { Issue } from "@/specs/issue-detail.contract";
 
 interface IssueCardProps {

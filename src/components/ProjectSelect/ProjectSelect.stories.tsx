@@ -4,7 +4,7 @@ import {
   OpenDashboardLink,
   ProjectSelect,
   ProjectSwitcher,
-} from "@/components/primitives/ProjectSelect";
+} from "@/components/ProjectSelect";
 
 function ProjectSelectPreview() {
   return (

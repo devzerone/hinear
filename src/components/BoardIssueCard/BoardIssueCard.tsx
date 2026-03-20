@@ -1,6 +1,6 @@
 import * as React from "react";
 
-import { Avatar } from "@/components/primitives/Avatar";
+import { Avatar } from "@/components/Avatar";
 import { Chip } from "@/components/primitives/Chip";
 import { cn } from "@/lib/utils";
 import type {

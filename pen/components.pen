@@ -2487,7 +2487,7 @@
                               "content": "No priority",
                               "fill": "$color-neutral-500",
                               "fontWeight": "$font-weight-400",
-                              "x": 63.166666666666664,
+                              "x": 63.16666666666667,
                               "y": 13.5
                             }
                           }
@@ -2526,7 +2526,7 @@
                               "content": "Assign to...",
                               "fill": "$color-neutral-500",
                               "fontWeight": "$font-weight-400",
-                              "x": 61.666666666666664,
+                              "x": 61.66666666666667,
                               "y": 13.5
                             }
                           }

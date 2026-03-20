@@ -18,50 +18,53 @@
 
 현재 `globals.css`에는 `pen`에서 온 토큰과 최소 `body` 스타일만 남아 있다.
 
-## 구현된 Primitive
+## `secPrimBg` 기준 Primitive
 
 - `Button`
   - 기준 노드: `cmpBtnPrimary`, `cmpBtnSecondary`
-  - 파일: [src/components/primitives/Button.tsx](/home/choiho/zerone/hinear/src/components/primitives/Button.tsx)
+  - 파일: [src/components/primitives/Button/Button.tsx](/Users/choiho/zerone/hinear/src/components/primitives/Button/Button.tsx)
 - `Chip`
   - 기준 노드: `cmpChipNeutral`, `cmpChipAccent`, `cmpChipOutline`, `cmpChipDanger`, `wbZNN`, `995lk`
-  - 파일: [src/components/primitives/Chip.tsx](/home/choiho/zerone/hinear/src/components/primitives/Chip.tsx)
+  - 파일: [src/components/primitives/Chip/Chip.tsx](/Users/choiho/zerone/hinear/src/components/primitives/Chip/Chip.tsx)
 - `Field`
   - 기준 노드: `cmpFieldInput`
-  - 파일: [src/components/primitives/Field.tsx](/home/choiho/zerone/hinear/src/components/primitives/Field.tsx)
+  - 파일: [src/components/primitives/Field/Field.tsx](/Users/choiho/zerone/hinear/src/components/primitives/Field/Field.tsx)
 - `Select`
   - 기준 노드: `cmpFieldSelect`
-  - 파일: [src/components/primitives/Select.tsx](/home/choiho/zerone/hinear/src/components/primitives/Select.tsx)
+  - 파일: [src/components/primitives/Select/Select.tsx](/Users/choiho/zerone/hinear/src/components/primitives/Select/Select.tsx)
 - `SidebarItem`
   - 기준 노드: `cmpNavItemDefault`, `cmpNavItemActive`, `cmpProjectItemDefault`, `cmpProjectItemActive`
   - 내장 variant: `issues`, `triage`, `active`, `backlog`, `roadmap`
-  - 파일: [src/components/primitives/SidebarItem.tsx](/home/choiho/zerone/hinear/src/components/primitives/SidebarItem.tsx)
+  - 파일: [src/components/primitives/SidebarItem/SidebarItem.tsx](/Users/choiho/zerone/hinear/src/components/primitives/SidebarItem/SidebarItem.tsx)
+- `HeaderAction`
+  - 기준 노드: `cmpHeaderActionPrimary`, `cmpHeaderActionBoard`, `cmpHeaderActionFilter`
+  - 파일: [src/components/primitives/HeaderAction/HeaderAction.tsx](/Users/choiho/zerone/hinear/src/components/primitives/HeaderAction/HeaderAction.tsx)
+- `HeaderSearchField`
+  - 기준 노드: `cmpHeaderActionSearch`
+  - 파일: [src/components/primitives/HeaderAction/HeaderAction.tsx](/Users/choiho/zerone/hinear/src/components/primitives/HeaderAction/HeaderAction.tsx)
+- `BoardAddCard`
+  - 기준 노드: `cmpBoardCardAdd`
+  - 파일: [src/components/primitives/BoardAddCard/BoardAddCard.tsx](/Users/choiho/zerone/hinear/src/components/primitives/BoardAddCard/BoardAddCard.tsx)
+
+공용 export 경로는 기본적으로 [src/components/primitives/index.ts](/home/choiho/zerone/hinear/src/components/primitives/index.ts)에 모아두고, 새 primitive 추가 시 기존 작업과 충돌이 없도록 함께 정리한다.
+
+## `secPrimBg` 밖의 재사용 컴포넌트
+
 - `ProjectSelect`
   - 기준 노드: `PGTKk`
   - 관련 구조: `ProjectSwitcher`, `OpenDashboardLink`
-  - 파일: [src/components/primitives/ProjectSelect.tsx](/home/choiho/zerone/hinear/src/components/primitives/ProjectSelect.tsx)
+  - 파일: [src/components/ProjectSelect/ProjectSelect.tsx](/Users/choiho/zerone/hinear/src/components/ProjectSelect/ProjectSelect.tsx)
 - `SidebarDesktop`
   - 기준 노드: `1YjGD` (`Sidebar/Desktop`)
   - 조합 구조: `ProjectSwitcher`, `OpenDashboardLink`, `SidebarItem`
-  - 파일: [src/components/primitives/SidebarDesktop.tsx](/home/choiho/zerone/hinear/src/components/primitives/SidebarDesktop.tsx)
-- `HeaderAction`
-  - 기준 노드: `cmpHeaderActionPrimary`, `cmpHeaderActionBoard`, `cmpHeaderActionFilter`
-  - 파일: [src/components/primitives/HeaderAction.tsx](/home/choiho/zerone/hinear/src/components/primitives/HeaderAction.tsx)
-- `HeaderSearchField`
-  - 기준 노드: `cmpHeaderActionSearch`
-  - 파일: [src/components/primitives/HeaderAction.tsx](/home/choiho/zerone/hinear/src/components/primitives/HeaderAction.tsx)
-- `BoardAddCard`
-  - 기준 노드: `cmpBoardCardAdd`
-  - 파일: [src/components/primitives/BoardAddCard.tsx](/home/choiho/zerone/hinear/src/components/primitives/BoardAddCard.tsx)
+  - 파일: [src/components/SidebarDesktop/SidebarDesktop.tsx](/Users/choiho/zerone/hinear/src/components/SidebarDesktop/SidebarDesktop.tsx)
 - `BoardIssueCard`
   - 기준 노드: `cmpBoardCardIssue`
-  - 파일: [src/components/primitives/BoardIssueCard.tsx](/home/choiho/zerone/hinear/src/components/primitives/BoardIssueCard.tsx)
+  - 파일: [src/components/BoardIssueCard/BoardIssueCard.tsx](/Users/choiho/zerone/hinear/src/components/BoardIssueCard/BoardIssueCard.tsx)
 - `Avatar`
   - 기준 노드: `T0CIx`
   - 동작: `src`가 있으면 이미지, 없으면 `name` 또는 `fallback`에서 두 글자 이니셜 표시
-  - 파일: [src/components/primitives/Avatar.tsx](/home/choiho/zerone/hinear/src/components/primitives/Avatar.tsx)
-
-공용 export 경로는 기본적으로 [src/components/primitives/index.ts](/home/choiho/zerone/hinear/src/components/primitives/index.ts)에 모아두고, 새 primitive 추가 시 기존 작업과 충돌이 없도록 함께 정리한다.
+  - 파일: [src/components/Avatar/Avatar.tsx](/Users/choiho/zerone/hinear/src/components/Avatar/Avatar.tsx)
 
 ## Storybook
 
@@ -71,17 +74,17 @@
 
 대표 스토리 파일:
 
-- [src/components/primitives/Button.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/Button.stories.tsx)
-- [src/components/primitives/Chip.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/Chip.stories.tsx)
-- [src/components/primitives/Field.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/Field.stories.tsx)
-- [src/components/primitives/Select.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/Select.stories.tsx)
-- [src/components/primitives/SidebarItem.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/SidebarItem.stories.tsx)
-- [src/components/primitives/ProjectSelect.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/ProjectSelect.stories.tsx)
-- [src/components/primitives/SidebarDesktop.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/SidebarDesktop.stories.tsx)
-- [src/components/primitives/HeaderAction.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/HeaderAction.stories.tsx)
-- [src/components/primitives/BoardAddCard.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/BoardAddCard.stories.tsx)
-- [src/components/primitives/BoardIssueCard.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/BoardIssueCard.stories.tsx)
-- [src/components/primitives/Avatar.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/Avatar.stories.tsx)
+- [src/components/primitives/Button/Button.stories.tsx](/Users/choiho/zerone/hinear/src/components/primitives/Button/Button.stories.tsx)
+- [src/components/primitives/Chip/Chip.stories.tsx](/Users/choiho/zerone/hinear/src/components/primitives/Chip/Chip.stories.tsx)
+- [src/components/primitives/Field/Field.stories.tsx](/Users/choiho/zerone/hinear/src/components/primitives/Field/Field.stories.tsx)
+- [src/components/primitives/Select/Select.stories.tsx](/Users/choiho/zerone/hinear/src/components/primitives/Select/Select.stories.tsx)
+- [src/components/primitives/SidebarItem/SidebarItem.stories.tsx](/Users/choiho/zerone/hinear/src/components/primitives/SidebarItem/SidebarItem.stories.tsx)
+- [src/components/ProjectSelect/ProjectSelect.stories.tsx](/Users/choiho/zerone/hinear/src/components/ProjectSelect/ProjectSelect.stories.tsx)
+- [src/components/SidebarDesktop/SidebarDesktop.stories.tsx](/Users/choiho/zerone/hinear/src/components/SidebarDesktop/SidebarDesktop.stories.tsx)
+- [src/components/primitives/HeaderAction/HeaderAction.stories.tsx](/Users/choiho/zerone/hinear/src/components/primitives/HeaderAction/HeaderAction.stories.tsx)
+- [src/components/primitives/BoardAddCard/BoardAddCard.stories.tsx](/Users/choiho/zerone/hinear/src/components/primitives/BoardAddCard/BoardAddCard.stories.tsx)
+- [src/components/BoardIssueCard/BoardIssueCard.stories.tsx](/Users/choiho/zerone/hinear/src/components/BoardIssueCard/BoardIssueCard.stories.tsx)
+- [src/components/Avatar/Avatar.stories.tsx](/Users/choiho/zerone/hinear/src/components/Avatar/Avatar.stories.tsx)
 
 ## 현재 주의사항
 
