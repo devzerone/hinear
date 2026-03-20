@@ -25,7 +25,7 @@
 - full-page issue detail route renders metadata and activity sidebar
 - title can be edited inline and saved
 - failed title save rolls back to the previous value
-- status selector includes `Triage`, `Backlog`, `Todo`, `In Progress`, `Done`
+- status selector includes `Triage`, `Backlog`, `Todo`, `In Progress`, `Done`, `Canceled`
 - status can change from `Triage` to `Backlog`
 - status can change from `Triage` to `Todo`
 - description empty state is visible when no description exists
@@ -41,7 +41,7 @@
 
 ### E2E Tests
 
-- create issue, land on the full-page issue detail route, verify the created issue is visible
+- create issue, open the compact drawer with the created issue, then open the full-page issue detail route and verify the created issue is visible
 - open issue detail, move issue from `Triage` to `Todo`, verify activity log entry
 - open issue detail, update title and description, reload, verify persistence
 - open issue detail, add comment, verify comment and activity log entry

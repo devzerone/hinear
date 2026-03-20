@@ -36,6 +36,16 @@
   - issue detail screen
 - GitHub Actions CI is enabled
 - Vercel deployment is expected to use Git Integration instead of GitHub CLI deploy workflows
+- **MSW mocking infrastructure added** (2025-03-20)
+  - MSW 패키지 설치 및 설정 완료
+  - Mock 데이터와 API 핸들러 구현 (`src/mocks/`)
+  - 테스트 환경과 브라우저 환경 모두 지원
+- **Kanban Board UI implemented** (2025-03-20)
+  - 6개 컬럼 (Triage, Backlog, Todo, In Progress, Done, Canceled)
+  - 드래그앤드롭으로 상태 변경 (dnd-kit)
+  - Issue Card 컴포넌트 (identifier, 제목, 우선순위, 라벨, 담당자)
+  - 프로젝트 페이지에 통합 완료
+  - MSW mock 데이터로 동작 중
 
 ## Key Files
 
@@ -141,6 +151,16 @@ Minimum methods to implement first:
 - priority mutation
 - activity log richness
 - comment persistence and render depth
+
+### 5. Add optimistic locking for concurrent edits (MVP 2)
+
+- add `version` column to `issues` table
+- implement `updateIssue` with version check
+- add conflict error handling
+- implement conflict dialog UI
+- add unit and integration tests for conflict scenarios
+
+See [optimistic-locking.md](/Users/choiho/zerone/hinear/docs/issue-detail/optimistic-locking.md) for detailed implementation guide.
 
 ## Open Notes
 

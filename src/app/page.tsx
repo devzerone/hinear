@@ -16,6 +16,9 @@ export default function Home() {
           <p className={styles.lead}>
             <Link href="/projects/new">Create the first project</Link>
           </p>
+          <p className={styles.lead}>
+            <Link href="/playground/components">Open component playground</Link>
+          </p>
         </section>
 
         <section className={styles.grid}>

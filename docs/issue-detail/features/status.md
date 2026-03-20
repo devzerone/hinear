@@ -11,6 +11,7 @@
 - `Todo`
 - `In Progress`
 - `Done`
+- `Canceled`
 
 ## 사용자 스토리
 
@@ -22,6 +23,7 @@
 - 신규 이슈 기본 상태는 `Triage`다.
 - 상태 셀렉터는 허용 상태만 표시한다.
 - `Triage`에서 `Backlog` 또는 `Todo`로 이동할 수 있다.
+- 필요 시 이슈를 `Canceled`로 종료할 수 있다.
 - 상태 변경 성공 시 activity log에 남는다.
 - 상태 변경 실패 시 마지막 저장 상태로 롤백한다.
 
@@ -36,5 +38,6 @@
 - 상태 셀렉터에 모든 허용 상태가 보인다
 - `Triage -> Backlog` 변경 가능
 - `Triage -> Todo` 변경 가능
+- `Backlog -> Canceled` 변경 가능
 - 실패 시 이전 상태로 롤백
 - 상태 변경 activity log가 표시된다

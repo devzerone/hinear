@@ -53,8 +53,10 @@ No GitHub Actions Vercel deploy workflow is checked in right now to avoid duplic
 
 ## First Focus
 
+- **이슈 보드 (칸반)** - Linear 스타일의 칸반 보드로 이슈 관리
 - personal/team project model
 - project-scoped issue identifiers
+- **이슈 생성** - Create Issue Modal/Page
 - issue detail page
 - activity log with before/after tracking
 - invitation flow
@@ -62,5 +64,6 @@ No GitHub Actions Vercel deploy workflow is checked in right now to avoid duplic
 ## Current App Flow
 
 - `/projects/new`
-- `/projects/[projectId]`
-- `/projects/[projectId]/issues/[issueId]`
+- `/projects/[projectId]` (Kanban board)
+- Create issue → opens in **drawer**
+- `/projects/[projectId]/issues/[issueId]` (full page detail, accessible from drawer)

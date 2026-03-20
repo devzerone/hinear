@@ -15,6 +15,7 @@
 - `Todo`
 - `In Progress`
 - `Done`
+- `Canceled`
 
 ## 기본 규칙
 
@@ -31,6 +32,8 @@
 - `Backlog -> Todo`
 - `Todo -> In Progress`
 - `In Progress -> Done`
+- `Triage -> Canceled`
+- `Backlog -> Canceled`
 
 초기 버전에서는 역방향 전이를 엄격히 막지 않는다. 제품 운영 정책이 정해지면 그때 제한을 추가한다.
 

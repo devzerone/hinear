@@ -42,6 +42,7 @@ UI부터 만들지 않는다. 먼저 도메인 규칙과 저장 동작을 테스
 - `updateIssue`
 - `createComment`
 - 저장소 호출과 반환 상태 연결
+- **낙관적 잠금 (Optimistic Locking)**: 버전 충돌 감지
 
 첫 테스트:
 
@@ -49,7 +50,10 @@ UI부터 만들지 않는다. 먼저 도메인 규칙과 저장 동작을 테스
 - 상태 변경이 저장된다
 - 코멘트 작성 시 새 코멘트가 추가된다
 - 프로젝트 생성 후 project route가 반환된다
-- 이슈 생성 후 full-page detail route가 반환된다
+- 이슈 생성 후 desktop/tablet에서는 drawer가 기본 오픈된다
+- **버전 일치 시 업데이트 성공** (MVP 2차)
+- **버전 불일치 시 충돌 에러 반환** (MVP 2차)
+- 상세 테스트는 [optimistic-locking.md](/Users/choiho/zerone/hinear/docs/issue-detail/optimistic-locking.md) 참조
 
 ### 3. 컴포넌트 테스트
 
@@ -58,6 +62,7 @@ UI부터 만들지 않는다. 먼저 도메인 규칙과 저장 동작을 테스
 - 로딩 상태
 - 필드 편집
 - optimistic update와 rollback
+- **충돌 다이얼로그 표시** (MVP 2차)
 - activity log 렌더링
 - metadata 렌더링
 - breakpoint별 route / layout rule

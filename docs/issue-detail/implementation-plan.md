@@ -30,6 +30,7 @@
 - 서버 로직: `Supabase Edge Functions`
 - 예약 작업: `Supabase Cron`
 - 푸시 알림: `Firebase Cloud Messaging`
+- **디자인: `pen/Hinear.pen` 파일에 정의된 Pen 디자인을 기반으로 UI 구현**
 
 ## 전체 단계
 
@@ -118,7 +119,7 @@
 - 활동 로그 표시
 - metadata 표시
 - failure / rollback memo와 에러 안내 위치 확정
-- create issue 성공 후 full page route 진입
+- create issue 성공 후 desktop/tablet에서는 drawer 우선 오픈
 - breakpoint별 정보 밀도와 route model 정리
 
 완료 조건:
@@ -138,6 +139,21 @@
 - 현재는 full-page issue detail shell 중심으로만 구현되어 있음
 - actor 식별은 임시로 `HINEAR_ACTOR_ID` env를 사용함
 - auth/session wiring 이후 이 임시 경계는 제거해야 함
+
+### 6.5. 낙관적 잠금 (Optimistic Locking) 구현
+
+- `issues` 테이블에 `version` 컬럼 추가
+- 버전 관리를 통한 충돌 감지
+- 충돌 시 사용자에게 알림 및 재시도 옵션 제공
+- `updateIssue` 메서드에 버전 체크 로직 추가
+
+완료 조건:
+
+- 동시 편집 시 데이터 무결성이 보장된다
+- 충돌 발생 시 사용자 친화적인 에러 메시지가 표시된다
+- 버전이 맞지 않으면 업데이트가 거부된다
+
+상세 내용은 [optimistic-locking.md](/Users/choiho/zerone/hinear/docs/issue-detail/optimistic-locking.md) 참조
 
 ### 7. 알림 구현
 
@@ -232,7 +248,7 @@
 - Supabase Auth
 - Supabase 저장
 - assignee, labels, priority
-- create issue -> full page detail route 연결
+- create issue -> drawer 기본 오픈 연결
 - tablet drawer -> open full page 연결
 - notification permission + FCM token 등록
 

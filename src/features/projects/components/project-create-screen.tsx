@@ -1,3 +1,7 @@
+import {
+  CreateProjectFormCard,
+  CreateProjectNextStepsCard,
+} from "@/features/projects/components/project-operation-cards";
 import type { ProjectType } from "@/features/projects/types";
 
 interface ProjectCreateScreenProps {
@@ -22,43 +26,10 @@ export function ProjectCreateScreen({
         </section>
 
         <section className="app-panel">
-          <form action={action} className="app-form">
-            <div className="app-field">
-              <label htmlFor="project-name">Project name</label>
-              <input
-                id="project-name"
-                name="name"
-                type="text"
-                placeholder="Web Platform"
-                required
-              />
-            </div>
-
-            <div className="app-field">
-              <label htmlFor="project-key">Project key</label>
-              <input
-                id="project-key"
-                name="key"
-                type="text"
-                placeholder="WEB"
-                required
-              />
-            </div>
-
-            <div className="app-field">
-              <label htmlFor="project-type">Project type</label>
-              <select id="project-type" name="type" defaultValue={defaultType}>
-                <option value="personal">Personal</option>
-                <option value="team">Team</option>
-              </select>
-            </div>
-
-            <div className="app-actions">
-              <button type="submit" className="app-button">
-                Create project
-              </button>
-            </div>
-          </form>
+          <div className="app-grid app-grid-two">
+            <CreateProjectFormCard action={action} defaultType={defaultType} />
+            <CreateProjectNextStepsCard projectType={defaultType} />
+          </div>
         </section>
       </div>
     </main>

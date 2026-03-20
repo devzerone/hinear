@@ -65,6 +65,7 @@ Allowed values:
 - `Todo`
 - `In Progress`
 - `Done`
+- `Canceled`
 
 ### Default Status
 
@@ -79,6 +80,8 @@ Recommended, but not technically required, transitions:
 - `Backlog -> Todo`
 - `Todo -> In Progress`
 - `In Progress -> Done`
+- `Triage -> Canceled`
+- `Backlog -> Canceled`
 
 Reverse transitions may be allowed by product policy. The first implementation should keep the domain permissive unless the team wants stricter workflow enforcement.
 

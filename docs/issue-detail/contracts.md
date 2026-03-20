@@ -49,6 +49,7 @@ SQL 스키마 초안은 [supabase/migrations/0001_initial_project_issue_schema.s
 - `Todo`
 - `In Progress`
 - `Done`
+- `Canceled`
 
 ### IssuePriority
 
@@ -109,6 +110,10 @@ SQL 스키마 초안은 [supabase/migrations/0001_initial_project_issue_schema.s
 - 제목, 상태, 우선순위, 담당자, 라벨, 설명을 수정한다.
 - 저장 후 최신 `Issue`를 반환한다.
 - 프로젝트 권한이 없는 사용자는 수정할 수 없다.
+- **낙관적 잠금 (Optimistic Locking)**: 버전 관리로 충돌을 방지한다.
+  - 입력에 `version` 필드가 포함되어야 한다.
+  - 버전이 일치하지 않으면 충돌 에러를 반환한다.
+  - 상세 구현은 [optimistic-locking.md](/Users/choiho/zerone/hinear/docs/issue-detail/optimistic-locking.md) 참조
 
 ### `createComment(input)`
 

@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { Button } from "@/components/primitives/Button";
+import { KanbanBoardView } from "@/features/issues/components/KanbanBoardView";
+import { ProjectAccessCard } from "@/features/projects/components/project-operation-cards";
 import type { Project } from "@/features/projects/types";
 
 interface ProjectWorkspaceScreenProps {
@@ -15,11 +18,18 @@ export function ProjectWorkspaceScreen({
     <main className="app-shell">
       <div className="app-stack">
         <section className="app-panel">
-          <p className="app-kicker">{project.key}</p>
-          <h1 className="app-title">{project.name}</h1>
-          <p className="app-muted">
-            Create a new triage issue for {project.key}.
-          </p>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="app-kicker">{project.key}</p>
+              <h1 className="app-title">{project.name}</h1>
+              <p className="app-muted">
+                Create a new triage issue for {project.key}.
+              </p>
+            </div>
+            <Link href="/" className="app-link !mt-0">
+              Back to home
+            </Link>
+          </div>
         </section>
 
         <section className="app-grid app-grid-two">
@@ -48,9 +58,7 @@ export function ProjectWorkspaceScreen({
               </div>
 
               <div className="app-actions">
-                <button type="submit" className="app-button">
-                  Create issue
-                </button>
+                <Button type="submit">Create issue</Button>
               </div>
             </form>
           </section>
@@ -72,14 +80,26 @@ export function ProjectWorkspaceScreen({
               </div>
             </dl>
             <p className="app-muted">
-              The first implementation keeps this route focused on issue
-              creation and the full-page issue detail flow.
+              The board stays primary, but project operations remain visible in
+              the same flow.
             </p>
-            <Link href="/" className="app-link">
-              Back to home
-            </Link>
           </aside>
         </section>
+
+        <section className="app-panel">
+          <div>
+            <h2 className="app-section-title !mb-2">Board</h2>
+            <p className="app-muted">
+              Status columns follow the current design source: Triage, Backlog,
+              Todo, In Progress, Done, and Canceled.
+            </p>
+          </div>
+          <div className="mt-6 h-[760px] overflow-hidden rounded-[24px] border border-[var(--border)] bg-[#F7F8FA]">
+            <KanbanBoardView projectId={project.id} />
+          </div>
+        </section>
+
+        {project.type === "team" && <ProjectAccessCard />}
       </div>
     </main>
   );

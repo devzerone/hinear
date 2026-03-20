@@ -9,7 +9,7 @@
 - MVP 1의 주 화면은 독립 `Issue Detail / Full page` route
 - `Issue Detail / Drawer`는 같은 detail model을 공유하는 compact exploration
 - `Issue List Page`와 `Project Dashboard`는 탐색 화면이며 MVP 기준 route는 아니다
-- `Create Issue`는 지원 흐름이며, 생성 후 기본 진입은 full page detail route
+- `Create Issue`는 지원 흐름이며, desktop/tablet에서는 생성 후 기본 오픈이 drawer다
 
 현재 브레이크포인트 기준은 아래와 같다.
 
@@ -17,6 +17,7 @@
   - full page detail 우선
 - Tablet `768px - 1279px`
   - board에서 issue를 탭하면 compact drawer 우선
+  - create 성공 후에도 compact drawer를 먼저 열고 필요시 full page로 이동
   - full metadata / full history / long-form editing은 full page로 이동
 - Mobile `< 768px`
   - issue tap 시 full page detail 우선
@@ -55,12 +56,20 @@
   - 프로젝트 중심 도메인 구조와 권한 모델
 - `issue-detail/invitations.md`
   - 프로젝트 초대 흐름과 owner/member 권한 규칙
+- `issue-detail/invitations-ui.md`
+  - 초대 목록, 재발송, 취소, 수락 화면 기준
+- `issue-detail/members.md`
+  - 프로젝트 멤버 목록, 역할 표시, 제거 규칙
+- `issue-detail/project-settings.md`
+  - 프로젝트 이름, key, type, 위험한 설정 변경 기준
 - `issue-detail/supabase-schema.md`
   - 초기 Supabase Postgres 테이블, trigger, RLS 방향
 - `issue-detail/roadmap.md`
   - MVP 단계별 기능 묶음과 구현 우선순위
 - `issue-detail/features/README.md`
   - 피처별 세부 스펙 인덱스
+- `issue-detail/optimistic-locking.md`
+  - 낙관적 잠금(Optimistic Locking) 구현 가이드, 데이터 무결성 보장, 충돌 해결 방법
 
 ## 구현 기준 원본
 

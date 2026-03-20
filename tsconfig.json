@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "target": "ES2017",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -18,7 +19,9 @@
         "name": "next"
       }
     ],
+    "types": ["vitest/globals"],
     "paths": {
+      "@/specs/*": ["./specs/*"],
       "@/*": ["./src/*"]
     }
   },

@@ -21,8 +21,16 @@ Linear 스타일의 이슈 상세 페이지를 구현해서, 프로젝트 이슈
 
 ## 핵심 범위
 
+- **이슈 보드 (칸반)** - Linear 스타일의 칸반 보드로 이슈 시각화
+  - Triage, Backlog, Todo, In Progress, Done, Canceled 컬럼
+  - 이슈 카드로 표시 (identifier, 제목, 우선순위, 라벨, 담당자)
+  - 드래그앤드롭으로 컬럼 간 이동
+- **이슈 생성** - Create Issue Modal/Page
+  - 제목, 설명, 우선순위 입력
+  - 마크다운 도구모음 지원
+  - desktop/tablet에서는 생성 후 drawer 우선 오픈, 필요시 full page detail 진입
 - 이슈 제목 수정
-- 상태 변경 `Triage / Backlog / Todo / In Progress / Done`
+- 상태 변경 `Triage / Backlog / Todo / In Progress / Done / Canceled`
 - 우선순위 변경
 - 담당자 변경
 - 라벨 추가 및 삭제
@@ -32,7 +40,7 @@ Linear 스타일의 이슈 상세 페이지를 구현해서, 프로젝트 이슈
 
 ## 제외 범위
 
-- 이슈 리스트
+- 이슈 리스트 (별도 페이지)
 - 프로젝트 대시보드
 - 팀 전환
 - 단축키 복제
@@ -76,17 +84,21 @@ Linear 스타일의 이슈 상세 페이지를 구현해서, 프로젝트 이슈
 
 ## 데스크탑 기준
 
-- MVP 1 기본 화면은 독립 full page detail route
-- full page는 `main column + right column` 구조를 사용한다
+- MVP 1 기본 화면은 **이슈 보드 (칸반)** + full page detail route
+- 칸반 보드는 `Triage`, `Backlog`, `Todo`, `In Progress`, `Done`, `Canceled` 컬럼으로 구성
+- 각 컬럼에는 해당 상태의 이슈 카드들이 표시됨
+- 드래그앤드롭으로 이슈 카드를 컬럼 간에 이동 가능
+- full page detail route는 `main column + right column` 구조를 사용한다
 - right column에는 metadata, full activity log, failure/rollback memo를 둔다
 - compact drawer는 같은 필드 규칙을 공유하지만, recent activity와 compact fields만 우선 노출한다
-- issue create modal은 지원 흐름이며, 생성 성공 후 기본 진입은 full page detail route다
+- create issue는 모달 또는 전용 페이지로 지원하며, desktop/tablet에서는 생성 성공 후 drawer를 먼저 연다
 
 현재 앱 구현 기준:
 
 - 홈에서 `/projects/new`로 진입 가능
-- 프로젝트 생성 후 `/projects/[projectId]`로 이동
-- 이슈 생성 후 `/projects/[projectId]/issues/[issueId]` full-page route로 이동
+- 프로젝트 생성 후 `/projects/[projectId]`로 이동 (칸반 보드 표시)
+- 칸반 보드에서 이슈 생성 가능
+- 이슈 생성 후 **drawer로 열리며**, 필요시 full page로 이동 가능
 - 현재 issue detail은 shell + metadata + empty comments/activity 표현까지 구현됨
 
 ## 브레이크포인트 기준
@@ -96,14 +108,14 @@ Linear 스타일의 이슈 상세 페이지를 구현해서, 프로젝트 이슈
 - 기본 issue detail surface는 독립 `Issue Detail / Full page`
 - full page가 desktop source of truth다
 - `Issue Detail / Drawer`는 exploration으로만 둔다
-- create issue는 모달로 열 수 있지만, 생성 성공 후 기본 진입은 full page detail route다
+- create issue는 모달로 열 수 있고, 생성 성공 후에는 compact drawer를 먼저 연다
 
 ### Tablet `768px - 1279px`
 
 - issue list / board에서 issue를 열면 compact drawer를 먼저 보여준다
 - drawer는 editable core fields, 짧은 설명, recent activity, metadata summary만 우선 노출한다
 - full metadata, full activity history, 긴 편집은 `Open full page`로 넘긴다
-- create issue는 모달로 열고, 생성 성공 후 drawer가 아니라 full page detail route로 이동한다
+- create issue는 모달로 열고, 생성 성공 후에도 compact drawer를 먼저 연다
 
 ### Mobile `< 768px`
 
@@ -132,6 +144,7 @@ Linear 스타일의 이슈 상세 페이지를 구현해서, 프로젝트 이슈
 - 서버 작업: `Supabase Edge Functions`
 - 예약 작업: `Supabase Cron`
 - 푸시/알림: `Firebase Cloud Messaging`
+- 디자인: `Pen` 디자인 도구로 작성된 `pen/Hinear.pen` 파일을 기반으로 UI 구현
 
 ## 도메인 경계
 
@@ -149,3 +162,4 @@ Linear 스타일의 이슈 상세 페이지를 구현해서, 프로젝트 이슈
 - [상태 모델](/Users/choiho/zerone/hinear/specs/issue-detail.states.md)
 - [구현 계획](/Users/choiho/zerone/hinear/docs/issue-detail/implementation-plan.md)
 - [PWA/Firebase 알림 설계](/Users/choiho/zerone/hinear/docs/issue-detail/pwa-firebase-notifications.md)
+- [낙관적 잠금 구현 가이드](/Users/choiho/zerone/hinear/docs/issue-detail/optimistic-locking.md) - 팀 협업 시 데이터 무결성 보장

@@ -85,13 +85,17 @@
 - `updated_by`
 - `created_at`
 - `updated_at`
+- `version` (낙관적 잠금을 위한 버전 필드, MVP 2차 추가)
 
 규칙:
 
 - 이슈는 반드시 하나의 프로젝트에 속함
 - `issue_number`와 `identifier`는 프로젝트 단위로 유일
-- 상태는 `Triage`, `Backlog`, `Todo`, `In Progress`, `Done`
+- 상태는 `Triage`, `Backlog`, `Todo`, `In Progress`, `Done`, `Canceled`
 - 우선순위는 `No Priority`, `Low`, `Medium`, `High`, `Urgent`
+- **낙관적 잠금**: `version` 필드는 업데이트 시마다 자동 증가
+  - MVP 2차에 추가됨
+  - 상세 구현은 [optimistic-locking.md](/Users/choiho/zerone/hinear/docs/issue-detail/optimistic-locking.md) 참조
 
 ### comments
 

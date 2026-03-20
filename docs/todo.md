@@ -71,6 +71,28 @@
 - [x] 프로젝트 상세 진입 페이지
 - [x] 이슈 생성 액션
 - [x] 이슈 상세 shell
+- [x] **MSW 모킹 인프라 구축 완료** (2025-03-20)
+  - [x] msw 패키지 설치
+  - [x] 핸들러 및 mock 데이터 정의 (`src/mocks/handlers.ts`)
+  - [x] 브라우저/서버 MSW 설정
+  - [x] 테스트 환경 MSW 연동
+- [x] **칸반 보드 컴포넌트 구현 완료** (2025-03-20)
+  - [x] KanbanBoard 메인 컴포넌트
+  - [x] KanbanColumn 컬럼 컴포넌트
+  - [x] IssueCard 카드 컴포넌트
+  - [x] dnd-kit 드래그앤드롭 구현
+  - [x] useIssues 훅 (MSW API 호출)
+  - [x] 프로젝트 페이지에 칸반 보드 통합
+- [x] **Primitives 컴포넌트 구현 완료** (2025-03-20)
+  - [x] Button (Primary/Secondary)
+  - [x] Chip (Neutral/Accent/Outline/Danger)
+  - [x] Field (Input/Select)
+  - [x] NavItem (Default/Active)
+  - [x] ProjectItem (Default/Active)
+  - [x] HeaderAction (Search/Filter)
+  - [x] lucide-react 아이콘 라이브러리 추가
+  - [x] clsx + tailwind-merge 유틸리티 추가
+- [ ] Create Issue Modal 컴포넌트
 - [ ] mutation 실패 UI
 - [ ] not-found / empty / loading polish
 - [ ] issue detail 실제 편집 컨트롤 연결
@@ -78,6 +100,16 @@
 ### 4. Data access hardening
 
 - [ ] repository 에러 타입 정리
+- [ ] **낙관적 잠금 (Optimistic Locking) 구현** - 버전 관리로 충돌 방지
+  - [ ] `issues` 테이블에 `version` 컬럼 추가 (마이그레이션 0003)
+  - [ ] `Issue` 타입에 `version` 필드 추가
+  - [ ] `UpdateIssueInput` 타입 정의
+  - [ ] `ConflictError` 타입 정의
+  - [ ] `SupabaseIssuesRepository.updateIssue` 메서드 구현
+  - [ ] 충돌 다이얼로그 UI 컴포넌트 구현
+  - [ ] 단위 테스트: 버전 일치/불일치 시나리오
+  - [ ] 통합 테스트: 동시 편집 시나리오
+  - 자세한 내용은 [optimistic-locking.md](/Users/choiho/zerone/hinear/docs/issue-detail/optimistic-locking.md) 참조
 - [ ] 중복 key / 중복 invitation / 권한 실패 케이스 메시지 정리
 - [ ] activity log 추가 시점과 정책 정리
 - [ ] invitation token 생성 규칙과 만료 정책 검토
@@ -86,6 +118,7 @@
 ## Key Files
 
 - [docs/session-handoff.md](/Users/choiho/zerone/hinear/docs/session-handoff.md)
+- [docs/issue-detail/optimistic-locking.md](/Users/choiho/zerone/hinear/docs/issue-detail/optimistic-locking.md) - 낙관적 잠금 구현 가이드
 - [src/lib/supabase/env.ts](/Users/choiho/zerone/hinear/src/lib/supabase/env.ts)
 - [src/lib/supabase/browser-client.ts](/Users/choiho/zerone/hinear/src/lib/supabase/browser-client.ts)
 - [src/lib/supabase/server-client.ts](/Users/choiho/zerone/hinear/src/lib/supabase/server-client.ts)
@@ -99,6 +132,7 @@
 - [src/app/projects/[projectId]/issues/[issueId]/page.tsx](/Users/choiho/zerone/hinear/src/app/projects/[projectId]/issues/[issueId]/page.tsx)
 - [supabase/migrations/0001_initial_project_issue_schema.sql](/Users/choiho/zerone/hinear/supabase/migrations/0001_initial_project_issue_schema.sql)
 - [supabase/migrations/0002_schema_lint_fixes.sql](/Users/choiho/zerone/hinear/supabase/migrations/0002_schema_lint_fixes.sql)
+- [supabase/migrations/0003_add_version_for_optimistic_locking.sql](/Users/choiho/zerone/hinear/supabase/migrations/0003_add_version_for_optimistic_locking.sql) (추가 예정)
 
 ## Suggested Prompt
 
