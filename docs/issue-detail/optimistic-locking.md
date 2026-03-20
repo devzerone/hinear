@@ -88,6 +88,33 @@ add column version integer not null default 1;
 create index issues_version_idx on public.issues (id, version);
 ```
 
+### 현재 구현 메모
+
+현재 앱 코드는 위 예시처럼 별도 DB 함수나 트리거를 쓰지 않고, 애플리케이션 레이어에서 아래 규칙으로 낙관적 잠금을 처리한다.
+
+- `issues.version` 컬럼은 원격 Supabase에 이미 적용됨
+- 클라이언트는 상세 화면에서 읽은 `issue.version`을 mutation payload에 함께 보냄
+- repository는 `where id = ? and version = ?` 조건으로 업데이트
+- 업데이트 payload에 `version = currentVersion + 1`을 함께 넣어 성공 시 버전이 실제 증가하도록 함
+- 일치하는 row가 없으면 최신 issue를 다시 읽어 `CONFLICT` 에러와 함께 반환
+
+즉, 현재 저장 경로의 핵심은 다음과 같다.
+
+```ts
+const { data } = await client
+  .from("issues")
+  .update({
+    ...issueUpdates,
+    version: currentIssue.version + 1,
+  })
+  .eq("id", issueId)
+  .eq("version", input.version)
+  .select()
+  .maybeSingle();
+```
+
+이 방식은 현재 앱 구조와 잘 맞고, route handler와 UI에서 충돌 처리 흐름을 단순하게 유지할 수 있다.
+
 ### 2. version 자동 증가 트리거
 
 ```sql
@@ -285,6 +312,131 @@ export class SupabaseIssuesRepository implements IssuesRepository {
   }
 }
 ```
+
+---
+
+## 현재 앱 동작 방식
+
+### 서버 경로
+
+- 상세 수정 경로: `PATCH /internal/issues/[issueId]/detail`
+- comment 생성 경로: `POST /internal/issues/[issueId]/comments`
+- 상세 route는 request-bound Supabase SSR client를 사용한다
+- actor 식별은 `auth.uid()` 기반 authenticated user lookup으로 수행한다
+
+### 상세 수정 흐름
+
+1. 상세 페이지가 서버에서 `issue.version`을 포함한 초기 데이터를 렌더한다.
+2. 사용자가 title / description / status / priority / assignee를 수정한다.
+3. 저장 시 클라이언트는 현재 들고 있는 `issueState.version`을 함께 보낸다.
+4. repository는 `id + version` 조건으로 update를 시도한다.
+5. 성공하면:
+   - row가 갱신된다
+   - `version`이 1 증가한다
+   - activity log가 append된다
+   - UI는 최신 issue와 activity log로 동기화된다
+6. 실패하면:
+   - 최신 row를 다시 읽는다
+   - `CONFLICT` 에러를 반환한다
+   - UI는 최신 issue를 다시 로드하고 conflict notice를 보여준다
+
+### 현재 UI 반응
+
+- 성공 시:
+  - `Title updated.`
+  - `Description updated.`
+  - `Metadata updated.`
+- 충돌 시:
+  - `Someone else updated this issue. The latest version has been reloaded.`
+- 인증 만료 시:
+  - `Your session expired. Sign in again and retry.`
+- 이슈 미존재 시:
+  - `This issue no longer exists. Return to the board and refresh your list.`
+
+---
+
+## 실제 검증 결과
+
+### 원격 적용 상태
+
+- remote Supabase migration 적용 완료:
+  - `add_version_for_optimistic_locking`
+- 원격 `public.issues` 테이블에 `version integer not null default 1` 존재 확인
+
+### 코드 검증
+
+확인 완료 항목:
+
+- repository update 시 `version`이 실제 증가하는지 검증
+- stale version으로 두 번째 저장 시 `CONFLICT`가 반환되는지 검증
+- detail route가 `409`를 그대로 전달하는지 검증
+- TypeScript 정합성 확인
+
+실행한 체크:
+
+- `tsc --noEmit`
+- `vitest run src/features/issues/repositories/supabase-issues-repository.test.ts`
+- `vitest run src/app/internal/issues/[issueId]/detail/route.test.ts`
+
+### 실제 브라우저 동시 편집 검증
+
+원격 Supabase와 로컬 앱을 연결한 상태에서 브라우저 두 컨텍스트로 아래 시나리오를 재현했다.
+
+검증 대상:
+
+- project: `CVAL`
+- issue: `CVAL-1`
+- route:
+  - `/projects/c5df28bc-7827-48b1-89a3-da51139366f1/issues/01d41429-3952-481c-a6d8-b5b222a426be`
+
+재현 절차:
+
+1. Alice와 Bob용 auth 세션을 각각 독립 브라우저 컨텍스트에 생성
+2. 두 사용자가 같은 이슈 상세 페이지를 열어 동일한 초기 `version`을 읽음
+3. Alice가 title을 `Concurrent edit validation / Alice`로 저장
+4. Bob은 stale version 상태에서 `Concurrent edit validation / Bob`를 저장 시도
+5. Bob 화면에서 conflict notice 표시 여부와 최신 title reload 여부 확인
+
+실제 결과:
+
+- Alice 저장 성공
+- Bob 저장 시 `409 CONFLICT` 발생
+- Bob 화면에 conflict notice 표시
+- Bob 입력 필드 값이 최신 값 `Concurrent edit validation / Alice`로 다시 로드됨
+- 검증 후 이슈 제목은 `Concurrent edit validation`로 원복
+- 원복 후 검증 이슈의 `version`은 `3`
+
+이 결과로 다음이 확인됐다.
+
+- app code의 optimistic locking 경로가 원격 DB 기준으로 실제 동작한다
+- 단순 unit test 수준이 아니라 브라우저 세션 분리 상태에서도 stale-write 보호가 걸린다
+- 현재 남은 작업은 “충돌 감지” 자체가 아니라 “충돌 경험 개선” 쪽이다
+
+---
+
+## 주의사항
+
+### auth confirm 링크 형식
+
+이번 검증에서 중요한 점이 하나 있었다.
+
+- Supabase `generateLink(...).properties.action_link`를 그대로 열면 현재 앱의 `/auth/confirm` 구현과 맞지 않을 수 있다
+- 현재 앱의 callback route는 `token_hash` + `type` query를 기대한다
+- 따라서 테스트 자동화에서는 `hashed_token`을 꺼내 아래 형식으로 `/auth/confirm`을 직접 호출해야 안정적이었다
+
+예시:
+
+```text
+/auth/confirm?token_hash=<hashed_token>&type=magiclink&next=/projects/.../issues/...
+```
+
+이 포인트를 모르면 로컬 브라우저 검증에서 `Login failed. Please request a new magic link.`로 떨어질 수 있다.
+
+### 현재 남은 후속 작업
+
+- conflict notice를 richer dialog로 올릴지 결정
+- `issue-detail-screen.test.tsx` hang 원인 분리
+- 필요하면 comment / metadata / description 경로까지 concurrent edit 케이스 확대
 
 ---
 
@@ -555,7 +707,7 @@ describe('updateIssueAction - concurrent edits', () => {
 
 ```bash
 # 새 마이그레이션 파일 생성
-touch supabase/migrations/0003_add_version_for_optimistic_locking.sql
+touch supabase/migrations/0004_add_version_for_optimistic_locking.sql
 ```
 
 ### 2. 로컬 Supabase에 적용

@@ -132,7 +132,8 @@ UI부터 만들지 않는다. 먼저 도메인 규칙과 저장 동작을 테스
 
 - 도메인 테스트는 통과 중
 - project create / issue create / issue detail shell 테스트도 통과 중
-- 현재 앱 플로우는 임시 actor env에 의존하므로, 다음 단계 TDD는 auth/session 경계 테스트로 내려가야 함
+- auth-bound actor lookup 테스트는 추가됨
+- 다음 단계 TDD는 auth callback / expired session / unauthenticated write failure 경계로 내려가야 함
 
 ## 관련 스펙
 

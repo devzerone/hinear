@@ -111,6 +111,39 @@
 
 - 공백만 있는 comment는 저장 불가
 
+### labels
+
+핵심 필드:
+
+- `id`
+- `project_id`
+- `name`
+- `name_key`
+- `color`
+- `created_by`
+- `created_at`
+
+규칙:
+
+- 라벨은 프로젝트 단위로 관리된다
+- `name_key`는 소문자 정규화 키이며 `(project_id, name_key)`로 유일하다
+- color는 현재 deterministic palette 기반 hex 문자열로 저장한다
+
+### issue_labels
+
+핵심 필드:
+
+- `issue_id`
+- `project_id`
+- `label_id`
+- `created_at`
+
+규칙:
+
+- 이슈와 라벨의 many-to-many 연결 테이블이다
+- `(issue_id, label_id)`가 PK다
+- 프로젝트 멤버만 조회/작성/삭제할 수 있다
+
 ### activity_logs
 
 핵심 필드:
@@ -158,7 +191,7 @@ identifier는 앱에서 임의 문자열을 생성하지 않고, DB에서 프로
 - `project_members`
   - 멤버만 조회
   - owner만 초대/제거 가능
-- `issues`, `comments`, `activity_logs`
+- `issues`, `comments`, `activity_logs`, `labels`, `issue_labels`
   - 프로젝트 멤버만 조회/작성 가능
 
 중요한 점:
@@ -172,6 +205,8 @@ identifier는 앱에서 임의 문자열을 생성하지 않고, DB에서 프로
 - 멤버십
 - 초대
 - 이슈
+- 라벨
+- 이슈-라벨 연결
 - 코멘트
 - 활동 로그
 

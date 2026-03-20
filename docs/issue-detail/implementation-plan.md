@@ -137,8 +137,8 @@
   - `/projects/[projectId]`
   - `/projects/[projectId]/issues/[issueId]`
 - 현재는 full-page issue detail shell 중심으로만 구현되어 있음
-- actor 식별은 임시로 `HINEAR_ACTOR_ID` env를 사용함
-- auth/session wiring 이후 이 임시 경계는 제거해야 함
+- actor 식별은 request-bound Supabase auth lookup으로 전환됨
+- 남은 auth 작업은 expired session / auth error polish와 route protection 세부 조정이다
 
 ### 6.5. 낙관적 잠금 (Optimistic Locking) 구현
 

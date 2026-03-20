@@ -31,8 +31,9 @@
 
 주의:
 
-- 현재 server action은 임시 actor source로 `HINEAR_ACTOR_ID` env를 사용한다
-- auth/session wiring이 들어오면 이 경계는 제거되어야 한다
+- 현재 app request path는 request-bound Supabase client + authenticated user context를 기준으로 동작한다
+- `/auth`, `/auth/confirm`, `proxy.ts`까지 추가돼서 auth bootstrap은 들어갔다
+- 로컬에서 쓰기 동작을 확인하려면 실제 Supabase auth 세션이 필요하다
 
 ## 문서 목록
 

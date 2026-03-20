@@ -23,11 +23,14 @@ pnpm test
 
 Copy `.env.example` to `.env.local` and fill in the values you need.
 
-Current local flow also expects:
+Current app request flow expects Supabase auth cookies for authenticated writes.
 
-- `HINEAR_ACTOR_ID`
+Primary app requests no longer use `HINEAR_ACTOR_ID` as a server-action fallback.
 
-This is a temporary server-action actor fallback until Supabase auth/session wiring replaces it.
+Auth bootstrap routes are now present:
+
+- `/auth`
+- `/auth/confirm`
 
 ## CI/CD
 
