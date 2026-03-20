@@ -1,0 +1,116 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import type { ActivityLogEntry, Comment, Issue } from "@/features/issues/types";
+
+const {
+  appendActivityLogMock,
+  createCommentMock,
+  getAuthenticatedActorIdOrNullMock,
+  getIssueByIdMock,
+  getServerIssuesRepositoryMock,
+} = vi.hoisted(() => ({
+  appendActivityLogMock: vi.fn(),
+  createCommentMock: vi.fn(),
+  getAuthenticatedActorIdOrNullMock: vi.fn(),
+  getIssueByIdMock: vi.fn(),
+  getServerIssuesRepositoryMock: vi.fn(),
+}));
+
+vi.mock("@/lib/supabase/server-auth", () => ({
+  getAuthenticatedActorIdOrNull: getAuthenticatedActorIdOrNullMock,
+}));
+
+vi.mock("@/features/issues/repositories/server-issues-repository", () => ({
+  getServerIssuesRepository: getServerIssuesRepositoryMock,
+}));
+
+import { POST } from "@/app/internal/issues/[issueId]/comments/route";
+
+describe("POST /internal/issues/[issueId]/comments", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("rejects empty comments", async () => {
+    getAuthenticatedActorIdOrNullMock.mockResolvedValue("user-1");
+
+    const response = await POST(
+      new Request("https://hinear.test/internal", {
+        method: "POST",
+        body: JSON.stringify({ body: "   " }),
+      }),
+      { params: Promise.resolve({ issueId: "issue-1" }) }
+    );
+
+    expect(response.status).toBe(400);
+  });
+
+  it("creates a comment and matching activity entry", async () => {
+    const issue: Issue = {
+      id: "issue-1",
+      projectId: "project-1",
+      issueNumber: 2,
+      identifier: "WEB-2",
+      title: "Comment support",
+      status: "Todo",
+      priority: "Medium",
+      assigneeId: null,
+      labels: [],
+      description: "",
+      createdBy: "user-1",
+      updatedBy: "user-1",
+      createdAt: "2026-03-20T00:00:00.000Z",
+      updatedAt: "2026-03-20T00:00:00.000Z",
+      version: 1,
+    };
+    const comment: Comment = {
+      id: "comment-1",
+      issueId: "issue-1",
+      projectId: "project-1",
+      authorId: "user-1",
+      body: "Looks good.",
+      createdAt: "2026-03-20T02:00:00.000Z",
+    };
+    const activityEntry: ActivityLogEntry = {
+      id: "activity-1",
+      issueId: "issue-1",
+      projectId: "project-1",
+      actorId: "user-1",
+      type: "issue.comment.created",
+      field: null,
+      from: null,
+      to: null,
+      summary: "댓글을 남겼습니다",
+      createdAt: "2026-03-20T02:00:00.000Z",
+    };
+
+    getAuthenticatedActorIdOrNullMock.mockResolvedValue("user-1");
+    getServerIssuesRepositoryMock.mockResolvedValue({
+      appendActivityLog: appendActivityLogMock,
+      createComment: createCommentMock,
+      getIssueById: getIssueByIdMock,
+    });
+    getIssueByIdMock.mockResolvedValue(issue);
+    createCommentMock.mockResolvedValue(comment);
+    appendActivityLogMock.mockResolvedValue(activityEntry);
+
+    const response = await POST(
+      new Request("https://hinear.test/internal", {
+        method: "POST",
+        body: JSON.stringify({ body: "Looks good." }),
+      }),
+      { params: Promise.resolve({ issueId: "issue-1" }) }
+    );
+
+    expect(createCommentMock).toHaveBeenCalledWith({
+      authorId: "user-1",
+      body: "Looks good.",
+      issueId: "issue-1",
+      projectId: "project-1",
+    });
+    await expect(response.json()).resolves.toEqual({
+      activityEntry,
+      comment,
+    });
+  });
+});
