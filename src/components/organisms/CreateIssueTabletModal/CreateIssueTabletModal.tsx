@@ -14,7 +14,8 @@ interface SelectOption {
 }
 
 interface CreateIssueTabletModalProps
-  extends React.HTMLAttributes<HTMLDivElement> {
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onSubmit"> {
+  action?: React.ComponentProps<"form">["action"];
   assigneeOptions?: SelectOption[];
   defaultDescription?: string;
   defaultLabels?: string;
@@ -37,7 +38,7 @@ const DEFAULT_STATUS_OPTIONS: SelectOption[] = [
 ];
 
 const DEFAULT_PRIORITY_OPTIONS: SelectOption[] = [
-  { label: "No priority", value: "No priority" },
+  { label: "No priority", value: "No Priority" },
   { label: "Low", value: "Low" },
   { label: "Medium", value: "Medium" },
   { label: "High", value: "High" },
@@ -77,11 +78,12 @@ function EditorToolButton({
 }
 
 export function CreateIssueTabletModal({
+  action,
   assigneeOptions = DEFAULT_ASSIGNEE_OPTIONS,
   className,
   defaultDescription = "# 요약\n이슈의 핵심 내용을 짧게 적어주세요...\n\n- 기대 동작\n- 현재 문제\n- 배포 메모",
   defaultLabels = "",
-  defaultPriority = "No priority",
+  defaultPriority = "No Priority",
   defaultStatus = "Triage",
   defaultTitle = "",
   onCancel,
@@ -150,6 +152,7 @@ export function CreateIssueTabletModal({
         </div>
 
         <form
+          action={action}
           className="flex flex-col gap-5 rounded-[16px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-white)] p-6"
           onSubmit={onSubmit}
         >

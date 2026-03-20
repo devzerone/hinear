@@ -1,5 +1,7 @@
 import type * as React from "react";
 
+import { Button } from "@/components/atoms/Button";
+import { Field } from "@/components/atoms/Field";
 import { cn } from "@/lib/utils";
 
 type AuthFormVariant = "desktop" | "tablet" | "mobile";
@@ -16,18 +18,33 @@ const titleClassNames: Record<AuthFormVariant, string> = {
   mobile: "text-[22px] leading-[22px]",
 };
 
-export interface AuthFormProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface AuthFormProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "action"> {
+  action?: React.ComponentProps<"form">["action"];
+  defaultEmail?: string;
+  errorMessage?: string;
+  next?: string;
+  noticeMessage?: string;
   onGoogleClick?: React.ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
   onSignUpClick?: React.ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
+  reason?: string;
+  submitLabel?: string;
   subtitle?: string;
   title?: string;
   variant?: AuthFormVariant;
 }
 
 export function AuthForm({
+  action,
   className,
+  defaultEmail = "",
+  errorMessage,
+  next = "/projects/new",
+  noticeMessage,
   onGoogleClick,
   onSignUpClick,
+  reason,
+  submitLabel = "Send magic link",
   subtitle = "Welcome back! Please enter your details.",
   title = "Sign in to your account",
   variant = "desktop",
@@ -56,17 +73,54 @@ export function AuthForm({
         </p>
       </div>
 
+      <form action={action} className="flex w-full flex-col gap-3">
+        <div className="flex flex-col gap-2">
+          <label
+            className="text-[13px] leading-[13px] font-[var(--app-font-weight-500)] text-[var(--app-color-black)]"
+            htmlFor="auth-email"
+          >
+            Email
+          </label>
+          <Field
+            autoComplete="email"
+            defaultValue={defaultEmail}
+            id="auth-email"
+            name="email"
+            placeholder="you@company.com"
+            type="email"
+          />
+        </div>
+        <input name="next" type="hidden" value={next} />
+        {reason ? <input name="reason" type="hidden" value={reason} /> : null}
+        <Button size="md" type="submit">
+          {submitLabel}
+        </Button>
+      </form>
+
+      {noticeMessage ? (
+        <div className="rounded-[12px] border border-[#BFDBFE] bg-[#EFF6FF] px-4 py-3 text-[13px] leading-5 font-medium text-[#1D4ED8]">
+          {noticeMessage}
+        </div>
+      ) : null}
+
+      {errorMessage ? (
+        <div className="rounded-[12px] border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-[13px] leading-5 font-medium text-[#B91C1C]">
+          {errorMessage}
+        </div>
+      ) : null}
+
       <div className="flex w-full flex-col gap-3">
         <div className="flex items-center gap-3">
           <div className="h-px flex-1 bg-[var(--app-color-border-soft)]" />
           <span className="text-[12px] leading-[12px] font-normal text-[var(--app-color-gray-500)]">
-            Continue with Google
+            Or continue with Google later
           </span>
           <div className="h-px flex-1 bg-[var(--app-color-border-soft)]" />
         </div>
 
         <button
           className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[10px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-white)] px-4"
+          disabled={!onGoogleClick}
           onClick={onGoogleClick}
           type="button"
         >

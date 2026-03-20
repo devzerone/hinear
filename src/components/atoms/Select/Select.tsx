@@ -11,7 +11,10 @@ interface SelectOption {
 
 function getOptions(children: React.ReactNode): SelectOption[] {
   return React.Children.toArray(children)
-    .filter(React.isValidElement)
+    .filter(
+      (child): child is React.ReactElement<React.ComponentProps<"option">> =>
+        React.isValidElement<React.ComponentProps<"option">>(child)
+    )
     .flatMap((child) => {
       if (child.type !== "option") return [];
 
@@ -30,13 +33,16 @@ function getOptions(children: React.ReactNode): SelectOption[] {
 
 export interface SelectProps
   extends Omit<
-    React.SelectHTMLAttributes<HTMLSelectElement>,
-    "children" | "onChange" | "size"
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    "children" | "defaultValue" | "onChange" | "size" | "value"
   > {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   defaultOpen?: boolean;
+  defaultValue?: string;
+  name?: string;
   onValueChange?: (value: string) => void;
   placeholder?: string;
+  value?: string;
 }
 
 export const Select = React.forwardRef<HTMLButtonElement, SelectProps>(

@@ -9,10 +9,12 @@ import { cn } from "@/lib/utils";
 
 export interface CreateProjectSectionProps
   extends React.HTMLAttributes<HTMLDivElement> {
+  action?: (formData: FormData) => void | Promise<void>;
   defaultType?: ProjectType;
 }
 
 export function CreateProjectSection({
+  action,
   className,
   defaultType = "team",
   ...props
@@ -30,7 +32,7 @@ export function CreateProjectSection({
       </h2>
 
       <div className="grid gap-6 xl:grid-cols-[728px_392px]">
-        <CreateProjectFormCard defaultType={defaultType} />
+        <CreateProjectFormCard action={action} defaultType={defaultType} />
         <CreateProjectNextStepsCard projectType={defaultType} />
       </div>
     </section>

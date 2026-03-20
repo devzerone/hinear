@@ -26,6 +26,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  args: {},
   render: () => (
     <Select defaultValue="value">
       <option value="value">Select value</option>
@@ -45,6 +46,7 @@ export const PenPreview: StoryObj<typeof SelectPreview> = {
 };
 
 export const OpenList: Story = {
+  args: {},
   render: () => (
     <div className="w-[280px] rounded-[16px] bg-[var(--app-color-surface-0)] p-6">
       <Select defaultOpen defaultValue="option-2">
