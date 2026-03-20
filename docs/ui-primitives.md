@@ -75,6 +75,12 @@
   - 기준 노드: `PGTKk`
   - 관련 구조: `ProjectSwitcher`, `OpenDashboardLink`
   - 파일: [src/components/molecules/ProjectSelect/ProjectSelect.tsx](/Users/choiho/zerone/hinear/src/components/molecules/ProjectSelect/ProjectSelect.tsx)
+- `ConflictDialog`
+    - 기준: 없음 (앱 기반 custom component)
+    - 구성: `Button` atom 활용, 버전 정보 비교 UI
+    - 용도: Optimistic locking 충돌 발생 시 사용자 알림
+    - 파일: [src/components/molecules/ConflictDialog/ConflictDialog.tsx](/Users/choiho/zerone/hinear/src/components/molecules/ConflictDialog/ConflictDialog.tsx)
+    - Storybook: Default, LargeVersionGap 시나리오
 
 ## Organisms
 
@@ -121,16 +127,21 @@
 - `MobileIssueSections`
 - `BoardColumnHeader`
 - `CountBadge`
+- `CreateProjectSection`
+  - 실제 `/projects/new` 화면에서 사용
+- `ProjectOperationsSection`
+  - 실제 project workspace team section에서 사용
+- `CreateIssueTabletModal`
+  - [project-issue-create-panel.tsx](/Users/choiho/zerone/hinear/src/features/projects/components/project-issue-create-panel.tsx)에서 실제 create flow modal로 사용
+- `AuthForm`
+  - 실제 `/auth` 화면에서 magic link entry form으로 사용
 - drag/drop hover and overlay states in [src/features/issues/components/KanbanBoard.tsx](/Users/choiho/zerone/hinear/src/features/issues/components/KanbanBoard.tsx), [src/features/issues/components/KanbanColumn.tsx](/Users/choiho/zerone/hinear/src/features/issues/components/KanbanColumn.tsx), [src/features/issues/components/IssueCard.tsx](/Users/choiho/zerone/hinear/src/features/issues/components/IssueCard.tsx)
+- issue detail loading / error / not-found state는 [issue-detail-screen.tsx](/Users/choiho/zerone/hinear/src/features/issues/components/issue-detail-screen.tsx)와 route state file에 반영
 
 Storybook / reference 단계 항목:
 
 - `DrawerIssueDetailPanel`
-- `CreateIssueTabletModal`
-- `AuthForm`
 - `IssueDetailStateVariations`
-- `CreateProjectSection`
-- `ProjectOperationsSection`
 
 ## Storybook
 
@@ -166,14 +177,20 @@ Storybook / reference 단계 항목:
 ## 현재 주의사항
 
 - 일부 컴포넌트는 `pen`의 기본 상태만 먼저 맞춘 상태라 hover, pressed, focus, disabled 값이 아직 덜 맞춰진 부분이 있다.
-- board는 현재 `column drop` 구조까지만 반영되어 있어서 카드 간 정확한 reorder/insertion 애니메이션까지 하려면 `sortable` 구조로 한 번 더 가야 한다.
-- 앱 화면에는 예전 커스텀 클래스 의존이 남아 있을 수 있어서, atomic 컴포넌트를 실제 화면에 붙이면서 치환 작업이 필요하다.
+- board는 이제 `sortable` 구조로 올라가 있어서 카드 간 reorder/insertion 피드백까지 반영된다.
+- 앱 화면에는 예전 커스텀 클래스 의존이 남아 있을 수 있어서, 아직 primitive 치환이 덜 된 화면을 계속 줄여야 한다.
 - `ProjectSwitcher`와 `HeaderSearchField`처럼 구조가 분리된 항목은 다시 단일 컴포넌트로 합치지 않는 것이 좋다.
+- create issue modal의 `labels`는 comma-separated 입력 기반이라, 추후 picker/search UX로 올릴 여지가 있다.
+- auth UI는 실사용으로 올라갔지만, expired session / auth error 문구와 redirect polish는 더 필요하다.
+- board / create / detail은 이제 같은 Supabase issue + labels source를 본다.
+- issue detail은 이제 title / description / status / priority / assignee / comment를 실제 persistence 경로로 수정한다.
+- issue detail 저장은 이제 `version` 기반 stale-write 감지를 포함한다.
 
 ## 다음 작업 추천
 
-- issue board와 project workspace에 atomic 컴포넌트 실제 치환
-- create project / operations / issue detail reference set 중 실제 라우트에 들어갈 화면을 선별해 연결
+- issue detail 본문을 reference set 기준으로 더 세분화
+- sortable 보드 상태를 실제 persistence / conflict handling까지 연결하기
+- expired session / auth error polish
 - `pen` 기준 hover, focus, disabled 상태 추가
 - drawer, modal, card 단위 조합 컴포넌트 확장
 - reference story 정리와 테스트 co-location 추가
