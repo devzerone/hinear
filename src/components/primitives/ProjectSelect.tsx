@@ -78,10 +78,10 @@ export function ProjectSwitcher({
         <div className="flex flex-col gap-1">
           {defaultProjects.map((project) => (
             <SidebarItem
-              active={project.active}
               className="w-full"
-              icon={<Folder className="h-4 w-4" />}
               key={project.label}
+              active={project.active}
+              icon={<Folder className="h-4 w-4" />}
               kind="project"
               label={project.label}
             />

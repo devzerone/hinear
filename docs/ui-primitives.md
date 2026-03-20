@@ -34,11 +34,16 @@
   - 파일: [src/components/primitives/Select.tsx](/home/choiho/zerone/hinear/src/components/primitives/Select.tsx)
 - `SidebarItem`
   - 기준 노드: `cmpNavItemDefault`, `cmpNavItemActive`, `cmpProjectItemDefault`, `cmpProjectItemActive`
+  - 내장 variant: `issues`, `triage`, `active`, `backlog`, `roadmap`
   - 파일: [src/components/primitives/SidebarItem.tsx](/home/choiho/zerone/hinear/src/components/primitives/SidebarItem.tsx)
 - `ProjectSelect`
   - 기준 노드: `PGTKk`
   - 관련 구조: `ProjectSwitcher`, `OpenDashboardLink`
   - 파일: [src/components/primitives/ProjectSelect.tsx](/home/choiho/zerone/hinear/src/components/primitives/ProjectSelect.tsx)
+- `SidebarDesktop`
+  - 기준 노드: `1YjGD` (`Sidebar/Desktop`)
+  - 조합 구조: `ProjectSwitcher`, `OpenDashboardLink`, `SidebarItem`
+  - 파일: [src/components/primitives/SidebarDesktop.tsx](/home/choiho/zerone/hinear/src/components/primitives/SidebarDesktop.tsx)
 - `HeaderAction`
   - 기준 노드: `cmpHeaderActionPrimary`, `cmpHeaderActionBoard`, `cmpHeaderActionFilter`
   - 파일: [src/components/primitives/HeaderAction.tsx](/home/choiho/zerone/hinear/src/components/primitives/HeaderAction.tsx)
@@ -53,7 +58,7 @@
   - 동작: `src`가 있으면 이미지, 없으면 `name` 또는 `fallback`에서 두 글자 이니셜 표시
   - 파일: [src/components/primitives/Avatar.tsx](/home/choiho/zerone/hinear/src/components/primitives/Avatar.tsx)
 
-모든 primitive export는 [src/components/primitives/index.ts](/home/choiho/zerone/hinear/src/components/primitives/index.ts)에서 모아둔다.
+공용 export 경로는 기본적으로 [src/components/primitives/index.ts](/home/choiho/zerone/hinear/src/components/primitives/index.ts)에 모아두고, 새 primitive 추가 시 기존 작업과 충돌이 없도록 함께 정리한다.
 
 ## Storybook
 
@@ -69,6 +74,7 @@
 - [src/components/primitives/Select.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/Select.stories.tsx)
 - [src/components/primitives/SidebarItem.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/SidebarItem.stories.tsx)
 - [src/components/primitives/ProjectSelect.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/ProjectSelect.stories.tsx)
+- [src/components/primitives/SidebarDesktop.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/SidebarDesktop.stories.tsx)
 - [src/components/primitives/HeaderAction.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/HeaderAction.stories.tsx)
 - [src/components/primitives/BoardAddCard.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/BoardAddCard.stories.tsx)
 - [src/components/primitives/Avatar.stories.tsx](/home/choiho/zerone/hinear/src/components/primitives/Avatar.stories.tsx)
@@ -78,6 +84,7 @@
 - primitive 일부는 `pen`의 기본 상태에 먼저 맞춘 상태라 hover, pressed, focus, disabled의 세부 값은 아직 덜 맞춰진 것이 있다.
 - 앱 화면에는 예전 커스텀 클래스 의존이 남아 있을 수 있어서, primitive를 실제 화면에 붙이면서 치환 작업이 필요하다.
 - `ProjectSwitcher`와 `HeaderSearchField`처럼 구조가 분리된 항목은 기존 단일 컴포넌트 가정으로 다시 합치지 않는 것이 좋다.
+- `SidebarItem`은 네비게이션 상태를 개별 라벨 문자열로 흩뿌리지 않고 `variant` preset으로 우선 사용한다. 프로젝트 목록처럼 pen에서 별도 primitive가 있는 경우만 `kind="project"` + 커스텀 `label`/`icon` 조합을 유지한다.
 
 ## 다음 작업 추천
 

@@ -1,17 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Circle, Folder, Layers } from "lucide-react";
+import { Folder } from "lucide-react";
 
 import { SidebarItem } from "@/components/primitives/SidebarItem";
 
 function SidebarItemPreview() {
   return (
     <div className="flex w-[280px] flex-col gap-3 rounded-[16px] bg-[var(--color-ink-900)] p-6">
-      <SidebarItem icon={<Layers className="h-4 w-4" />} label="Issues" />
-      <SidebarItem
-        active
-        icon={<Circle className="h-4 w-4 fill-current stroke-none" />}
-        label="Active"
-      />
+      <SidebarItem variant="issues" />
+      <SidebarItem variant="triage" />
+      <SidebarItem variant="active" />
+      <SidebarItem variant="backlog" />
+      <SidebarItem variant="roadmap" />
       <SidebarItem
         icon={<Folder className="h-4 w-4" />}
         kind="project"
@@ -34,21 +33,36 @@ const meta = {
     layout: "centered",
   },
   args: {
-    icon: <Layers className="h-4 w-4" />,
-    label: "Issues",
+    variant: "issues",
   },
 } satisfies Meta<typeof SidebarItem>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const NavDefault: Story = {};
+export const Issues: Story = {};
 
-export const NavActive: Story = {
+export const Triage: Story = {
   args: {
-    active: true,
-    icon: <Circle className="h-4 w-4 fill-current stroke-none" />,
-    label: "Active",
+    variant: "triage",
+  },
+};
+
+export const Active: Story = {
+  args: {
+    variant: "active",
+  },
+};
+
+export const Backlog: Story = {
+  args: {
+    variant: "backlog",
+  },
+};
+
+export const Roadmap: Story = {
+  args: {
+    variant: "roadmap",
   },
 };
 
