@@ -40,6 +40,8 @@
   - 다음 세션에서 바로 이어가기 위한 현재 상태와 다음 작업
 - `todo.md`
   - 현재 남은 작업, 위험요소, 다음 구현 체크리스트
+- `ui-primitives.md`
+  - `pen` 기반 토큰 등록, primitive 구현 상태, Storybook 확인 경로
 - `issue-detail/overview.md`
   - 기능 범위, 목표, 화면 구성, 핵심 요구사항
 - `issue-detail/triage-workflow.md`

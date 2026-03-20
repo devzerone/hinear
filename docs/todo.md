@@ -84,14 +84,24 @@
   - [x] useIssues 훅 (MSW API 호출)
   - [x] 프로젝트 페이지에 칸반 보드 통합
 - [x] **Primitives 컴포넌트 구현 완료** (2025-03-20)
-  - [x] Button (Primary/Secondary)
-  - [x] Chip (Neutral/Accent/Outline/Danger)
-  - [x] Field (Input/Select)
-  - [x] NavItem (Default/Active)
-  - [x] ProjectItem (Default/Active)
-  - [x] HeaderAction (Search/Filter)
+  - [x] `pen/components.pen`, `pen/Hinear.pen` 토큰을 `globals.css`에 등록
+  - [x] 전역 수기 CSS 클래스와 `:root` 별칭 제거
+  - [x] Button
+  - [x] Chip
+  - [x] Field
+  - [x] Select
+  - [x] SidebarItem
+  - [x] ProjectSelect
+  - [x] HeaderAction
+  - [x] HeaderSearchField
+  - [x] BoardAddCard
+  - [x] Avatar
+  - [x] Storybook 설정 및 primitive stories 추가
   - [x] lucide-react 아이콘 라이브러리 추가
   - [x] clsx + tailwind-merge 유틸리티 추가
+- [ ] project workspace 화면에 primitive 실제 치환
+- [ ] create project 화면에 primitive 실제 치환
+- [ ] create issue 화면에 primitive 실제 치환
 - [ ] Create Issue Modal 컴포넌트
 - [ ] mutation 실패 UI
 - [ ] not-found / empty / loading polish
@@ -118,6 +128,7 @@
 ## Key Files
 
 - [docs/session-handoff.md](/Users/choiho/zerone/hinear/docs/session-handoff.md)
+- [docs/ui-primitives.md](/Users/choiho/zerone/hinear/docs/ui-primitives.md) - pen 기반 primitive 구현 상태와 Storybook 기준
 - [docs/issue-detail/optimistic-locking.md](/Users/choiho/zerone/hinear/docs/issue-detail/optimistic-locking.md) - 낙관적 잠금 구현 가이드
 - [src/lib/supabase/env.ts](/Users/choiho/zerone/hinear/src/lib/supabase/env.ts)
 - [src/lib/supabase/browser-client.ts](/Users/choiho/zerone/hinear/src/lib/supabase/browser-client.ts)

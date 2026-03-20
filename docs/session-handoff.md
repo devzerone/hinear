@@ -46,10 +46,27 @@
   - Issue Card 컴포넌트 (identifier, 제목, 우선순위, 라벨, 담당자)
   - 프로젝트 페이지에 통합 완료
   - MSW mock 데이터로 동작 중
+- **Pen-based UI primitives and Storybook added** (2026-03-20)
+  - `pen/components.pen`, `pen/Hinear.pen` 토큰을 `src/app/globals.css`의 `@theme`에 정리
+  - 전역 수기 CSS 클래스와 `:root` 별칭 제거, 토큰 중심 구조로 정리
+  - Storybook 설정 추가 및 primitive별 스토리 작성
+  - 구현 완료 primitive:
+    - `Button`
+    - `Chip`
+    - `Field`
+    - `Select`
+    - `SidebarItem`
+    - `ProjectSelect`
+    - `HeaderAction`
+    - `HeaderSearchField`
+    - `BoardAddCard`
+    - `Avatar`
+  - 구현 기준 및 사용 규칙은 `docs/ui-primitives.md`에 정리
 
 ## Key Files
 
 - [docs/todo.md](/Users/choiho/zerone/hinear/docs/todo.md)
+- [docs/ui-primitives.md](/Users/choiho/zerone/hinear/docs/ui-primitives.md)
 - [docs/issue-detail/project-model.md](/Users/choiho/zerone/hinear/docs/issue-detail/project-model.md)
 - [docs/issue-detail/contracts.md](/Users/choiho/zerone/hinear/docs/issue-detail/contracts.md)
 - [docs/issue-detail/supabase-schema.md](/Users/choiho/zerone/hinear/docs/issue-detail/supabase-schema.md)
@@ -86,6 +103,10 @@ In this environment, `pnpm` was not on PATH in the later session, so checks were
 - `/opt/homebrew/bin/node ./node_modules/typescript/bin/tsc --noEmit`
 - `/opt/homebrew/bin/node ./node_modules/vitest/vitest.mjs run`
 
+Additional UI check run in this session:
+
+- `npm run build-storybook`
+
 ## Current State
 
 - Supabase MCP works in the current session
@@ -100,6 +121,9 @@ In this environment, `pnpm` was not on PATH in the later session, so checks were
   - land on project workspace
   - create issue
   - land on full-page issue detail route
+- Storybook is now part of the UI workflow for primitive verification
+- current primitive source of truth is `pen/components.pen`
+- token source of truth is `pen/components.pen` + `pen/Hinear.pen`
 
 ## Current Risk
 
@@ -117,7 +141,22 @@ Required next action:
 
 ## Next Session Priority
 
-### 1. Replace service-role-first wiring
+### 1. Apply primitives to real screens
+
+Goal:
+
+- stop leaving primitive work only in Storybook
+- replace ad-hoc screen markup with shared primitives
+- keep visuals aligned with `pen`
+
+First targets:
+
+- project workspace header
+- project switcher/sidebar
+- issue card metadata rows
+- create project / create issue form controls
+
+### 2. Replace service-role-first wiring
 
 Goal:
 
@@ -125,14 +164,14 @@ Goal:
 - stop treating service-role as the default app request client
 - decide how authenticated request context reaches repository calls
 
-### 2. Finish Supabase app wiring
+### 3. Finish Supabase app wiring
 
 - add client helpers under `src/lib/supabase/`
 - connect them to real `.env.local`
 - add session-aware server usage
 - replace temporary `HINEAR_ACTOR_ID` usage with authenticated user context
 
-### 3. Harden the existing flow
+### 4. Harden the existing flow
 
 - keep the current project -> issue -> issue detail flow
 - narrow the repository access path so app requests stop defaulting to service-role
@@ -144,7 +183,7 @@ Minimum methods to implement first:
 - verify `getIssueById`
 - add error handling and user-visible failure states
 
-### 4. Fill the missing issue-detail depth
+### 5. Fill the missing issue-detail depth
 
 - labels
 - assignee selector
@@ -152,7 +191,7 @@ Minimum methods to implement first:
 - activity log richness
 - comment persistence and render depth
 
-### 5. Add optimistic locking for concurrent edits (MVP 2)
+### 6. Add optimistic locking for concurrent edits (MVP 2)
 
 - add `version` column to `issues` table
 - implement `updateIssue` with version check
@@ -165,13 +204,15 @@ See [optimistic-locking.md](/Users/choiho/zerone/hinear/docs/issue-detail/optimi
 ## Open Notes
 
 - `pen/Hinear.pen` is present in the working tree and was not created by this work
+- `pen/components.pen` is now the reference file for primitive matching
 - no GitHub issue was created for this branch because GitHub API auth failed earlier
 - remote git push works through `git@github-zerone:devzerone/hinear.git`
 - TODO details are tracked in [docs/todo.md](/Users/choiho/zerone/hinear/docs/todo.md)
+- primitive implementation details are tracked in [docs/ui-primitives.md](/Users/choiho/zerone/hinear/docs/ui-primitives.md)
 - `.env.local` currently needs `HINEAR_ACTOR_ID` in addition to Supabase values for the temporary server-action flow
 
 ## Suggested First Prompt For Next Session
 
 ```text
-Continue from docs/session-handoff.md and docs/todo.md on branch main. Keep the current project -> issue -> detail flow working, replace service-role-first repository usage with session-aware server wiring, and remove the temporary HINEAR_ACTOR_ID actor fallback.
+Continue from docs/session-handoff.md, docs/todo.md, and docs/ui-primitives.md on branch main. Apply the new pen-based primitives to the real project workspace screens while keeping the current project -> issue -> detail flow working, then continue replacing service-role-first repository usage with session-aware server wiring.
 ```
