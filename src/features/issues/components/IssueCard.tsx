@@ -1,33 +1,44 @@
 "use client";
 
 import { useDraggable } from "@dnd-kit/core";
-import { BoardIssueCard } from "@/components/BoardIssueCard";
+import { BoardIssueCard } from "@/components/organisms/BoardIssueCard";
+import { cn } from "@/lib/utils";
 import type { Issue } from "@/specs/issue-detail.contract";
 
 interface IssueCardProps {
+  className?: string;
   issue: Issue;
+  preview?: boolean;
 }
 
-export function IssueCard({ issue }: IssueCardProps) {
+export function IssueCard({
+  className,
+  issue,
+  preview = false,
+}: IssueCardProps) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: issue.id,
+    disabled: preview,
   });
 
   return (
     <BoardIssueCard
       assignee={issue.assignee}
-      className={[
-        "cursor-grab transition-shadow active:cursor-grabbing",
-        isDragging
-          ? "opacity-50"
-          : "opacity-100 hover:shadow-[0_12px_28px_rgba(15,23,42,0.1)]",
-      ].join(" ")}
+      className={cn(
+        "touch-none transition-[transform,opacity,box-shadow] duration-200 ease-out",
+        preview
+          ? "pointer-events-none rotate-[1.5deg] scale-[1.02] cursor-grabbing shadow-[0_24px_48px_rgba(15,23,42,0.18)]"
+          : "cursor-grab active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]",
+        isDragging ? "scale-[0.985] opacity-20 shadow-none" : "opacity-100",
+        className
+      )}
       estimate={undefined}
       issueKey={issue.identifier}
       issueTitle={issue.title}
       labels={issue.labels}
       priority={issue.priority}
       ref={setNodeRef}
+      aria-grabbed={preview ? undefined : isDragging}
       {...attributes}
       {...listeners}
     />

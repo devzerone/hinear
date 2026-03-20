@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Button } from "@/components/primitives/Button";
+import { Button } from "@/components/atoms/Button";
 import { KanbanBoardView } from "@/features/issues/components/KanbanBoardView";
 import { ProjectAccessCard } from "@/features/projects/components/project-operation-cards";
 import type { Project } from "@/features/projects/types";
@@ -87,16 +87,11 @@ export function ProjectWorkspaceScreen({
         </section>
 
         <section className="app-panel">
-          <div>
-            <h2 className="app-section-title !mb-2">Board</h2>
-            <p className="app-muted">
-              Status columns follow the current design source: Triage, Backlog,
-              Todo, In Progress, Done, and Canceled.
-            </p>
-          </div>
-          <div className="mt-6 h-[760px] overflow-hidden rounded-[24px] border border-[var(--border)] bg-[#F7F8FA]">
-            <KanbanBoardView projectId={project.id} />
-          </div>
+          <KanbanBoardView
+            projectId={project.id}
+            projectKey={project.key}
+            projectName={project.name}
+          />
         </section>
 
         {project.type === "team" && <ProjectAccessCard />}

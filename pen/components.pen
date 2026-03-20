@@ -2487,7 +2487,7 @@
                               "content": "No priority",
                               "fill": "$color-neutral-500",
                               "fontWeight": "$font-weight-400",
-                              "x": 63.16666666666667,
+                              "x": 63.166666666666664,
                               "y": 13.5
                             }
                           }
@@ -2526,7 +2526,7 @@
                               "content": "Assign to...",
                               "fill": "$color-neutral-500",
                               "fontWeight": "$font-weight-400",
-                              "x": 61.66666666666667,
+                              "x": 61.666666666666664,
                               "y": 13.5
                             }
                           }
@@ -6732,8 +6732,8 @@
         {
           "type": "frame",
           "id": "cmpMobileSectionsIssueList",
-          "x": 1080,
-          "y": 180,
+          "x": 291,
+          "y": 1007,
           "name": "Mobile/Sections Issue List",
           "reusable": true,
           "width": 361,

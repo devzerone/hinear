@@ -1,10 +1,16 @@
 "use client";
 
 import { useDroppable } from "@dnd-kit/core";
+import { BoardAddCard } from "@/components/molecules/BoardAddCard";
+import { BoardColumnHeader } from "@/components/molecules/BoardColumnHeader";
+import { cn } from "@/lib/utils";
 import type { Issue, IssueStatus } from "@/specs/issue-detail.contract";
 import { IssueCard } from "./IssueCard";
 
 interface KanbanColumnProps {
+  activeIssue?: Issue | null;
+  forceDropTarget?: boolean;
+  isDragging?: boolean;
   status: IssueStatus;
   issues: Issue[];
 }
@@ -18,53 +24,58 @@ const COLUMN_LABELS: Record<IssueStatus, string> = {
   Canceled: "Canceled",
 };
 
-const COLUMN_COLORS: Record<IssueStatus, string> = {
-  Triage: "text-[#6B7280]",
-  Backlog: "text-[#2563EB]",
-  Todo: "text-[#B45309]",
-  "In Progress": "text-[#5B21B6]",
-  Done: "text-[#15803D]",
-  Canceled: "text-[#B91C1C]",
-};
-
-export function KanbanColumn({ status, issues }: KanbanColumnProps) {
-  const { setNodeRef } = useDroppable({
+export function KanbanColumn({
+  activeIssue = null,
+  forceDropTarget = false,
+  isDragging = false,
+  status,
+  issues,
+}: KanbanColumnProps) {
+  const { isOver, setNodeRef } = useDroppable({
     id: status,
   });
 
+  const isDropTarget = forceDropTarget || (isDragging && isOver);
+  const showPlaceholder =
+    isDropTarget && activeIssue && activeIssue.status !== status;
+
   return (
     <div className="w-[232px] flex-shrink-0">
-      <div className="rounded-[14px] border border-[#ECEEF2] bg-[#F7F8FA] p-3">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="text-[14px] font-semibold text-[#111318]">
-              {COLUMN_LABELS[status]}
-            </h3>
-            <span
-              className={`text-[12px] font-semibold ${COLUMN_COLORS[status]}`}
-            >
-              {issues.length}
-            </span>
-          </div>
-        </div>
+      <div
+        ref={setNodeRef}
+        className={cn(
+          "flex min-h-[520px] flex-col gap-[10px] rounded-[14px] border p-3 transition-[background-color,border-color,box-shadow,transform] duration-200 ease-out",
+          isDropTarget
+            ? "border-[var(--app-color-brand-300)] bg-[var(--app-color-brand-50)] shadow-[inset_0_0_0_1px_var(--app-color-brand-200)]"
+            : "border-[var(--app-color-surface-150,#ECEEF2)] bg-[var(--app-color-surface-100,#F7F8FA)]"
+        )}
+      >
+        <BoardColumnHeader
+          count={issues.length}
+          title={COLUMN_LABELS[status]}
+        />
 
-        <div ref={setNodeRef} className="flex min-h-[520px] flex-col gap-2">
+        <div className="flex flex-1 flex-col gap-[10px]">
           {issues.map((issue) => (
-            <IssueCard key={issue.id} issue={issue} />
+            <IssueCard className="w-full" key={issue.id} issue={issue} />
           ))}
 
-          {issues.length === 0 && (
-            <div className="rounded-[12px] border border-dashed border-[#D7DCE5] bg-white px-3 py-6 text-center text-[13px] font-medium text-[#9CA3AF]">
+          {showPlaceholder ? (
+            <>
+              <p className="text-[13px] leading-[1.4] font-[var(--app-font-weight-500)] text-[var(--app-color-brand-700)]">
+                Drop the dragged card into this lane.
+              </p>
+              <div className="h-[72px] rounded-[14px] border-2 border-[var(--app-color-brand-300)] bg-[var(--app-color-white)] shadow-[0_10px_24px_rgba(94,106,210,0.08)] transition-all duration-200 ease-out" />
+            </>
+          ) : null}
+
+          {issues.length === 0 && !showPlaceholder && (
+            <div className="rounded-[12px] border border-dashed border-[var(--app-color-border-soft,#D7DCE5)] bg-[var(--app-color-white)] px-3 py-6 text-center text-[13px] leading-[1.45] font-[var(--app-font-weight-500)] text-[var(--app-color-gray-400)]">
               No issues yet
             </div>
           )}
 
-          <button
-            className="mt-auto inline-flex h-11 items-center justify-center rounded-[12px] border border-[#D7DCE5] bg-white px-3 text-[13px] font-medium text-[#6B7280]"
-            type="button"
-          >
-            + Add issue
-          </button>
+          <BoardAddCard className="mt-auto w-full" label="Add card" />
         </div>
       </div>
     </div>

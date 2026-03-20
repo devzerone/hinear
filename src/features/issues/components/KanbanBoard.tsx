@@ -60,6 +60,10 @@ export function KanbanBoard({ issues, onIssueUpdate }: KanbanBoardProps) {
     }
   };
 
+  const handleDragCancel = () => {
+    setActiveIssue(null);
+  };
+
   // 드래그 종료 핸들러
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -98,12 +102,15 @@ export function KanbanBoard({ issues, onIssueUpdate }: KanbanBoardProps) {
     <div className="h-full overflow-x-auto">
       <DndContext
         sensors={sensors}
+        onDragCancel={handleDragCancel}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
         <div className="flex min-h-full gap-3 p-4">
           {COLUMNS.map((status) => (
             <KanbanColumn
+              activeIssue={activeIssue}
+              isDragging={activeIssue !== null}
               key={status}
               status={status}
               issues={getIssuesByStatus(status)}
@@ -114,8 +121,8 @@ export function KanbanBoard({ issues, onIssueUpdate }: KanbanBoardProps) {
         {/* 드래그 중인 이슈 오버레이 */}
         <DragOverlay>
           {activeIssue && (
-            <div className="rotate-2 opacity-90">
-              <IssueCard issue={activeIssue} />
+            <div className="origin-center opacity-95">
+              <IssueCard issue={activeIssue} preview />
             </div>
           )}
         </DragOverlay>
