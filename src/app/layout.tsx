@@ -1,21 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Inter, Space_Grotesk } from "next/font/google";
+import { ServiceWorkerRegister } from "@/components/organisms/ServiceWorkerRegister";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-display",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://hinear.local"),
@@ -25,20 +10,38 @@ export const metadata: Metadata = {
   },
   description: "Project-first issue tracking for personal and team workflows.",
   applicationName: "Hinear",
+  openGraph: {
+    title: "Hinear",
+    description:
+      "Project-first issue tracking for personal and team workflows.",
+    images: [
+      {
+        url: "/og-image.png",
+        alt: "Hinear",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Hinear",
+    description:
+      "Project-first issue tracking for personal and team workflows.",
+    images: ["/og-image.png"],
+  },
   icons: {
     icon: [
       {
-        url: "/favicon.png",
+        url: "/icon.png",
         type: "image/png",
       },
     ],
     apple: [
       {
-        url: "/favicon.png",
+        url: "/icon.png",
         type: "image/png",
       },
     ],
-    shortcut: ["/favicon.png"],
+    shortcut: ["/icon.png"],
   },
   appleWebApp: {
     capable: true,
@@ -57,11 +60,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="ko"
-      className={`${inter.variable} ${geistMono.variable} ${spaceGrotesk.variable}`}
-    >
-      <body>{children}</body>
+    <html lang="ko">
+      <body>
+        <ServiceWorkerRegister />
+        {children}
+      </body>
     </html>
   );
 }

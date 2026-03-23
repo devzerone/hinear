@@ -120,7 +120,11 @@ const meta = {
     onIssueUpdate: (issueId, updates) => {
       console.log(`[Storybook] Issue update:`, { issueId, updates });
       // Simulate async update
-      const originalIssue = issues.find((i) => i.id === issueId)!;
+      const originalIssue = issues.find((i) => i.id === issueId);
+      if (!originalIssue) {
+        throw new Error(`Issue not found for Storybook update: ${issueId}`);
+      }
+
       return Promise.resolve({
         ...originalIssue,
         ...updates,

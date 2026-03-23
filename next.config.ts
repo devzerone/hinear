@@ -8,7 +8,11 @@ const nextConfig: NextConfig = {
 };
 
 export default withPWA({
+  customWorkerSrc: "src/worker",
   dest: "public",
   disable: process.env.NODE_ENV === "development",
+  fallbacks: {
+    document: "/~offline",
+  },
   register: true,
 })(nextConfig);

@@ -138,7 +138,7 @@ function createNotificationPayload(data: NotificationData) {
       return {
         title: "이슈 할당 알림",
         body: `${actor?.name || "사용자"}님이 ${issueIdentifier}를 당신에게 할당했습니다.`,
-        icon: "/icon.svg",
+        icon: "/icon.png",
         tag: `issue-${data.issueId}-assigned`,
         data,
       };
@@ -147,7 +147,7 @@ function createNotificationPayload(data: NotificationData) {
       return {
         title: "이슈 변경 알림",
         body: `${actor?.name || "사용자"}님이 ${issueIdentifier}를 변경했습니다.`,
-        icon: "/icon.svg",
+        icon: "/icon.png",
         tag: `issue-${data.issueId}-updated`,
         data,
       };
@@ -160,7 +160,7 @@ function createNotificationPayload(data: NotificationData) {
       return {
         title: "상태 변경 알림",
         body: `${issueIdentifier}가 '${previousStatus}'에서 '${newStatus}'(으)로 변경되었습니다.`,
-        icon: "/icon.svg",
+        icon: "/icon.png",
         tag: `issue-${data.issueId}-status`,
         data,
       };
@@ -170,7 +170,7 @@ function createNotificationPayload(data: NotificationData) {
       return {
         title: "댓글 알림",
         body: `${actor?.name || "사용자"}님이 ${issueIdentifier}에 댓글을 남겼습니다.`,
-        icon: "/icon.svg",
+        icon: "/icon.png",
         tag: `issue-${data.issueId}-comment`,
         data,
       };
@@ -179,7 +179,7 @@ function createNotificationPayload(data: NotificationData) {
       return {
         title: "프로젝트 초대 알림",
         body: `${data.projectName} 프로젝트에 초대되었습니다.`,
-        icon: "/icon.svg",
+        icon: "/icon.png",
         tag: `project-${data.projectId}-invited`,
         data,
       };
@@ -188,7 +188,7 @@ function createNotificationPayload(data: NotificationData) {
       return {
         title: "Hinear 알림",
         body: "새로운 알림이 있습니다.",
-        icon: "/icon.svg",
+        icon: "/icon.png",
         data,
       };
   }

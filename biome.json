@@ -7,7 +7,15 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!pen", "!supabase/migrations"]
+    "includes": [
+      "**",
+      "!pen",
+      "!supabase/migrations",
+      "!public/sw.js",
+      "!public/workbox-*.js",
+      "!public/worker-*.js",
+      "!public/fallback-*.js"
+    ]
   },
   "formatter": {
     "enabled": true,
