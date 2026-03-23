@@ -11,6 +11,7 @@ export interface CreateIssueInput {
   assigneeId?: string | null;
   createdBy: string;
   description?: string;
+  dueDate?: string | null;
   labels?: string[];
   priority?: IssuePriority;
   projectId: string;
@@ -28,6 +29,7 @@ export interface CreateCommentInput {
 export interface UpdateIssueInput {
   assigneeId?: string | null;
   description?: string;
+  dueDate?: string | null;
   priority?: IssuePriority;
   status?: IssueStatus;
   title?: string;

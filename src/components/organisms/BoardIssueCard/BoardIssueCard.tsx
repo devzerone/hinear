@@ -32,6 +32,7 @@ function getChipVariant(label: Label) {
 export interface BoardIssueCardProps
   extends React.HTMLAttributes<HTMLDivElement> {
   assignee?: UserRef | null;
+  dueDate?: string | null;
   estimate?: string;
   issueKey: string;
   issueTitle: string;
@@ -47,6 +48,7 @@ export const BoardIssueCard = React.forwardRef<
     {
       assignee,
       className,
+      dueDate,
       estimate,
       issueKey,
       issueTitle,
@@ -115,7 +117,7 @@ export const BoardIssueCard = React.forwardRef<
           </div>
         ) : null}
 
-        {(assignee || estimate) && (
+        {(assignee || estimate || dueDate) && (
           <div className="flex items-center justify-between gap-3">
             {assignee ? (
               <div className="flex min-w-0 items-center gap-2">
@@ -132,11 +134,21 @@ export const BoardIssueCard = React.forwardRef<
               <div />
             )}
 
-            {estimate ? (
-              <span className="shrink-0 text-[11px] leading-[11px] font-[var(--app-font-weight-500)] text-[var(--app-color-gray-400)]">
-                {estimate}
-              </span>
-            ) : null}
+            <div className="flex items-center gap-2">
+              {dueDate ? (
+                <span className="shrink-0 text-[11px] leading-[11px] font-[var(--app-font-weight-500)] text-[var(--app-color-gray-400)]">
+                  {new Date(dueDate).toLocaleDateString("ko-KR", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+              ) : null}
+              {estimate ? (
+                <span className="shrink-0 text-[11px] leading-[11px] font-[var(--app-font-weight-500)] text-[var(--app-color-gray-400)]">
+                  {estimate}
+                </span>
+              ) : null}
+            </div>
           </div>
         )}
       </div>

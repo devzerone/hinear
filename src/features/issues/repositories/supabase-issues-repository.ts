@@ -60,6 +60,7 @@ function mapIssue(row: TableRow<"issues">): Issue {
     assigneeId: row.assignee_id,
     labels: [],
     description: row.description,
+    dueDate: row.due_date,
     createdBy: row.created_by,
     updatedBy: row.updated_by,
     createdAt: row.created_at,
@@ -269,6 +270,7 @@ export class SupabaseIssuesRepository implements IssuesRepository {
         assignee_id: input.assigneeId ?? null,
         created_by: input.createdBy,
         description: input.description ?? "",
+        due_date: input.dueDate ?? null,
         priority: input.priority ?? "No Priority",
         project_id: input.projectId,
         status: input.status ?? "Triage",
@@ -464,6 +466,26 @@ export class SupabaseIssuesRepository implements IssuesRepository {
         summary: input.assigneeId
           ? "담당자를 배정했습니다"
           : "담당자를 해제했습니다",
+      });
+    }
+
+    if (input.dueDate !== undefined && input.dueDate !== currentIssue.dueDate) {
+      issueUpdates.due_date = input.dueDate;
+      const previousDate = currentIssue.dueDate
+        ? new Date(currentIssue.dueDate).toLocaleDateString("ko-KR")
+        : "없음";
+      const newDate = input.dueDate
+        ? new Date(input.dueDate).toLocaleDateString("ko-KR")
+        : "없음";
+      activityEntries.push({
+        issueId: currentIssue.id,
+        projectId: currentIssue.projectId,
+        actorId: input.updatedBy,
+        type: "issue.dueDate.updated",
+        field: "dueDate",
+        from: currentIssue.dueDate,
+        to: input.dueDate,
+        summary: `마감일을 "${previousDate}"에서 "${newDate}"(으)로 변경했습니다`,
       });
     }
 

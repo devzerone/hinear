@@ -35,6 +35,7 @@ export interface Issue {
   assigneeId: string | null;
   labels: Label[];
   description: string;
+  dueDate: string | null;
   createdBy: string;
   updatedBy: string;
   createdAt: string;

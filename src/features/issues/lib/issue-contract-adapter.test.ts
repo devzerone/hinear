@@ -16,6 +16,7 @@ describe("toBoardIssue", () => {
       assigneeId: "user-1",
       labels: [{ id: "label-1", name: "Backend", color: "#2563EB" }],
       description: "Use one issue source across create, board, and detail.",
+      dueDate: null,
       createdBy: "user-1",
       updatedBy: "user-1",
       createdAt: "2026-03-20T00:00:00.000Z",

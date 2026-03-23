@@ -287,6 +287,9 @@ export function IssueDetailScreen({
   const [descriptionDraft, setDescriptionDraft] = useState(issue.description);
   const [statusDraft, setStatusDraft] = useState(issue.status);
   const [priorityDraft, setPriorityDraft] = useState(issue.priority);
+  const [dueDateDraft, setDueDateDraft] = useState(
+    issue.dueDate ? new Date(issue.dueDate).toISOString().split("T")[0] : ""
+  );
   const [assigneeDraft, setAssigneeDraft] = useState(issue.assigneeId ?? "");
   const [commentDraft, setCommentDraft] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
@@ -622,12 +625,19 @@ export function IssueDetailScreen({
                     isSaving ||
                     (statusDraft === issueState.status &&
                       priorityDraft === issueState.priority &&
+                      dueDateDraft ===
+                        (issueState.dueDate
+                          ? new Date(issueState.dueDate)
+                              .toISOString()
+                              .split("T")[0]
+                          : "") &&
                       assigneeDraft.trim() === (issueState.assigneeId ?? ""))
                   }
                   onClick={() =>
                     saveIssueUpdates(
                       {
                         assigneeId: assigneeDraft.trim() || null,
+                        dueDate: dueDateDraft || null,
                         priority: priorityDraft,
                         status: statusDraft,
                       },
@@ -683,6 +693,21 @@ export function IssueDetailScreen({
                         </option>
                       ))}
                     </Select>
+                  </div>
+                  <div className="flex flex-col gap-[6px]">
+                    <label
+                      className="text-[11px] font-semibold text-[#6B7280]"
+                      htmlFor="issue-due-date"
+                    >
+                      Due Date
+                    </label>
+                    <input
+                      id="issue-due-date"
+                      className="rounded-[8px] border border-[var(--color-border-soft)] bg-[var(--color-surface-50)] px-3 py-2 text-[13px] text-[var(--color-ink-900)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-brand-300)] focus-visible:ring-offset-2"
+                      onChange={(event) => setDueDateDraft(event.target.value)}
+                      type="date"
+                      value={dueDateDraft}
+                    />
                   </div>
                 </div>
                 <div className="flex flex-col gap-[6px]">

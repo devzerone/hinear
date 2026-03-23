@@ -68,6 +68,7 @@ export interface Database {
           created_at: string;
           created_by: string;
           description: string;
+          due_date: string | null;
           id: string;
           identifier: string;
           issue_number: number;
@@ -84,6 +85,7 @@ export interface Database {
           created_at?: string;
           created_by: string;
           description?: string;
+          due_date?: string | null;
           id?: string;
           identifier?: string;
           issue_number?: number;

@@ -64,6 +64,7 @@ export interface Issue {
   assignee: UserRef | null;
   labels: Label[];
   description: string;
+  dueDate: string | null;
   comments: Comment[];
   activityLog: ActivityLogEntry[];
   createdAt: string;

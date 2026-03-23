@@ -23,6 +23,7 @@ export function toBoardIssue(
       : null,
     labels: issue.labels,
     description: issue.description,
+    dueDate: issue.dueDate,
     comments: [],
     activityLog: [],
     createdAt: issue.createdAt,

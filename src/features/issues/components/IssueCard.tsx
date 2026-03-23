@@ -59,6 +59,7 @@ export function IssueCard({
           isDragging ? "scale-[0.985] opacity-20 shadow-none" : "opacity-100",
           className
         )}
+        dueDate={issue.dueDate}
         estimate={undefined}
         issueKey={issue.identifier}
         issueTitle={issue.title}

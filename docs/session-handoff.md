@@ -204,17 +204,19 @@
   - [public/manifest.webmanifest](/Users/choiho/zerone/hinear/public/manifest.webmanifest) - PWA manifest
   - [src/features/notifications/types.ts](/Users/choiho/zerone/hinear/src/features/notifications/types.ts) - Notification type definitions
   - [src/features/notifications/components/NotificationPermissionButton.tsx](/Users/choiho/zerone/hinear/src/features/notifications/components/NotificationPermissionButton.tsx) - Permission request UI
-  - [src/features/notifications/components/NotificationSettingsCard.tsx](/Users/choiho/zerone/hinear/src/features/notifications/components/NotificationSettingsCard.tsx) - Settings UI
-  - [src/app/api/notifications/subscribe/route.ts](/Users/choiho/zerone/hinear/src/app/api/notifications/subscribe/route.ts) - Subscription endpoint
-  - [src/app/api/notifications/send/route.ts](/Users/choiho/zerone/hinear/src/app/api/notifications/send/route.ts) - Send notification endpoint
+  - [src/features/notifications/components/NotificationSettingsCard.tsx](/Users/choiho/zerone/hinear/src/features/notifications/components/NotificationSettingsCard.tsx) - Settings UI with toggles
+  - [src/features/notifications/repositories/supabase-push-subscriptions-repository.ts](/Users/choiho/zerone/hinear/src/features/notifications/repositories/supabase-push-subscriptions-repository.ts) - Push subscriptions repository
+  - [src/features/notifications/repositories/supabase-notification-preferences-repository.ts](/Users/choiho/zerone/hinear/src/features/notifications/repositories/supabase-notification-preferences-repository.ts) - Notification preferences repository
+  - [src/app/api/notifications/subscribe/route.ts](/Users/choiho/zerone/hinear/src/app/api/notifications/subscribe/route.ts) - Subscription endpoint (now uses DB)
+  - [src/app/api/notifications/send/route.ts](/Users/choiho/zerone/hinear/src/app/api/notifications/send/route.ts) - Send notification endpoint (with target filtering)
   - [src/lib/notifications/triggers.ts](/Users/choiho/zerone/hinear/src/lib/notifications/triggers.ts) - Notification trigger functions
   - [src/lib/notifications/push.ts](/Users/choiho/zerone/hinear/src/lib/notifications/push.ts) - Push notification utilities
   - [src/components/organisms/ServiceWorkerRegister.tsx](/Users/choiho/zerone/hinear/src/components/organisms/ServiceWorkerRegister.tsx) - SW registration
-- Database Migrations:
-  - [supabase/migrations/0007_add_push_notification_subscriptions.sql](/Users/choiho/zerone/hinear/supabase/migrations/0007_add_push_notification_subscriptions.sql)
-  - [supabase/migrations/0008_add_notification_preferences.sql](/Users/choiho/zerone/hinear/supabase/migrations/0008_add_notification_preferences.sql)
+- Database Migrations (Applied 2026-03-23):
+  - [supabase/migrations/0007_add_push_notification_subscriptions.sql](/Users/choiho/zerone/hinear/supabase/migrations/0007_add_push_notification_subscriptions.sql) ✅ Applied
+  - [supabase/migrations/0008_add_notification_preferences.sql](/Users/choiho/zerone/hinear/supabase/migrations/0008_add_notification_preferences.sql) ✅ Applied
 - MCP Configuration:
-  - [.mcp.json](/Users/choiho/zerone/hinear/.mcp.json) - Supabase MCP server configuration
+  - [.mcp.json](/Users/choiho/zerone/hinear/.mcp.json) - Supabase MCP server configuration ✅ Authenticated
 
 ## Checks Last Run
 
@@ -293,14 +295,35 @@ Additional UI check run in this session:
   - comments and activity remain separate repository reads
   - page layer composes them with `Promise.all` for the detail screen
   - do not widen `getIssueById` into a heavy aggregate while board/update paths still depend on the lean issue shape
-- PWA 알림 시스템 현재 상태 (2026-03-23):
-  - Service Worker가 푸시 알림 수신 및 표시 처리
-  - 알림 권한 요청 및 구독 UI 완료
-  - 4가지 알림 타입의 페이로드 생성 로직 완료
-  - 이슈 업데이트 시 자동 알림 트리거 통합 완료
-  - **현재 한계**: 구독 정보가 메모리(Map)에 저장되어 서버 재시작 시 소실
-  - DB 마이그레이션 파일이 생성되었으나 아직 적용되지 않음
-  - Supabase MCP 서버가 설정되었으나 아직 인증되지 않음 (별도 터미널에서 `claude /mcp` 필요)
+- PWA 알림 시스템 완성 (2026-03-23):
+  - ✅ Service Worker가 푸시 알림 수신 및 표시 처리
+  - ✅ 알림 권한 요청 및 구독 UI 완료
+  - ✅ 4가지 알림 타입의 페이로드 생성 로직 완료
+  - ✅ 이슈 업데이트 시 자동 알림 트리거 통합 완료
+  - ✅ **DB 마이그레이션 적용 완료**: `push_subscriptions`, `notification_preferences` 테이블 생성
+  - ✅ **Repository 구현 완료**:
+    - `SupabasePushSubscriptionsRepository` (subscribe, unsubscribe, getByUser, getActiveSubscriptions)
+    - `SupabaseNotificationPreferencesRepository` (getPreferences, updatePreferences)
+  - ✅ **API 라우트 업데이트 완료**:
+    - `/api/notifications/subscribe`: 메모리 Map → Supabase DB 저장
+    - `/api/notifications/send`: 대상 필터링 구조 추가
+  - ✅ **알림 설정 UI 완성**: `NotificationSettingsCard`에 토글 스위치 4개 추가
+  - 🔄 **다음 단계**: 실제 테스트 및 대상 필터링 로직 완성
+- **Due Date 기능 추가** (2026-03-23):
+  - ✅ DB 마이그레이션 적용: `issues.due_date` 컬럼 추가 (timestamptz, nullable)
+  - ✅ TypeScript 타입 업데이트:
+    - `Issue` 인터페이스에 `dueDate: string | null` 추가
+    - `CreateIssueInput`, `UpdateIssueInput`에 `dueDate` 추가
+    - Supabase 타입 정의 업데이트
+  - ✅ Repository 업데이트:
+    - `mapIssue()` 함수에서 `due_date` 매핑
+    - `createIssue()`에서 due date 저장
+    - `updateIssue()`에서 due date 업데이트 및 activity log 기록
+  - ✅ UI 업데이트:
+    - Issue Detail 화면에 date input 추가 (HTML5 date picker)
+    - BoardIssueCard에 due date 표시 (월일 형식)
+    - IssueCard에서 dueDate prop 전달
+  - 🔄 **다음 단계**: 테스트 파일에 dueDate: null 추가, due date 알림 트리거 고려
 
 ## Current Risk
 
@@ -320,46 +343,36 @@ The remaining risk is narrower now:
 
 ## Next Session Priority
 
-### 0. PWA 알림 시스템 완성 (新增)
+### 0. PWA 알림 시스템 실제 테스트 및 대상 필터링 완성 (2026-03-23)
 
-**목표**: 메모리 저장을 DB 저장으로 전환하고 실제 사용 환경에서 테스트
+**완료된 작업**:
+- ✅ Supabase MCP 인증 완료
+- ✅ DB 마이그레이션 적용 완료 (0007, 0008)
+- ✅ Repository 구현 완료
+- ✅ API 라우트 업데이트 완료 (메모리 → DB)
+- ✅ 알림 설정 UI 완성 (토글 스위치)
 
-**작업 순서**:
+**다음 단계**:
 
-1. **Supabase MCP 인증** (별도 터미널에서):
-   ```bash
-   claude /mcp
-   ```
+1. **대상 필터링 로직 완성**:
+   - `extractTargetUserIds()` 함수 실제 구현
+   - 이슈 담당자, 프로젝트 멤버 등 관련 사용자 ID 추출
+   - `filterSubscriptionsByPreferences()` 함수 완성
+   - 사용자별 알림 설정 확인 및 필터링
 
-2. **마이그레이션 적용**:
-   - 로컬: `npx supabase start` 후 `npx supabase migration up`
-   - 원격: Supabase MCP 또는 Dashboard에서 SQL 실행
-   - `0007_add_push_notification_subscriptions.sql`
-   - `0008_add_notification_preferences.sql`
+2. **알림 설정 API 구현**:
+   - `/api/notifications/preferences` GET/DELETE 라우트
+   - 현재 mock 데이터를 실제 DB 조회로 대체
 
-3. **Repository 구현**:
-   - `SupabasePushSubscriptionsRepository` 생성
-   - `subscribe()`, `unsubscribe()`, `getByUser()`, `getActiveSubscriptions()`
-   - API 라우트에서 메모리 Map 대신 repository 사용
-
-4. **알림 대상 필터링**:
-   - 현재: 모든 구독자에게 전송
-   - 개선: 관련 사용자만 필터링 (이슈 담당자, 프로젝트 멤버 등)
-
-5. **알림 설정 UI 추가**:
-   - `NotificationSettingsCard`에 토글 스위치 추가
-   - `notification_preferences` 테이블과 연동
-   - 타입별 on/off 설정
-
-6. **실제 테스트**:
+3. **실제 테스트**:
    - 개발 서버 실행 (`pnpm dev`)
    - 알림 권한 요청 및 구독 테스트
    - 이슈 상태/담당자 변경 시 알림 확인
+   - 알림 설정 on/off 테스트
 
 **관련 파일**:
-- `src/app/api/notifications/subscribe/route.ts` - 메모리 Map → repository
-- `src/app/api/notifications/send/route.ts` - 대상 필터링 로직 추가
-- `src/features/notifications/components/NotificationSettingsCard.tsx` - 설정 UI 확장
+- `src/app/api/notifications/send/route.ts` - 대상 필터링 로직 완성 필요
+- `src/features/notifications/components/NotificationSettingsCard.tsx` - API 호출 연동 필요
 - `src/lib/notifications/triggers.ts` - 사용자 ID 전달 로직 확인
 
 ### 1. Polish route states and verification
