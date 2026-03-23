@@ -47,3 +47,6 @@ storybook-static
 # local assistant/editor settings
 .claude/
 .kiro/
+
+# Windows Zone.Identifier files
+*:Zone.Identifier

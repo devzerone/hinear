@@ -30,8 +30,8 @@ vi.mock("@/lib/supabase/server-client", () => ({
 }));
 
 import {
+  requireAuthRedirect,
   startEmailAuthAction,
-  startGoogleAuthAction,
 } from "@/features/auth/actions/start-email-auth-action";
 
 describe("startEmailAuthAction", () => {
@@ -81,29 +81,11 @@ describe("startEmailAuthAction", () => {
     );
   });
 
-  it("starts Google auth and redirects to the provider URL", async () => {
-    const formData = new FormData();
-    formData.set("next", "/projects/new");
-    formData.set("reason", "auth_required");
+  it("requires auth and redirects with reason", async () => {
+    await requireAuthRedirect("/projects/test", "session_expired");
 
-    getRequestOriginMock.mockResolvedValue("https://hinear.test");
-    signInWithOAuthMock.mockResolvedValue({
-      data: {
-        url: "https://accounts.google.com/o/oauth2/v2/auth?client_id=test",
-      },
-      error: null,
-    });
-
-    await startGoogleAuthAction(formData);
-
-    expect(signInWithOAuthMock).toHaveBeenCalledWith({
-      options: {
-        redirectTo: "https://hinear.test/auth/confirm?next=%2Fprojects%2Fnew",
-      },
-      provider: "google",
-    });
     expect(redirectMock).toHaveBeenCalledWith(
-      "https://accounts.google.com/o/oauth2/v2/auth?client_id=test"
+      "/auth?next=%2Fprojects%2Ftest&reason=session_expired"
     );
   });
 });

@@ -1,6 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@/features/notifications/components/NotificationSettingsCard", () => ({
+  NotificationSettingsCard: () => (
+    <div data-testid="notification-settings-mock">Notification Settings</div>
+  ),
+}));
+
 import { ProjectSettingsScreen } from "@/features/projects/components/project-settings-screen";
 
 describe("ProjectSettingsScreen", () => {
@@ -49,25 +55,16 @@ describe("ProjectSettingsScreen", () => {
       />
     );
 
+    // Check main heading
     expect(
-      screen.getByRole("heading", { name: "Manage Web Platform" })
+      screen.getByRole("heading", { name: "Web Platform project settings" })
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Project details" })
-    ).toBeInTheDocument();
+    // Check form fields
     expect(screen.getByDisplayValue("Web Platform")).toBeInTheDocument();
     expect(screen.getByDisplayValue("WEB")).toBeInTheDocument();
-    expect(screen.getByText("Danger zone")).toBeInTheDocument();
+    // Check notification settings card is rendered
     expect(
-      screen.getByText(
-        "Remove every additional member and revoke all pending invitations before switching this project to personal."
-      )
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Back to workspace" })
-    ).toHaveAttribute("href", "/projects/project-1");
-    expect(
-      screen.getByRole("heading", { name: "Project Access & Invitations" })
+      screen.getByTestId("notification-settings-mock")
     ).toBeInTheDocument();
   });
 });

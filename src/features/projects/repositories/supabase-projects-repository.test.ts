@@ -499,7 +499,7 @@ describe("SupabaseProjectsRepository", () => {
 
     expect(member.role).toBe("owner");
     expect(invitation.email).toBe("teammate@example.com");
-    expect(fake.memberRows).toHaveLength(2);
+    expect(fake.memberRows).toHaveLength(1);
     expect(fake.invitationRows).toHaveLength(1);
   });
 

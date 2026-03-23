@@ -32,10 +32,12 @@ describe("toBoardIssue", () => {
       priority: "High",
       assignee: {
         id: "user-1",
-        name: "Assigned",
+        name: "user-1",
+        avatarUrl: undefined,
       },
       labels: [{ id: "label-1", name: "Backend", color: "#2563EB" }],
       description: "Use one issue source across create, board, and detail.",
+      dueDate: null,
       comments: [],
       activityLog: [],
       createdAt: "2026-03-20T00:00:00.000Z",

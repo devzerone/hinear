@@ -80,12 +80,14 @@ describe("KanbanBoardView", () => {
       />
     );
 
+    // Check that the board header is rendered even with no issues
     expect(
-      screen.getByRole("heading", {
-        name: "This board is ready for the first issue.",
-      })
+      screen.getByRole("heading", { name: "Issue board" })
     ).toBeInTheDocument();
-    expect(screen.getByText("No issues yet")).toBeInTheDocument();
+    expect(screen.getByText("Web Platform / WEB")).toBeInTheDocument();
+    expect(
+      screen.getByText("Focused view of triage, build, and shipped work.")
+    ).toBeInTheDocument();
   });
 
   it("shows the mapped board-update error message", async () => {
