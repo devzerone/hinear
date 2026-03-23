@@ -3,11 +3,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Issue } from "@/features/issues/types";
 
 const {
+  createRequestSupabaseServerClientMock,
   getIssueByIdMock,
   getAuthenticatedActorIdOrNullMock,
   getServerIssuesRepositoryMock,
   updateIssueMock,
 } = vi.hoisted(() => ({
+  createRequestSupabaseServerClientMock: vi.fn(),
   getIssueByIdMock: vi.fn(),
   getAuthenticatedActorIdOrNullMock: vi.fn(),
   getServerIssuesRepositoryMock: vi.fn(),
@@ -20,6 +22,10 @@ vi.mock("@/lib/supabase/server-auth", () => ({
 
 vi.mock("@/features/issues/repositories/server-issues-repository", () => ({
   getServerIssuesRepository: getServerIssuesRepositoryMock,
+}));
+
+vi.mock("@/lib/supabase/server-client", () => ({
+  createRequestSupabaseServerClient: createRequestSupabaseServerClientMock,
 }));
 
 import { PUT } from "@/app/internal/issues/[issueId]/route";
@@ -98,7 +104,7 @@ describe("PUT /internal/issues/[issueId]", () => {
       title: "Finish auth rollout",
       status: "Done",
       priority: "High",
-      assigneeId: null,
+      assigneeId: "user-2",
       labels: [{ id: "label-1", name: "Auth", color: "#2563EB" }],
       description: "All routes now use request-bound auth.",
       dueDate: null,
@@ -113,6 +119,22 @@ describe("PUT /internal/issues/[issueId]", () => {
     getServerIssuesRepositoryMock.mockResolvedValue({
       getIssueById: getIssueByIdMock,
       updateIssue: updateIssueMock,
+    });
+    createRequestSupabaseServerClientMock.mockResolvedValue({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            maybeSingle: () =>
+              Promise.resolve({
+                data: {
+                  id: "user-2",
+                  display_name: "Assigned User",
+                  avatar_url: null,
+                },
+              }),
+          }),
+        }),
+      }),
     });
     getIssueByIdMock.mockResolvedValue(issue);
     updateIssueMock.mockResolvedValue(issue);
@@ -140,7 +162,10 @@ describe("PUT /internal/issues/[issueId]", () => {
         title: "Finish auth rollout",
         status: "Done",
         priority: "High",
-        assignee: null,
+        assignee: {
+          id: "user-2",
+          name: "Assigned User",
+        },
         labels: [{ id: "label-1", name: "Auth", color: "#2563EB" }],
         description: "All routes now use request-bound auth.",
         dueDate: null,

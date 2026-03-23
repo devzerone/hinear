@@ -12,6 +12,7 @@ import {
   triggerIssueStatusChangedNotification,
 } from "@/lib/notifications/triggers";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
+import { createRequestSupabaseServerClient } from "@/lib/supabase/server-client";
 
 interface RouteContext {
   params: Promise<{
@@ -110,6 +111,23 @@ export async function PUT(request: Request, context: RouteContext) {
       updatedBy: actorId,
       version: currentIssue.version,
     });
+    const supabase = await createRequestSupabaseServerClient();
+    const assignee =
+      issue.assigneeId === null
+        ? null
+        : await supabase
+            .from("profiles")
+            .select("id, display_name, avatar_url")
+            .eq("id", issue.assigneeId)
+            .maybeSingle()
+            .then(({ data }) =>
+              data
+                ? {
+                    avatarUrl: data.avatar_url,
+                    name: data.display_name?.trim() || data.id,
+                  }
+                : null
+            );
 
     // 알림 전송 (비동기, 블로킹하지 않음)
     if (updates.status && updates.status !== currentIssue.status) {
@@ -154,7 +172,7 @@ export async function PUT(request: Request, context: RouteContext) {
     }
 
     return NextResponse.json({
-      issue: toBoardIssue(issue),
+      issue: toBoardIssue(issue, assignee),
     });
   } catch (error) {
     const message =

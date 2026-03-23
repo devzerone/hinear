@@ -9,7 +9,7 @@ const BOARD_COLUMN_SKELETON_IDS = [
 
 export default function ProjectWorkspaceLoading() {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[1440px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
+    <main className="flex min-h-screen w-full flex-col">
       <div className="hidden md:flex md:min-h-screen">
         <aside className="w-[240px] shrink-0 border-r border-[#1C1F26] bg-[#111318] px-4 pt-6 pb-6">
           <div className="flex h-full flex-col gap-7">

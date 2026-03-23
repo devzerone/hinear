@@ -2,8 +2,19 @@ import type { Metadata, Viewport } from "next";
 import { ServiceWorkerRegister } from "@/components/organisms/ServiceWorkerRegister";
 import "./globals.css";
 
+function getMetadataBase() {
+  const origin =
+    process.env.APP_ORIGIN?.trim() ||
+    process.env.NEXT_PUBLIC_APP_ORIGIN?.trim() ||
+    process.env.SITE_URL?.trim() ||
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+    "http://localhost:3000";
+
+  return new URL(origin);
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://hinear.local"),
+  metadataBase: getMetadataBase(),
   title: {
     default: "Hinear",
     template: "%s | Hinear",
@@ -11,6 +22,9 @@ export const metadata: Metadata = {
   description: "Project-first issue tracking for personal and team workflows.",
   applicationName: "Hinear",
   openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Hinear",
     title: "Hinear",
     description:
       "Project-first issue tracking for personal and team workflows.",

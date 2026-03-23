@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { MobileIssueListAppBar } from "@/components/molecules/MobileIssueListAppBar";
 import { CreateIssueTabletModal } from "@/components/organisms/CreateIssueTabletModal";
@@ -31,6 +32,7 @@ export function KanbanBoardView({
   projectKey,
   projectName = "Project",
 }: KanbanBoardViewProps) {
+  const router = useRouter();
   const { issues, loading, error, mutationError, updateIssue } =
     useIssues(projectId);
   const [createModalStatus, setCreateModalStatus] =
@@ -126,6 +128,7 @@ export function KanbanBoardView({
           <KanbanBoard
             issues={issues}
             onAddCard={setCreateModalStatus}
+            onNavigate={(href) => router.push(href)}
             onIssueUpdate={updateIssue}
             projectId={projectId}
           />
