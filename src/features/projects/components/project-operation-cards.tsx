@@ -454,7 +454,6 @@ export function ProjectAccessCard({
           </h3>
           <Field
             aria-label="Search members"
-            defaultValue=""
             onChange={(event) => setMemberQuery(event.currentTarget.value)}
             placeholder="Search members by name or email"
             value={memberQuery}
