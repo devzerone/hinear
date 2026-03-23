@@ -48,41 +48,43 @@ export function IssueCard({
   };
 
   return (
-    <BoardIssueCard
-      assignee={issue.assignee}
-      className={cn(
-        "touch-none transition-[transform,opacity,box-shadow] duration-200 ease-out",
-        preview
-          ? "pointer-events-none rotate-[1.5deg] scale-[1.02] cursor-grabbing shadow-[0_24px_48px_rgba(15,23,42,0.18)]"
-          : "cursor-grab active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]",
-        isDragging ? "scale-[0.985] opacity-20 shadow-none" : "opacity-100",
-        className
-      )}
-      estimate={undefined}
-      issueKey={issue.identifier}
-      issueTitle={issue.title}
-      labels={issue.labels}
-      onClick={
-        !preview && detailHref && onNavigate ? handleNavigate : undefined
-      }
-      onKeyDown={
-        !preview && detailHref && onNavigate
-          ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                handleNavigate();
+    <div className={isDragging ? "pointer-events-none" : ""}>
+      <BoardIssueCard
+        assignee={issue.assignee}
+        className={cn(
+          "touch-none transition-[transform,opacity,box-shadow] duration-200 ease-out",
+          preview
+            ? "pointer-events-none rotate-[1.5deg] scale-[1.02] cursor-grabbing shadow-[0_24px_48px_rgba(15,23,42,0.18)]"
+            : "cursor-grab active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]",
+          isDragging ? "scale-[0.985] opacity-20 shadow-none" : "opacity-100",
+          className
+        )}
+        estimate={undefined}
+        issueKey={issue.identifier}
+        issueTitle={issue.title}
+        labels={issue.labels}
+        onClick={
+          !preview && detailHref && onNavigate ? handleNavigate : undefined
+        }
+        onKeyDown={
+          !preview && detailHref && onNavigate
+            ? (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleNavigate();
+                }
               }
-            }
-          : undefined
-      }
-      priority={issue.priority}
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-      }}
-      {...attributes}
-      {...listeners}
-    />
+            : undefined
+        }
+        priority={issue.priority}
+        ref={setNodeRef}
+        style={{
+          transform: CSS.Transform.toString(transform),
+          transition,
+        }}
+        {...attributes}
+        {...listeners}
+      />
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type CollisionDetection,
   DndContext,
   type DragEndEvent,
   type DragOverEvent,
@@ -60,6 +61,17 @@ function mergeIssuesPreservingOrder(previous: Issue[], next: Issue[]): Issue[] {
 function isColumnId(id: string): id is IssueStatus {
   return COLUMNS.includes(id as IssueStatus);
 }
+
+// 카드 영역을 제외하고 컬럼 빈 공간만 드롭 타겟으로 인식
+const customCollisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+
+  // 컬럼 id(IssueStatus)만 남기기 - 카드 위에 있을 때는 컬럼 드롭 타겟 비활성화
+  return pointerCollisions.filter((collision) => {
+    const { id } = collision;
+    return isColumnId(id as string);
+  });
+};
 
 export function KanbanBoard({
   issues,
@@ -247,7 +259,7 @@ export function KanbanBoard({
   return (
     <div className="h-full overflow-x-auto">
       <DndContext
-        collisionDetection={pointerWithin}
+        collisionDetection={customCollisionDetection}
         sensors={sensors}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
