@@ -62,17 +62,29 @@ describe("ProjectDashboardScreen", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Web Platform" })
-    ).toBeInTheDocument();
+      screen.getAllByRole("heading", { name: "Web Platform" }).length
+    ).toBeGreaterThan(0);
     expect(
-      screen.getByText(
-        "Exploration only. Project Dashboard is separated from the MVP 1 implementation scope."
-      )
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open board" })).toHaveAttribute(
-      "href",
-      "/projects/project-1"
-    );
+      screen
+        .getAllByRole("link", { name: "Open board" })
+        .some((link) => link.getAttribute("href") === "/projects/project-1")
+    ).toBe(true);
+    expect(
+      screen.getByRole("link", { name: "Project settings" })
+    ).toHaveAttribute("href", "/projects/project-1/settings");
+    expect(screen.getByText("Project dashboard")).toBeInTheDocument();
+    expect(screen.getAllByText("Total issues").length).toBeGreaterThan(0);
+    expect(screen.getByText("Recent activity")).toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole("link", {
+          name: /WEB-12 Refine create issue route plan/i,
+        })
+        .some(
+          (link) =>
+            link.getAttribute("href") === "/projects/project-1/issues/issue-1"
+        )
+    ).toBe(true);
     expect(screen.getAllByText("Settings").length).toBeGreaterThan(0);
   });
 });

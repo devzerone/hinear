@@ -71,41 +71,56 @@ export default async function IssueDetailPage({
   );
 
   return (
-    <div className="relative min-h-screen bg-[#FCFCFD]">
-      <ProjectWorkspaceScreen
-        action={createIssueAction.bind(null, projectId)}
-        createdByLabel={workspace.createdByLabel}
-        inviteAction={inviteProjectMemberAction.bind(null, projectId)}
-        invitationAction={manageProjectInvitationAction.bind(null, projectId)}
-        inviteErrorMessage={undefined}
-        inviteNoticeMessage={undefined}
-        inviteValue={undefined}
-        invitations={workspace.invitations}
-        memberAction={manageProjectMemberAction.bind(null, projectId)}
-        members={workspace.members}
-        project={workspace.project}
-        summary={workspace.summary}
-        workspaceNoticeMessage={undefined}
-      />
+    <>
+      <div className="md:hidden">
+        <IssueDetailFullPageScreen
+          activityLog={activityLog}
+          assigneeOptions={assigneeOptions}
+          boardHref={getProjectPath(projectId)}
+          comments={comments}
+          issue={issue}
+          memberNamesById={memberNamesById}
+        />
+      </div>
 
-      <div className="pointer-events-none absolute inset-0 bg-[rgba(15,23,42,0.4)]" />
+      <div className="relative hidden min-h-screen bg-[#FCFCFD] md:block">
+        <ProjectWorkspaceScreen
+          action={createIssueAction.bind(null, projectId)}
+          createdByLabel={workspace.createdByLabel}
+          inviteAction={inviteProjectMemberAction.bind(null, projectId)}
+          invitationAction={manageProjectInvitationAction.bind(null, projectId)}
+          inviteErrorMessage={undefined}
+          inviteNoticeMessage={undefined}
+          inviteValue={undefined}
+          invitations={workspace.invitations}
+          memberAction={manageProjectMemberAction.bind(null, projectId)}
+          members={workspace.members}
+          project={workspace.project}
+          summary={workspace.summary}
+          workspaceNoticeMessage={undefined}
+        />
 
-      <div className="pointer-events-none absolute inset-0 p-6">
-        <div className="flex h-full justify-end">
-          <IssueDetailDrawerScreen
-            activityLog={activityLog}
-            assigneeOptions={assigneeOptions}
-            boardHref={getProjectPath(projectId)}
-            createdByName={membersById.get(issue.createdBy) ?? issue.createdBy}
-            fullPageHref={`/projects/${projectId}/issues/${issueId}?view=full`}
-            issue={issue}
-            lastEditedByName={
-              membersById.get(issue.updatedBy) ?? issue.updatedBy
-            }
-            memberNamesById={memberNamesById}
-          />
+        <div className="pointer-events-none absolute inset-0 bg-[rgba(15,23,42,0.4)]" />
+
+        <div className="pointer-events-none absolute inset-0 p-6">
+          <div className="flex h-full justify-end">
+            <IssueDetailDrawerScreen
+              activityLog={activityLog}
+              assigneeOptions={assigneeOptions}
+              boardHref={getProjectPath(projectId)}
+              createdByName={
+                membersById.get(issue.createdBy) ?? issue.createdBy
+              }
+              fullPageHref={`/projects/${projectId}/issues/${issueId}?view=full`}
+              issue={issue}
+              lastEditedByName={
+                membersById.get(issue.updatedBy) ?? issue.updatedBy
+              }
+              memberNamesById={memberNamesById}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

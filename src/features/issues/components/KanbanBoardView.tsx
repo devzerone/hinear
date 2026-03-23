@@ -1,11 +1,15 @@
 "use client";
 
+import { ChevronDown } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { Chip } from "@/components/atoms/Chip";
 import { MobileIssueListAppBar } from "@/components/molecules/MobileIssueListAppBar";
 import { CreateIssueTabletModal } from "@/components/organisms/CreateIssueTabletModal";
 import { LinearDashboardHeader } from "@/components/organisms/LinearDashboardHeader";
 import { MobileIssueSections } from "@/components/organisms/MobileIssueSections";
+import { getProjectIssueCreatePath } from "@/features/projects/lib/paths";
 import type { IssueStatus } from "@/specs/issue-detail.contract";
 import { useIssues } from "../hooks/useIssues";
 import { KanbanBoard } from "./KanbanBoard";
@@ -21,6 +25,91 @@ interface KanbanBoardViewProps {
   projectId: string;
   projectKey?: string;
   projectName?: string;
+  projectOptions?: Array<{
+    active?: boolean;
+    href?: string;
+    label: string;
+  }>;
+}
+
+function MobileProjectSwitcher({
+  projectName,
+  projectOptions = [],
+}: {
+  projectName: string;
+  projectOptions?: Array<{
+    active?: boolean;
+    href?: string;
+    label: string;
+  }>;
+}) {
+  return (
+    <details className="group rounded-[12px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-white)]">
+      <summary className="flex list-none items-center justify-between gap-3 px-3 py-[10px] marker:content-none">
+        <div className="min-w-0">
+          <p className="text-[11px] leading-[11px] font-[var(--app-font-weight-500)] text-[var(--app-color-gray-500)]">
+            Project
+          </p>
+          <p className="mt-[2px] truncate text-[13px] leading-[13px] font-[var(--app-font-weight-600)] text-[var(--app-color-ink-900)]">
+            {projectName}
+          </p>
+        </div>
+        <ChevronDown
+          aria-hidden="true"
+          className="h-4 w-4 shrink-0 text-[var(--app-color-gray-500)] transition-transform group-open:rotate-180"
+        />
+      </summary>
+
+      {projectOptions.length > 0 ? (
+        <div className="border-t border-[var(--app-color-border-soft)] px-2 py-2">
+          <div className="flex flex-col gap-1">
+            {projectOptions.map((project) =>
+              project.href ? (
+                <Link
+                  className={`rounded-[10px] px-[10px] py-[9px] text-[13px] leading-[13px] ${
+                    project.active
+                      ? "bg-[var(--app-color-gray-100)] font-[var(--app-font-weight-600)] text-[var(--app-color-ink-900)]"
+                      : "font-[var(--app-font-weight-500)] text-[#4B5563]"
+                  }`}
+                  href={project.href}
+                  key={project.href}
+                >
+                  {project.label}
+                </Link>
+              ) : (
+                <div
+                  className={`rounded-[10px] px-[10px] py-[9px] text-[13px] leading-[13px] ${
+                    project.active
+                      ? "bg-[var(--app-color-gray-100)] font-[var(--app-font-weight-600)] text-[var(--app-color-ink-900)]"
+                      : "font-[var(--app-font-weight-500)] text-[#4B5563]"
+                  }`}
+                  key={project.label}
+                >
+                  {project.label}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      ) : null}
+    </details>
+  );
+}
+
+function MobileIssueFilterChips() {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <Chip size="sm" variant="accent">
+        Updated
+      </Chip>
+      <Chip size="sm" variant="neutral">
+        My issues
+      </Chip>
+      <Chip size="sm" variant="neutral">
+        Filter
+      </Chip>
+    </div>
+  );
 }
 
 export function KanbanBoardView({
@@ -31,6 +120,7 @@ export function KanbanBoardView({
   projectId,
   projectKey,
   projectName = "Project",
+  projectOptions,
 }: KanbanBoardViewProps) {
   const router = useRouter();
   const { issues, loading, error, mutationError, updateIssue } =
@@ -104,8 +194,29 @@ export function KanbanBoardView({
       ) : null}
       <div className="md:hidden">
         <div className="flex flex-col gap-4">
-          <MobileIssueListAppBar title={projectName} />
-          <MobileIssueSections issues={issues} />
+          <MobileIssueListAppBar
+            onCreateClick={() =>
+              router.push(getProjectIssueCreatePath(projectId))
+            }
+            title={projectName}
+          />
+          <MobileProjectSwitcher
+            projectName={projectName}
+            projectOptions={projectOptions}
+          />
+          <MobileIssueFilterChips />
+          <MobileIssueSections
+            issues={issues}
+            projectId={projectId}
+            statuses={[
+              "Triage",
+              "In Progress",
+              "Done",
+              "Backlog",
+              "Todo",
+              "Canceled",
+            ]}
+          />
         </div>
       </div>
       <div className="hidden min-h-0 flex-1 flex-col gap-5 md:flex">

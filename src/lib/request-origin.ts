@@ -37,6 +37,10 @@ function readConfiguredOrigin(): string | null {
 }
 
 export async function getRequestOrigin(): Promise<string> {
+  if (process.env.NODE_ENV === "development") {
+    return "http://localhost:3000";
+  }
+
   const configuredOrigin = readConfiguredOrigin();
 
   if (configuredOrigin) {

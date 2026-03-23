@@ -1,4 +1,7 @@
+import Link from "next/link";
+
 import { Chip } from "@/components/atoms/Chip";
+import { getIssuePath } from "@/features/projects/lib/paths";
 import { cn } from "@/lib/utils";
 import type {
   Issue,
@@ -33,12 +36,22 @@ function getChipVariant(label: Label) {
 
 interface MobileIssueSectionsProps {
   issues: Issue[];
+  projectId: string;
   statuses?: IssueStatus[];
 }
 
-function MobileIssueCard({ issue }: { issue: Issue }) {
+function MobileIssueCard({
+  issue,
+  projectId,
+}: {
+  issue: Issue;
+  projectId: string;
+}) {
   return (
-    <article className="flex w-full flex-col gap-[10px] rounded-[14px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-white)] p-3">
+    <Link
+      className="flex w-full flex-col gap-[10px] rounded-[14px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-white)] p-3 transition-colors hover:bg-[#F7F8FA]"
+      href={getIssuePath(projectId, issue.id)}
+    >
       <div className="flex items-start justify-between gap-3">
         <span className="text-[12px] leading-[12px] font-[var(--app-font-weight-600)] text-[var(--app-color-brand-500)]">
           {issue.identifier}
@@ -78,12 +91,13 @@ function MobileIssueCard({ issue }: { issue: Issue }) {
           ))}
         </div>
       ) : null}
-    </article>
+    </Link>
   );
 }
 
 export function MobileIssueSections({
   issues,
+  projectId,
   statuses = MOBILE_SECTION_ORDER,
 }: MobileIssueSectionsProps) {
   const sections = statuses
@@ -116,7 +130,11 @@ export function MobileIssueSections({
 
           <div className="flex flex-col gap-2">
             {section.issues.map((issue) => (
-              <MobileIssueCard issue={issue} key={issue.id} />
+              <MobileIssueCard
+                issue={issue}
+                key={issue.id}
+                projectId={projectId}
+              />
             ))}
           </div>
         </section>

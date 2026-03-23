@@ -1,6 +1,3 @@
-import Link from "next/link";
-
-import { getButtonClassName } from "@/components/atoms/Button";
 import { SidebarDesktop } from "@/components/organisms/SidebarDesktop";
 import { KanbanBoardView } from "@/features/issues/components/KanbanBoardView";
 import {
@@ -76,18 +73,6 @@ export function ProjectWorkspaceScreen({
 
       <div className="min-w-0 flex flex-1 flex-col self-stretch">
         <div className="flex min-h-screen w-full flex-1 flex-col gap-5 bg-[#FCFCFD] p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 md:hidden">
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 rounded-full bg-[var(--app-color-brand-500)]" />
-              <span className="text-[16px] font-[var(--app-font-weight-600)] text-[var(--app-color-ink-900)]">
-                Hinear
-              </span>
-            </div>
-            <Link className={getButtonClassName("ghost")} href="/">
-              Back to home
-            </Link>
-          </div>
-
           {workspaceNoticeMessage ? (
             <div
               className="rounded-[12px] border border-[#BFDBFE] bg-[#EFF6FF] px-[14px] py-3 text-[12px] leading-5 font-[var(--app-font-weight-600)] text-[#1D4ED8]"
@@ -106,6 +91,11 @@ export function ProjectWorkspaceScreen({
               projectId={project.id}
               projectKey={project.key}
               projectName={project.name}
+              projectOptions={(projects ?? []).map((entry) => ({
+                active: entry.id === project.id,
+                href: getProjectPath(entry.id),
+                label: entry.name,
+              }))}
             />
           </section>
         </div>

@@ -73,7 +73,6 @@ export async function startEmailAuthAction(formData: FormData) {
   }
 
   const redirectTo = new URL("/auth/confirm", await getRequestOrigin());
-
   redirectTo.searchParams.set("next", next);
 
   const supabase = createServerSupabaseClient();
@@ -103,7 +102,6 @@ export async function startGoogleAuthAction(formData: FormData) {
   const next = readNextPath(formData);
   const reason = readReason(formData);
   const redirectTo = new URL("/auth/confirm", await getRequestOrigin());
-
   redirectTo.searchParams.set("next", next);
 
   // OAuth starts with PKCE state that must be persisted on the request/response
@@ -115,7 +113,6 @@ export async function startGoogleAuthAction(formData: FormData) {
     },
     provider: "google",
   });
-
   if (error || !data.url) {
     return redirect(
       buildAuthStatusPath({

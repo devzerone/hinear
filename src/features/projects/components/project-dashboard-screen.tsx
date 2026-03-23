@@ -1,3 +1,4 @@
+import { ChevronDown, Settings } from "lucide-react";
 import Link from "next/link";
 
 import { getButtonClassName } from "@/components/atoms/Button";
@@ -5,6 +6,7 @@ import { SidebarItem } from "@/components/molecules/SidebarItem";
 import type { Issue } from "@/features/issues/types";
 import {
   getIssuePath,
+  getProjectDashboardPath,
   getProjectPath,
   getProjectSettingsPath,
 } from "@/features/projects/lib/paths";
@@ -59,12 +61,12 @@ function getIssueStatusTone(status: Issue["status"]) {
 function getStatCards(summary: ProjectDashboardScreenProps["summary"]) {
   return [
     {
-      label: "Total Issues",
+      label: "Total issues",
       tone: "text-[#111318]",
       value: summary.totalIssueCount,
     },
     {
-      label: "In Progress",
+      label: "In progress",
       tone: "text-[#E42313]",
       value: summary.inProgressIssueCount,
     },
@@ -79,6 +81,142 @@ function getStatCards(summary: ProjectDashboardScreenProps["summary"]) {
       value: summary.backlogIssueCount,
     },
   ];
+}
+
+function ProjectDashboardMobileHeader({ project }: { project: Project }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="truncate text-[18px] leading-[18px] font-[var(--app-font-weight-600)] text-[#111318]">
+          {project.name}
+        </h1>
+        <p className="mt-[2px] truncate text-[12px] leading-[12px] font-[var(--app-font-weight-500)] text-[#6B7280]">
+          Project dashboard
+        </p>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2">
+        <Link
+          className={getButtonClassName("secondary", "sm")}
+          href={getProjectPath(project.id)}
+        >
+          Open Project
+        </Link>
+        <Link
+          aria-label="Project settings"
+          className={getButtonClassName(
+            "secondary",
+            "sm",
+            "h-[34px] w-[34px] rounded-[10px] px-0 py-0"
+          )}
+          href={getProjectSettingsPath(project.id)}
+        >
+          <Settings aria-hidden="true" className="h-[14px] w-[14px]" />
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function ProjectDashboardMobileSwitcher({
+  project,
+  projects,
+}: {
+  project: Project;
+  projects: Project[];
+}) {
+  return (
+    <details className="group rounded-[12px] border border-[#E6E8EC] bg-white">
+      <summary className="flex list-none items-center justify-between gap-3 px-3 py-[10px] marker:content-none">
+        <div className="min-w-0">
+          <p className="text-[11px] leading-[11px] font-[var(--app-font-weight-500)] text-[#6B7280]">
+            Project
+          </p>
+          <p className="mt-[2px] truncate text-[13px] leading-[13px] font-[var(--app-font-weight-600)] text-[#111318]">
+            {project.name}
+          </p>
+        </div>
+        <ChevronDown
+          aria-hidden="true"
+          className="h-4 w-4 shrink-0 text-[#6B7280] transition-transform group-open:rotate-180"
+        />
+      </summary>
+
+      <div className="border-t border-[#E6E8EC] px-2 py-2">
+        <div className="flex flex-col gap-1">
+          {projects.map((candidate) => (
+            <Link
+              className={`rounded-[10px] px-[10px] py-[9px] text-[13px] leading-[13px] ${
+                candidate.id === project.id
+                  ? "bg-[#F3F4F6] font-[var(--app-font-weight-600)] text-[#111318]"
+                  : "font-[var(--app-font-weight-500)] text-[#4B5563]"
+              }`}
+              href={getProjectDashboardPath(candidate.id)}
+              key={candidate.id}
+            >
+              {candidate.name}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function StatCard({
+  label,
+  tone,
+  value,
+}: {
+  label: string;
+  tone: string;
+  value: number;
+}) {
+  return (
+    <article className="rounded-[14px] border border-[#E6E8EC] bg-white px-[14px] py-[14px]">
+      <p className="text-[12px] leading-[12px] font-[var(--app-font-weight-500)] text-[#6B7280]">
+        {label}
+      </p>
+      <p
+        className={`mt-[6px] text-[28px] leading-none font-[var(--app-font-weight-700)] ${tone}`}
+      >
+        {value}
+      </p>
+    </article>
+  );
+}
+
+function RecentActivityList({
+  issues,
+  projectId,
+}: {
+  issues: Issue[];
+  projectId: string;
+}) {
+  return (
+    <div className="flex flex-col gap-[10px]">
+      {issues.length > 0 ? (
+        issues.map((issue) => (
+          <Link
+            className="rounded-[14px] border border-[#E6E8EC] bg-white px-[14px] py-[14px] transition-colors hover:bg-[#F7F8FA]"
+            href={getIssuePath(projectId, issue.id)}
+            key={issue.id}
+          >
+            <p className="truncate text-[13px] leading-[1.35] font-[var(--app-font-weight-500)] text-[#111318]">
+              {issue.identifier} {issue.title}
+            </p>
+            <p className="mt-1 text-[11px] leading-[11px] font-[var(--app-font-weight-500)] text-[#6B7280]">
+              {formatUpdatedAt(issue.updatedAt)}
+            </p>
+          </Link>
+        ))
+      ) : (
+        <div className="rounded-[14px] border border-dashed border-[#D6DAE1] bg-white px-[14px] py-[14px] text-[13px] leading-[1.4] text-[#6B7280]">
+          No recent activity yet.
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function ProjectDashboardScreen({
@@ -146,7 +284,33 @@ export function ProjectDashboardScreen({
       </aside>
 
       <div className="min-w-0 flex-1 bg-[#FCFCFD]">
-        <div className="flex w-full flex-col gap-6 p-6">
+        <div className="flex w-full flex-col gap-4 px-4 py-4 md:hidden">
+          <ProjectDashboardMobileHeader project={project} />
+          <ProjectDashboardMobileSwitcher
+            project={project}
+            projects={projects}
+          />
+
+          <section className="grid grid-cols-2 gap-3">
+            {getStatCards(summary).map((card) => (
+              <StatCard
+                key={card.label}
+                label={card.label}
+                tone={card.tone}
+                value={card.value}
+              />
+            ))}
+          </section>
+
+          <section className="flex flex-col gap-[10px]">
+            <h2 className="text-[14px] leading-[14px] font-[var(--app-font-weight-600)] text-[#111318]">
+              Recent activity
+            </h2>
+            <RecentActivityList issues={recentIssues} projectId={project.id} />
+          </section>
+        </div>
+
+        <div className="hidden w-full flex-col gap-6 p-6 md:flex">
           <div className="flex items-start justify-between gap-4">
             <div className="flex min-w-0 flex-col gap-1">
               <p className="text-[12px] leading-[12px] font-[var(--app-font-weight-500)] text-[#6B7280]">
@@ -163,15 +327,9 @@ export function ProjectDashboardScreen({
             <div className="flex items-center gap-3">
               <Link
                 className={getButtonClassName("secondary", "sm")}
-                href="/projects/new"
-              >
-                + New Project
-              </Link>
-              <Link
-                className={getButtonClassName("secondary", "sm")}
                 href={getProjectPath(project.id)}
               >
-                Open board
+                Open Project
               </Link>
               <Link
                 className={getButtonClassName("secondary", "sm")}
@@ -180,11 +338,6 @@ export function ProjectDashboardScreen({
                 Settings
               </Link>
             </div>
-          </div>
-
-          <div className="rounded-[12px] border border-[#DDD6FE] bg-[#F5F3FF] px-[14px] py-3 text-[12px] leading-5 font-[var(--app-font-weight-600)] text-[#5B21B6]">
-            Exploration only. Project Dashboard is separated from the MVP 1
-            implementation scope.
           </div>
 
           <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -242,8 +395,4 @@ export function ProjectDashboardScreen({
       </div>
     </main>
   );
-}
-
-function getProjectDashboardPath(projectId: string) {
-  return `/projects/${projectId}/dashboard`;
 }

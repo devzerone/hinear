@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ChevronLeft, Ellipsis } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 
@@ -106,6 +106,24 @@ function getFailureMemo(issue: Issue) {
   }
 
   return "Capture delivery risk, QA notes, and follow-up items here when the issue gets closer to release.";
+}
+
+function formatRelativeTime(value: string) {
+  const diffInHours = Math.round(
+    (new Date(value).getTime() - Date.now()) / (1000 * 60 * 60)
+  );
+
+  if (Math.abs(diffInHours) < 24) {
+    return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+      diffInHours,
+      "hour"
+    );
+  }
+
+  return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
+    Math.round(diffInHours / 24),
+    "day"
+  );
 }
 
 export function IssueDetailFullPageScreen({
@@ -276,7 +294,200 @@ export function IssueDetailFullPageScreen({
 
   return (
     <main className="min-h-screen bg-[#FCFCFD]">
-      <div className="flex flex-col gap-6 px-8 py-6">
+      <div className="flex flex-col gap-4 px-4 py-4 md:hidden">
+        {conflictInfo ? (
+          <ConflictDialog
+            currentVersion={conflictInfo.currentVersion}
+            onDismiss={() => setConflictInfo(null)}
+            requestedVersion={conflictInfo.requestedVersion}
+          />
+        ) : null}
+
+        {errorMessage ? (
+          <div className="rounded-[14px] border border-[#FCA5A5] bg-[#FEF2F2] px-4 py-3 text-[13px] font-medium text-[#991B1B]">
+            {errorMessage}
+          </div>
+        ) : null}
+        {feedbackMessage ? (
+          <div className="rounded-[14px] border border-[#C7D2FE] bg-[#EEF2FF] px-4 py-3 text-[13px] font-medium text-[#3730A3]">
+            {feedbackMessage}
+          </div>
+        ) : null}
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-2">
+            {boardHref ? (
+              <Link
+                aria-label="Back to board"
+                className="inline-flex h-4 w-4 items-center justify-center text-[#111318]"
+                href={boardHref}
+              >
+                <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+              </Link>
+            ) : (
+              <span className="inline-flex h-4 w-4 items-center justify-center text-[#111318]">
+                <ChevronLeft aria-hidden="true" className="h-4 w-4" />
+              </span>
+            )}
+            <h1 className="truncate text-[16px] leading-[16px] font-[var(--app-font-weight-600)] text-[#111318]">
+              Issue detail
+            </h1>
+          </div>
+
+          <button
+            aria-label="More issue actions"
+            className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-[#E6E8EC] bg-white"
+            type="button"
+          >
+            <Ellipsis
+              aria-hidden="true"
+              className="h-[14px] w-[14px] text-[#6B7280]"
+            />
+          </button>
+        </div>
+
+        <section className="flex flex-col gap-3 rounded-[16px] border border-[#E6E8EC] bg-white p-4">
+          <span className="text-[12px] font-[var(--app-font-weight-700)] text-[#5E6AD2]">
+            {issueState.identifier}
+          </span>
+          <h2 className="text-[20px] leading-[1.25] font-[var(--app-font-weight-600)] text-[#111318]">
+            {issueState.title}
+          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip size="sm" variant="neutral">
+              {issueState.status}
+            </Chip>
+            <Chip
+              size="sm"
+              variant={
+                issueState.priority === "Urgent" ||
+                issueState.priority === "High"
+                  ? "danger"
+                  : "neutral"
+              }
+            >
+              {issueState.priority}
+            </Chip>
+          </div>
+          <p className="text-[12px] leading-[1.45] font-[var(--app-font-weight-500)] text-[#6B7280]">
+            {assigneeLabel} assigned ·{" "}
+            {formatRelativeTime(issueState.updatedAt)} updated
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-3 rounded-[16px] border border-[#E6E8EC] bg-white p-4">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[14px] font-[var(--app-font-weight-600)] text-[#111318]">
+              Description
+            </h2>
+            <span className="text-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]">
+              Markdown
+            </span>
+          </div>
+          <p className="whitespace-pre-wrap text-[13px] leading-[1.5] text-[#111318]">
+            {issueState.description || "No description yet."}
+          </p>
+          {issueState.labels.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {issueState.labels.map((label) => (
+                <span
+                  className="text-[12px] leading-[12px] font-[var(--app-font-weight-500)] text-[#4338CA]"
+                  key={label.id}
+                >
+                  {label.name}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="flex flex-col gap-3 rounded-[16px] border border-[#E6E8EC] bg-white p-4">
+          <h2 className="text-[14px] font-[var(--app-font-weight-600)] text-[#111318]">
+            Comments
+          </h2>
+          {commentsState.length > 0 ? (
+            commentsState.slice(0, 1).map((comment) => (
+              <div className="flex flex-col gap-2" key={comment.id}>
+                <p className="text-[11px] font-[var(--app-font-weight-600)] text-[#111318]">
+                  {memberNamesById[comment.authorId] ?? comment.authorId} ·{" "}
+                  {formatRelativeTime(comment.createdAt)}
+                </p>
+                <p className="text-[13px] leading-[1.45] text-[#4B5563]">
+                  {comment.body}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="text-[13px] leading-[1.45] text-[#6B7280]">
+              No comments yet.
+            </p>
+          )}
+
+          <textarea
+            className="min-h-[44px] w-full rounded-[12px] border border-[#E6E8EC] bg-[#FCFCFD] px-[14px] py-3 text-[12px] leading-[1.45] text-[#111318] outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-brand-300)]"
+            onChange={(event) => setCommentDraft(event.target.value)}
+            placeholder="댓글을 입력하세요..."
+            value={commentDraft}
+          />
+          <div className="flex justify-end">
+            <Button
+              disabled={isSaving || commentDraft.trim().length === 0}
+              onClick={submitComment}
+              size="sm"
+              variant="secondary"
+            >
+              Post
+            </Button>
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-2 rounded-[16px] border border-[#E6E8EC] bg-white p-[14px]">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[14px] font-[var(--app-font-weight-600)] text-[#111318]">
+              Metadata
+            </h2>
+            <Chip size="sm" variant="neutral">
+              Summary
+            </Chip>
+          </div>
+          <p className="whitespace-pre-wrap text-[11px] leading-[1.45] font-[var(--app-font-weight-500)] text-[#4B5563]">
+            {`Created ${formatTimestamp(issueState.createdAt)} · Updated ${formatRelativeTime(
+              issueState.updatedAt
+            )}\nAuthor ${memberNamesById[issueState.createdBy] ?? issueState.createdBy} · Last editor ${lastEditedByLabel}`}
+          </p>
+        </section>
+
+        <section className="flex flex-col gap-2 rounded-[16px] border border-[#E6E8EC] bg-white p-[14px]">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[13px] font-[var(--app-font-weight-600)] text-[#111318]">
+              Recent activity
+            </h2>
+            <span className="text-[11px] font-[var(--app-font-weight-700)] text-[#4338CA]">
+              View full history
+            </span>
+          </div>
+          {activityState.length > 0 ? (
+            activityState.slice(0, 2).map((entry) => (
+              <div
+                className="flex flex-col gap-[2px] rounded-[12px] bg-[#FCFCFD] px-3 py-[10px]"
+                key={entry.id}
+              >
+                <p className="text-[11px] font-[var(--app-font-weight-600)] text-[#111318]">
+                  {memberNamesById[entry.actorId] ?? entry.actorId} ·{" "}
+                  {formatRelativeTime(entry.createdAt)}
+                </p>
+                <p className="text-[11px] leading-[1.45] font-[var(--app-font-weight-500)] text-[#4B5563]">
+                  {entry.summary}
+                </p>
+              </div>
+            ))
+          ) : (
+            <p className="text-[12px] text-[#6B7280]">No activity yet.</p>
+          )}
+        </section>
+      </div>
+
+      <div className="hidden flex-col gap-6 px-8 py-6 md:flex">
         {conflictInfo ? (
           <ConflictDialog
             currentVersion={conflictInfo.currentVersion}

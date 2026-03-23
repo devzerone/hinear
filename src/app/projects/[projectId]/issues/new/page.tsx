@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getButtonClassName } from "@/components/atoms/Button";
 import { CreateIssueTabletModal } from "@/components/organisms/CreateIssueTabletModal";
 import { createIssueAction } from "@/features/issues/actions/create-issue-action";
+import { MobileIssueCreateScreen } from "@/features/issues/components/mobile-issue-create-screen";
 import { loadProjectWorkspace } from "@/features/projects/lib/load-project-workspace";
 import {
   getProjectIssueCreatePath,
@@ -35,8 +36,15 @@ export default async function NewProjectIssuePage({
 
   return (
     <main className="min-h-screen bg-[#FCFCFD]">
-      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 py-6 md:px-6 md:py-8">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 py-4 md:px-6 md:py-8">
+        <div className="md:hidden">
+          <MobileIssueCreateScreen
+            action={createIssueAction.bind(null, projectId)}
+            cancelHref={getProjectPath(projectId)}
+          />
+        </div>
+
+        <div className="hidden flex-wrap items-center justify-between gap-3 md:flex">
           <div className="flex flex-col gap-1">
             <p className="text-[12px] font-[var(--app-font-weight-600)] text-[var(--app-color-brand-500)]">
               {project.name} / New issue
@@ -62,7 +70,7 @@ export default async function NewProjectIssuePage({
           </div>
         </div>
 
-        <div className="flex justify-center">
+        <div className="hidden justify-center md:flex">
           <CreateIssueTabletModal
             action={createIssueAction.bind(null, projectId)}
             assigneeOptions={assigneeOptions}
