@@ -107,6 +107,22 @@ const meta = {
   },
   args: {
     issues,
+    projectId: "test-project",
+    onNavigate: (href: string) => {
+      console.log(`[Storybook] Navigate to: ${href}`);
+    },
+    onIssueUpdate: (issueId, updates) => {
+      console.log(`[Storybook] Issue update:`, { issueId, updates });
+      // Simulate async update
+      const originalIssue = issues.find((i) => i.id === issueId)!;
+      return Promise.resolve({
+        ...originalIssue,
+        ...updates,
+      });
+    },
+    onAddCard: (status) => {
+      console.log(`[Storybook] Add card to status:`, status);
+    },
   },
 } satisfies Meta<typeof KanbanBoard>;
 

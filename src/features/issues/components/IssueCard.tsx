@@ -2,7 +2,6 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useRouter } from "next/navigation";
 import { BoardIssueCard } from "@/components/organisms/BoardIssueCard";
 import { cn } from "@/lib/utils";
 import type { Issue } from "@/specs/issue-detail.contract";
@@ -12,6 +11,7 @@ interface IssueCardProps {
   issue: Issue;
   projectId?: string;
   preview?: boolean;
+  onNavigate?: (href: string) => void;
 }
 
 export function IssueCard({
@@ -19,8 +19,8 @@ export function IssueCard({
   issue,
   projectId,
   preview = false,
+  onNavigate,
 }: IssueCardProps) {
-  const router = useRouter();
   const {
     attributes,
     listeners,
@@ -41,6 +41,12 @@ export function IssueCard({
     ? `/projects/${projectId}/issues/${issue.id}`
     : undefined;
 
+  const handleNavigate = () => {
+    if (detailHref && onNavigate) {
+      onNavigate(detailHref);
+    }
+  };
+
   return (
     <BoardIssueCard
       assignee={issue.assignee}
@@ -57,31 +63,24 @@ export function IssueCard({
       issueTitle={issue.title}
       labels={issue.labels}
       onClick={
-        !preview && detailHref
-          ? () => {
-              router.push(detailHref);
+        !preview && detailHref && onNavigate ? handleNavigate : undefined
+      }
+      onKeyDown={
+        !preview && detailHref && onNavigate
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleNavigate();
+              }
             }
           : undefined
       }
       priority={issue.priority}
       ref={setNodeRef}
-      role={detailHref ? "button" : undefined}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
       }}
-      tabIndex={detailHref ? 0 : undefined}
-      onKeyDown={
-        !preview && detailHref
-          ? (event) => {
-              if (event.key === "Enter" || event.key === " ") {
-                event.preventDefault();
-                router.push(detailHref);
-              }
-            }
-          : undefined
-      }
-      aria-grabbed={preview ? undefined : isDragging}
       {...attributes}
       {...listeners}
     />

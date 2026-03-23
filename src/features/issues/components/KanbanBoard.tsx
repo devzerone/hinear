@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  closestCorners,
   DndContext,
   type DragEndEvent,
   type DragOverEvent,
   DragOverlay,
   type DragStartEvent,
   PointerSensor,
+  pointerWithin,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -38,6 +38,7 @@ interface KanbanBoardProps {
     }
   ) => Promise<Issue | undefined> | Issue | undefined;
   projectId?: string;
+  onNavigate?: (href: string) => void;
 }
 
 function mergeIssuesPreservingOrder(previous: Issue[], next: Issue[]): Issue[] {
@@ -65,6 +66,7 @@ export function KanbanBoard({
   onAddCard,
   onIssueUpdate,
   projectId,
+  onNavigate,
 }: KanbanBoardProps) {
   const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -193,6 +195,8 @@ export function KanbanBoard({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     const draggedIssue = activeIssue;
+
+    // 즉시 activeIssue 초기화하여 다음 드래그 준비
     setActiveIssue(null);
 
     if (!draggedIssue || !over) {
@@ -232,6 +236,7 @@ export function KanbanBoard({
               projectId={projectId}
               status={status}
               issues={getIssuesByStatus(status)}
+              onNavigate={onNavigate}
             />
           ))}
         </div>
@@ -242,7 +247,7 @@ export function KanbanBoard({
   return (
     <div className="h-full overflow-x-auto">
       <DndContext
-        collisionDetection={closestCorners}
+        collisionDetection={pointerWithin}
         sensors={sensors}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
@@ -252,20 +257,20 @@ export function KanbanBoard({
         <div className="flex h-full min-h-full items-stretch gap-3 p-4">
           {COLUMNS.map((status) => (
             <KanbanColumn
-              activeIssue={activeIssue}
               isDragging={activeIssue !== null}
               key={status}
               onAddCard={onAddCard}
               projectId={projectId}
               status={status}
               issues={getIssuesByStatus(status)}
+              onNavigate={onNavigate}
             />
           ))}
         </div>
 
         <DragOverlay>
           {activeIssue && (
-            <div className="origin-center opacity-95">
+            <div className="pointer-events-none origin-center opacity-95">
               <IssueCard issue={activeIssue} preview />
             </div>
           )}
