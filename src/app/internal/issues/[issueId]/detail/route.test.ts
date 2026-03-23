@@ -81,6 +81,7 @@ describe("PATCH /internal/issues/[issueId]/detail", () => {
       updatedBy: "user-1",
       createdAt: "2026-03-20T00:00:00.000Z",
       updatedAt: "2026-03-20T01:00:00.000Z",
+      dueDate: null,
       version: 2,
     };
     const activityLog: ActivityLogEntry[] = [

@@ -65,6 +65,7 @@ describe("POST /internal/issues/[issueId]/comments", () => {
       updatedBy: "user-1",
       createdAt: "2026-03-20T00:00:00.000Z",
       updatedAt: "2026-03-20T00:00:00.000Z",
+      dueDate: null,
       version: 1,
     };
     const comment: Comment = {

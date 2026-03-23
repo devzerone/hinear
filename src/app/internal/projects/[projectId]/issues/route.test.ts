@@ -20,6 +20,22 @@ vi.mock("@/features/issues/repositories/server-issues-repository", () => ({
   getServerIssuesRepository: getServerIssuesRepositoryMock,
 }));
 
+vi.mock("@/lib/supabase/server-client", () => ({
+  createRequestSupabaseServerClient: vi.fn(() => ({
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        in: vi.fn(() =>
+          Promise.resolve({
+            data: [
+              { id: "user-1", display_name: "Assigned", avatar_url: null },
+            ],
+          })
+        ),
+      })),
+    })),
+  })),
+}));
+
 import { GET } from "@/app/internal/projects/[projectId]/issues/route";
 
 describe("GET /internal/projects/[projectId]/issues", () => {
@@ -54,6 +70,7 @@ describe("GET /internal/projects/[projectId]/issues", () => {
         assigneeId: "user-1",
         labels: [{ id: "label-1", name: "Labels", color: "#16A34A" }],
         description: "",
+        dueDate: null,
         createdBy: "user-1",
         updatedBy: "user-1",
         createdAt: "2026-03-20T00:00:00.000Z",
@@ -88,6 +105,7 @@ describe("GET /internal/projects/[projectId]/issues", () => {
           },
           labels: [{ id: "label-1", name: "Labels", color: "#16A34A" }],
           description: "",
+          dueDate: null,
           comments: [],
           activityLog: [],
           createdAt: "2026-03-20T00:00:00.000Z",

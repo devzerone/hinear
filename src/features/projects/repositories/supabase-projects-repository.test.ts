@@ -308,7 +308,9 @@ function createFakeProjectsClient(options?: {
                 ) {
                   const candidate = memberRows[index];
                   const matches = filters.every(
-                    (filter) => candidate[filter.column] === filter.value
+                    (filter) =>
+                      (candidate as Record<string, unknown>)[filter.column] ===
+                      filter.value
                   );
 
                   if (matches) {
