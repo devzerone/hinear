@@ -7,6 +7,10 @@ import {
 import { getServerIssuesRepository } from "@/features/issues/repositories/server-issues-repository";
 import type { Issue } from "@/features/issues/types";
 import { ISSUE_PRIORITIES, ISSUE_STATUSES } from "@/features/issues/types";
+import {
+  triggerIssueAssignedNotification,
+  triggerIssueStatusChangedNotification,
+} from "@/lib/notifications/triggers";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
 
 interface RouteContext {
@@ -106,6 +110,48 @@ export async function PUT(request: Request, context: RouteContext) {
       updatedBy: actorId,
       version: currentIssue.version,
     });
+
+    // 알림 전송 (비동기, 블로킹하지 않음)
+    if (updates.status && updates.status !== currentIssue.status) {
+      // 상태 변경 알림
+      triggerIssueStatusChangedNotification({
+        issueId: issue.id,
+        issueIdentifier: issue.identifier,
+        projectId: issue.projectId,
+        previousStatus: currentIssue.status,
+        newStatus: updates.status,
+        actor: {
+          id: actorId,
+          name: "사용자", // TODO: 실제 사용자 이름으로 변경
+        },
+      }).catch((err) => {
+        console.error(
+          "[Notification] Failed to send status change notification:",
+          err
+        );
+      });
+    }
+
+    if (
+      updates.assigneeId !== undefined &&
+      updates.assigneeId !== currentIssue.assigneeId
+    ) {
+      // 할당 변경 알림
+      triggerIssueAssignedNotification({
+        issueId: issue.id,
+        issueIdentifier: issue.identifier,
+        projectId: issue.projectId,
+        actor: {
+          id: actorId,
+          name: "사용자", // TODO: 실제 사용자 이름으로 변경
+        },
+      }).catch((err) => {
+        console.error(
+          "[Notification] Failed to send assignment notification:",
+          err
+        );
+      });
+    }
 
     return NextResponse.json({
       issue: toBoardIssue(issue),

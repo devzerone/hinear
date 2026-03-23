@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { getButtonClassName } from "@/components/atoms/Button";
 import { SidebarDesktop } from "@/components/organisms/SidebarDesktop";
+import { NotificationSettingsCard } from "@/features/notifications/components/NotificationSettingsCard";
 import { ProjectMetadataForm } from "@/features/projects/components/project-metadata-form";
 import { ProjectAccessCard } from "@/features/projects/components/project-operation-cards";
 import {
@@ -141,6 +142,8 @@ export function ProjectSettingsScreen({
                   noticeMessage={inviteNoticeMessage}
                   projectType={project.type}
                 />
+
+                <NotificationSettingsCard />
 
                 <div className="flex justify-end">
                   <Link
