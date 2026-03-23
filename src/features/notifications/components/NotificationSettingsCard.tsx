@@ -1,8 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { Skeleton } from "@/components/atoms/Skeleton";
 import type { NotificationPreferences } from "@/features/notifications/repositories/supabase-notification-preferences-repository";
 import { NotificationPermissionButton } from "./NotificationPermissionButton";
+
+const NOTIFICATION_LOADING_IDS = [
+  "issue-assigned",
+  "status-changed",
+  "comment-added",
+  "project-invited",
+] as const;
 
 interface NotificationToggleProps {
   label: string;
@@ -114,14 +122,25 @@ export function NotificationSettingsCard() {
   if (loading) {
     return (
       <div className="flex flex-col gap-4 rounded-[16px] border border-[#E6E8EC] p-5">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-[16px] font-semibold text-[#111318]">
-            알림 설정
-          </h2>
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-5 w-24 rounded-full" />
+          <Skeleton className="h-4 w-64 rounded-full" />
         </div>
-        <div className="flex items-center justify-center py-8">
-          <div className="text-sm text-[var(--app-color-gray-600)]">
-            로딩 중...
+        <div className="flex flex-col gap-3">
+          <Skeleton className="h-[52px] w-full rounded-[12px]" />
+          <div className="flex flex-col gap-3 rounded-lg border border-[var(--app-color-border-soft)] bg-[var(--app-color-surface-50)] p-4">
+            {NOTIFICATION_LOADING_IDS.map((notificationId) => (
+              <div
+                key={notificationId}
+                className="flex items-center justify-between"
+              >
+                <div className="flex flex-col gap-2">
+                  <Skeleton className="h-4 w-28 rounded-full" />
+                  <Skeleton className="h-3 w-40 rounded-full" />
+                </div>
+                <Skeleton className="h-6 w-11 rounded-full" />
+              </div>
+            ))}
           </div>
         </div>
       </div>

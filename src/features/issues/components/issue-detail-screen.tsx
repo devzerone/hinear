@@ -7,6 +7,7 @@ import { Button, getButtonClassName } from "@/components/atoms/Button";
 import { Chip } from "@/components/atoms/Chip";
 import { Field } from "@/components/atoms/Field";
 import { Select } from "@/components/atoms/Select";
+import { Skeleton } from "@/components/atoms/Skeleton";
 import { ConflictDialog } from "@/components/molecules/ConflictDialog";
 import {
   getMutationErrorCode,
@@ -176,17 +177,67 @@ export function IssueDetailLoadingScreen() {
   return (
     <main className="app-shell">
       <div className="app-stack">
-        <IssueStateCard title="Loading">
-          <p
-            className="text-[13px] font-medium leading-5 text-[#4B5563]"
-            role="status"
-          >
-            We&apos;re loading the latest issue details and activity.
-          </p>
-          <div className="h-[14px] w-[180px] animate-pulse rounded-full bg-[#E5E7EB]" />
-          <div className="h-11 w-full animate-pulse rounded-[12px] bg-[#F3F4F6]" />
-          <div className="h-[180px] w-full animate-pulse rounded-[16px] border border-[#E6E8EC] bg-[#F8FAFC]" />
-        </IssueStateCard>
+        <section className="rounded-[20px] border border-[#E6E8EC] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="flex min-w-0 flex-1 flex-col gap-3">
+                <Skeleton className="h-4 w-24 rounded-full" />
+                <Skeleton className="h-10 w-full max-w-[420px] rounded-[16px]" />
+                <div className="flex flex-wrap gap-2">
+                  <Skeleton className="h-8 w-20 rounded-full" />
+                  <Skeleton className="h-8 w-24 rounded-full" />
+                  <Skeleton className="h-8 w-16 rounded-full" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-10 w-24 rounded-[12px]" />
+                <Skeleton className="h-10 w-28 rounded-[12px]" />
+              </div>
+            </div>
+
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_320px]">
+              <div className="flex flex-col gap-5">
+                <DetailPanel className="space-y-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-24 rounded-full" />
+                    <Skeleton className="h-11 w-full rounded-[10px]" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-20 rounded-full" />
+                    <Skeleton className="h-[180px] w-full rounded-[16px]" />
+                  </div>
+                </DetailPanel>
+
+                <DetailPanel className="space-y-4">
+                  <Skeleton className="h-5 w-28 rounded-full" />
+                  <div className="space-y-3">
+                    <Skeleton className="h-[78px] w-full rounded-[14px]" />
+                    <Skeleton className="h-[78px] w-full rounded-[14px]" />
+                  </div>
+                </DetailPanel>
+              </div>
+
+              <div className="flex flex-col gap-5">
+                <DetailPanel className="space-y-4">
+                  <Skeleton className="h-5 w-20 rounded-full" />
+                  <div className="grid gap-3">
+                    <Skeleton className="h-[58px] w-full rounded-[10px]" />
+                    <Skeleton className="h-[58px] w-full rounded-[10px]" />
+                    <Skeleton className="h-[58px] w-full rounded-[10px]" />
+                  </div>
+                </DetailPanel>
+
+                <DetailPanel className="space-y-4">
+                  <Skeleton className="h-5 w-24 rounded-full" />
+                  <div className="space-y-3">
+                    <Skeleton className="h-12 w-full rounded-[12px]" />
+                    <Skeleton className="h-12 w-full rounded-[12px]" />
+                  </div>
+                </DetailPanel>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   );
