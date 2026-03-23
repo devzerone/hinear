@@ -179,6 +179,12 @@ export function IssueDetailLoadingScreen() {
       <div className="app-stack">
         <section className="rounded-[20px] border border-[#E6E8EC] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col gap-5">
+            <div className="sr-only">
+              <h1>Loading</h1>
+              <p role="status">
+                We&apos;re loading the latest issue details and activity.
+              </p>
+            </div>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex min-w-0 flex-1 flex-col gap-3">
                 <Skeleton className="h-4 w-24 rounded-full" />
