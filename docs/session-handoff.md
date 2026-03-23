@@ -128,6 +128,49 @@
   - `/projects/[projectId]/settings` 전용 route가 추가되어 access 관리 UI를 workspace에서 분리했다
   - settings 화면에서 project metadata (`name`, `key`, `type`) 수정이 가능하다
   - `team -> personal` 전환은 추가 멤버 또는 pending invitation이 남아 있으면 danger zone 정책으로 차단된다
+- **PWA 알림 시스템 구현** (2026-03-23)
+  - Service Worker for push notification handling (`public/sw.js`)
+  - PWA manifest configuration for standalone app support
+  - Service Worker auto-registration in root layout
+  - VAPID key configuration for web push authentication
+  - 4가지 알림 타입 구현:
+    - Issue assignment notifications
+    - Issue status change notifications
+    - Comment added notifications
+    - Project invitation notifications
+  - 알림 컴포넌트:
+    - `NotificationPermissionButton`: 알림 권한 요청 및 푸시 구독
+    - `NotificationSettingsCard`: 설정 UI (프로젝트 설정 페이지에 통합)
+  - API 라우트:
+    - `/api/notifications/subscribe`: 푸시 구독 처리
+    - `/api/notifications/send`: 알림 전송 (타입별 페이로드 생성)
+  - 알림 트리거 함수 (`src/lib/notifications/triggers.ts`):
+    - `triggerIssueAssignedNotification`
+    - `triggerIssueStatusChangedNotification`
+    - `triggerCommentAddedNotification`
+    - `triggerProjectInvitedNotification`
+  - 이슈 업데이트 API와 통합:
+    - 상태 변경 시 자동 알림 전송
+    - 담당자 할당 변경 시 자동 알림 전송
+    - 비동기 non-blocking 전송으로 UX 저하 방지
+  - 기술 구현:
+    - `web-push` library for VAPID authentication
+    - Base64 URL-safe encoding for applicationServerKey
+    - Proper BufferSource typing for TypeScript
+    - 환경 변수로 VAPID 키 관리
+- **Supabase DB 마이그레이션 추가** (2026-03-23)
+  - `0007_add_push_notification_subscriptions.sql`: 푸시 알림 구독 저장 테이블
+    - `push_subscriptions` 테이블 (user_id, endpoint, p256dh_key, auth_key)
+    - RLS 정책: 사용자는 자신의 구독만 관리 가능
+    - 인덱스: user_id, endpoint
+  - `0008_add_notification_preferences.sql`: 사용자별 알림 설정 테이블
+    - `notification_preferences` 테이블 (issue_assigned, issue_status_changed, comment_added, project_invited)
+    - `get_or_create_notification_preferences` RPC 함수
+    - RLS 정책: 사용자는 자신의 설정만 관리 가능
+- **Supabase MCP 서버 설정** (2026-03-23)
+  - `.mcp.json`에 Supabase MCP 서버 추가
+  - 프로젝트 ref: `pmyrrckkiomjwjqntymr`
+  - 인증 필요: 별도 터미널에서 `claude /mcp` 실행 필요
 
 ## Key Files
 
@@ -156,6 +199,22 @@
 - [src/app/projects/new/page.tsx](/Users/choiho/zerone/hinear/src/app/projects/new/page.tsx)
 - [src/app/projects/[projectId]/page.tsx](/Users/choiho/zerone/hinear/src/app/projects/[projectId]/page.tsx)
 - [src/app/projects/[projectId]/issues/[issueId]/page.tsx](/Users/choiho/zerone/hinear/src/app/projects/[projectId]/issues/[issueId]/page.tsx)
+- PWA Notification System:
+  - [public/sw.js](/Users/choiho/zerone/hinear/public/sw.js) - Service Worker for push notifications
+  - [public/manifest.webmanifest](/Users/choiho/zerone/hinear/public/manifest.webmanifest) - PWA manifest
+  - [src/features/notifications/types.ts](/Users/choiho/zerone/hinear/src/features/notifications/types.ts) - Notification type definitions
+  - [src/features/notifications/components/NotificationPermissionButton.tsx](/Users/choiho/zerone/hinear/src/features/notifications/components/NotificationPermissionButton.tsx) - Permission request UI
+  - [src/features/notifications/components/NotificationSettingsCard.tsx](/Users/choiho/zerone/hinear/src/features/notifications/components/NotificationSettingsCard.tsx) - Settings UI
+  - [src/app/api/notifications/subscribe/route.ts](/Users/choiho/zerone/hinear/src/app/api/notifications/subscribe/route.ts) - Subscription endpoint
+  - [src/app/api/notifications/send/route.ts](/Users/choiho/zerone/hinear/src/app/api/notifications/send/route.ts) - Send notification endpoint
+  - [src/lib/notifications/triggers.ts](/Users/choiho/zerone/hinear/src/lib/notifications/triggers.ts) - Notification trigger functions
+  - [src/lib/notifications/push.ts](/Users/choiho/zerone/hinear/src/lib/notifications/push.ts) - Push notification utilities
+  - [src/components/organisms/ServiceWorkerRegister.tsx](/Users/choiho/zerone/hinear/src/components/organisms/ServiceWorkerRegister.tsx) - SW registration
+- Database Migrations:
+  - [supabase/migrations/0007_add_push_notification_subscriptions.sql](/Users/choiho/zerone/hinear/supabase/migrations/0007_add_push_notification_subscriptions.sql)
+  - [supabase/migrations/0008_add_notification_preferences.sql](/Users/choiho/zerone/hinear/supabase/migrations/0008_add_notification_preferences.sql)
+- MCP Configuration:
+  - [.mcp.json](/Users/choiho/zerone/hinear/.mcp.json) - Supabase MCP server configuration
 
 ## Checks Last Run
 
@@ -234,6 +293,14 @@ Additional UI check run in this session:
   - comments and activity remain separate repository reads
   - page layer composes them with `Promise.all` for the detail screen
   - do not widen `getIssueById` into a heavy aggregate while board/update paths still depend on the lean issue shape
+- PWA 알림 시스템 현재 상태 (2026-03-23):
+  - Service Worker가 푸시 알림 수신 및 표시 처리
+  - 알림 권한 요청 및 구독 UI 완료
+  - 4가지 알림 타입의 페이로드 생성 로직 완료
+  - 이슈 업데이트 시 자동 알림 트리거 통합 완료
+  - **현재 한계**: 구독 정보가 메모리(Map)에 저장되어 서버 재시작 시 소실
+  - DB 마이그레이션 파일이 생성되었으나 아직 적용되지 않음
+  - Supabase MCP 서버가 설정되었으나 아직 인증되지 않음 (별도 터미널에서 `claude /mcp` 필요)
 
 ## Current Risk
 
@@ -252,6 +319,48 @@ The remaining risk is narrower now:
 - remaining work is mostly final verification and cleanup, not core feature implementation
 
 ## Next Session Priority
+
+### 0. PWA 알림 시스템 완성 (新增)
+
+**목표**: 메모리 저장을 DB 저장으로 전환하고 실제 사용 환경에서 테스트
+
+**작업 순서**:
+
+1. **Supabase MCP 인증** (별도 터미널에서):
+   ```bash
+   claude /mcp
+   ```
+
+2. **마이그레이션 적용**:
+   - 로컬: `npx supabase start` 후 `npx supabase migration up`
+   - 원격: Supabase MCP 또는 Dashboard에서 SQL 실행
+   - `0007_add_push_notification_subscriptions.sql`
+   - `0008_add_notification_preferences.sql`
+
+3. **Repository 구현**:
+   - `SupabasePushSubscriptionsRepository` 생성
+   - `subscribe()`, `unsubscribe()`, `getByUser()`, `getActiveSubscriptions()`
+   - API 라우트에서 메모리 Map 대신 repository 사용
+
+4. **알림 대상 필터링**:
+   - 현재: 모든 구독자에게 전송
+   - 개선: 관련 사용자만 필터링 (이슈 담당자, 프로젝트 멤버 등)
+
+5. **알림 설정 UI 추가**:
+   - `NotificationSettingsCard`에 토글 스위치 추가
+   - `notification_preferences` 테이블과 연동
+   - 타입별 on/off 설정
+
+6. **실제 테스트**:
+   - 개발 서버 실행 (`pnpm dev`)
+   - 알림 권한 요청 및 구독 테스트
+   - 이슈 상태/담당자 변경 시 알림 확인
+
+**관련 파일**:
+- `src/app/api/notifications/subscribe/route.ts` - 메모리 Map → repository
+- `src/app/api/notifications/send/route.ts` - 대상 필터링 로직 추가
+- `src/features/notifications/components/NotificationSettingsCard.tsx` - 설정 UI 확장
+- `src/lib/notifications/triggers.ts` - 사용자 ID 전달 로직 확인
 
 ### 1. Polish route states and verification
 
@@ -319,9 +428,30 @@ See [optimistic-locking.md](/Users/choiho/zerone/hinear/docs/issue-detail/optimi
 - invitation send / resend / revoke / accept are wired through real server actions and `/invite/[token]` routes
 - profile rows are upserted on authenticated request reads through [server-auth.ts](/Users/choiho/zerone/hinear/src/lib/supabase/server-auth.ts)
 - `0005_add_profiles.sql` exists locally but remote Supabase apply is still a separate verification step
+- **PWA 알림 시스템 관련** (2026-03-23):
+  - VAPID 키가 `.env.local`에 설정되어 있음
+    - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
+    - `VAPID_PRIVATE_KEY`
+    - `NOTIFICATION_PUBLIC_KEY`
+  - 현재 push subscription이 메모리(Map)에 저장되어 서버 재시작 시 소실
+  - DB 마이그레이션 `0007`, `0008`이 생성되었으나 아직 적용되지 않음
+  - Supabase MCP가 `.mcp.json`에 설정되었으나 인증 필요 (별도 터미널에서 `claude /mcp`)
+  - Service Worker가 `/public/sw.js`에 있으며 자동 등록됨
+  - 알림 설정이 프로젝트 설정(`/projects/[projectId]/settings`) 페이지에 통합됨
 
 ## Suggested First Prompt For Next Session
 
 ```text
-Continue from docs/session-handoff.md, docs/todo.md, and docs/logs/2026-03-21.md on branch main. Project workspace/invitations/profiles are now wired end-to-end, so verify the new invitation flows against the real database and finish not-found/loading/empty polish.
+Continue from docs/session-handoff.md, docs/todo.md on branch main.
+
+**Priority 1**: Complete PWA notification system
+- Authenticate Supabase MCP in separate terminal: `claude /mcp`
+- Apply migrations 0007, 0008 to database
+- Replace in-memory subscription storage with Supabase repository
+- Add notification preference toggles to settings UI
+- Test push notifications end-to-end
+
+**Priority 2**: Polish remaining routes
+- Verify invitation flows against real database
+- Finish not-found/loading/empty state polish
 ```
