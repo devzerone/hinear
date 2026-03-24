@@ -47,6 +47,7 @@ export async function loadIssueDetail(
 
   return {
     activityLog: [], // TODO: Implement activity log loading
+    comments: [], // TODO: Implement comments loading
     assigneeOptions,
     memberNamesById,
     project,

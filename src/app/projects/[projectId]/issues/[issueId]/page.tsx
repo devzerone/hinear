@@ -51,15 +51,14 @@ export default async function IssueDetailPage({
     memberNamesById[member.id] = member.name;
   }
 
-  const createdByName = memberNamesById[issueDetail.issue.createdBy];
-  const lastEditedByName = memberNamesById[issueDetail.issue.updatedBy];
-
   // Render based on view parameter
   if (view === "full") {
     return (
       <IssueDetailFullPageScreen
+        activityLog={issueDetail.activityLog}
         assigneeOptions={assigneeOptions}
         boardHref={`/projects/${projectId}`}
+        comments={issueDetail.comments}
         issue={issueDetail.issue}
         memberNamesById={memberNamesById}
       />
@@ -85,10 +84,8 @@ export default async function IssueDetailPage({
           activityLog={issueDetail.activityLog}
           assigneeOptions={assigneeOptions}
           boardHref={`/projects/${projectId}`}
-          createdByName={createdByName}
           fullPageHref={`/projects/${projectId}/issues/${issueId}?view=full`}
           issue={issueDetail.issue}
-          lastEditedByName={lastEditedByName}
           memberNamesById={memberNamesById}
         />
       </div>
