@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
-import { loadCommentsContainer } from "@/features/comments/containers/load-comments-container";
-import { CommentsPresenter } from "@/features/comments/presenters/comments-presenter";
 import {
   getMutationErrorStatus,
   inferMutationErrorCode,
 } from "@/features/issues/lib/mutation-error-messages";
 import { getServerIssuesRepository } from "@/features/issues/repositories/server-issues-repository";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
-import { createRequestSupabaseServerClient } from "@/lib/supabase/server-client";
 
 interface RouteContext {
   params: Promise<{
@@ -34,30 +31,38 @@ export async function GET(_request: Request, context: RouteContext) {
   const actorId = await getAuthenticatedActorIdOrNull();
 
   if (!actorId) {
-    return CommentsPresenter.presentAuthRequired();
+    return NextResponse.json(
+      { code: "AUTH_REQUIRED", error: "Authentication required." },
+      { status: 401 }
+    );
   }
 
-  const { issueId } = await context.params;
-  const supabase = await createRequestSupabaseServerClient();
+  try {
+    const { issueId } = await context.params;
+    const repository = await getServerIssuesRepository();
+    const comments = await repository.listCommentsByIssueId(issueId);
 
-  const result = await loadCommentsContainer(supabase, issueId);
-
-  if (result.error) {
-    return CommentsPresenter.presentError(result.error);
+    return NextResponse.json({ comments });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        code: "COMMENTS_LOAD_ERROR",
+        error:
+          error instanceof Error ? error.message : "Failed to load comments",
+      },
+      { status: 500 }
+    );
   }
-
-  if (!result.data) {
-    return CommentsPresenter.presentError(new Error("Failed to load comments"));
-  }
-
-  return CommentsPresenter.presentSuccess(result.data);
 }
 
 export async function POST(request: Request, context: RouteContext) {
   const actorId = await getAuthenticatedActorIdOrNull();
 
   if (!actorId) {
-    return CommentsPresenter.presentAuthRequired();
+    return NextResponse.json(
+      { code: "AUTH_REQUIRED", error: "Authentication required." },
+      { status: 401 }
+    );
   }
 
   const commentBody = parseCommentBody(await request.json().catch(() => null));

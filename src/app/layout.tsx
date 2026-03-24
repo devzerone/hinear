@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { ServiceWorkerRegister } from "@/components/organisms/ServiceWorkerRegister";
-import { QueryClientProvider } from "@/lib/react-query/providers";
 import "./globals.css";
 
 const PRIMARY_COLOR = "#5e6ad2";
@@ -87,10 +86,8 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        <QueryClientProvider>
-          <ServiceWorkerRegister />
-          {children}
-        </QueryClientProvider>
+        <ServiceWorkerRegister />
+        {children}
       </body>
     </html>
   );
