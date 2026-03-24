@@ -1,10 +1,5 @@
-import { NextResponse } from "next/server";
-import { toBoardIssue } from "@/features/issues/lib/issue-contract-adapter";
-import {
-  getMutationErrorStatus,
-  inferMutationErrorCode,
-} from "@/features/issues/lib/mutation-error-messages";
-import { getServerIssuesRepository } from "@/features/issues/repositories/server-issues-repository";
+import { loadProjectIssuesContainer } from "@/features/issues/containers/load-project-issues-container";
+import { IssuesApiPresenter } from "@/features/issues/presenters/issues-api-presenter";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
 import { createRequestSupabaseServerClient } from "@/lib/supabase/server-client";
 
@@ -15,71 +10,22 @@ interface RouteContext {
 }
 
 export async function GET(_request: Request, context: RouteContext) {
+  // 인증 체크
   if (!(await getAuthenticatedActorIdOrNull())) {
-    return NextResponse.json(
-      {
-        code: "AUTH_REQUIRED",
-        error: "Authentication required.",
-      },
-      { status: 401 }
-    );
+    return IssuesApiPresenter.presentAuthRequired();
   }
 
-  try {
-    const { projectId } = await context.params;
-    const repository = await getServerIssuesRepository();
-    const issues = await repository.listIssuesByProject(projectId);
+  const { projectId } = await context.params;
+  const supabase = await createRequestSupabaseServerClient();
 
-    const assigneeIds = [
-      ...new Set(
-        issues
-          .map((issue) => issue.assigneeId)
-          .filter((id): id is string => id !== null)
-      ),
-    ];
+  // Container: 데이터 페칭
+  const result = await loadProjectIssuesContainer(supabase, projectId);
 
-    // 병렬로 프로필 데이터 페칭
-    const supabase = await createRequestSupabaseServerClient();
-    const [profileResult] = await Promise.all([
-      assigneeIds.length
-        ? supabase
-            .from("profiles")
-            .select("id, display_name, avatar_url")
-            .in("id", assigneeIds)
-        : Promise.resolve({ data: [] }),
-    ]);
-
-    const { data: profileRows } = profileResult;
-    const assigneesById = new Map(
-      (profileRows ?? []).map((profile) => [
-        profile.id,
-        {
-          avatarUrl: profile.avatar_url,
-          name: profile.display_name?.trim() || profile.id,
-        },
-      ])
-    );
-
-    return NextResponse.json({
-      issues: issues.map((issue) =>
-        toBoardIssue(
-          issue,
-          issue.assigneeId ? assigneesById.get(issue.assigneeId) : null
-        )
-      ),
-      total: issues.length,
-    });
-  } catch (error) {
-    const code = inferMutationErrorCode(error);
-    const status = getMutationErrorStatus(code);
-
-    return NextResponse.json(
-      {
-        code,
-        error:
-          error instanceof Error ? error.message : "Failed to load issues.",
-      },
-      { status }
-    );
+  if (result.error) {
+    // Presenter: 에러 응답
+    return IssuesApiPresenter.presentError(result.error);
   }
+
+  // Presenter: 성공 응답
+  return IssuesApiPresenter.presentSuccess(result.data);
 }
