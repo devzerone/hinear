@@ -10,6 +10,7 @@ import { Field } from "@/components/atoms/Field";
 import { Select } from "@/components/atoms/Select";
 import { ConflictDialog } from "@/components/molecules/ConflictDialog";
 import { DueDateField } from "@/components/molecules/DueDateField";
+import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
 import {
   getMutationErrorCode,
   getMutationErrorFallbackMessage,
@@ -362,10 +363,11 @@ export function IssueDetailDrawerScreen({
             </span>
           </div>
 
-          <textarea
-            className="min-h-[160px] w-full rounded-[12px] border border-[#E6E8EC] bg-[#FCFCFD] px-4 py-3 text-[13px] leading-[1.55] text-[#111318] outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-brand-300)]"
-            onChange={(event) => setDescriptionDraft(event.target.value)}
+          <MarkdownEditor
             value={descriptionDraft}
+            onChange={setDescriptionDraft}
+            placeholder="이슈에 대한 자세한 설명을 작성해주세요..."
+            minHeight="160px"
           />
         </section>
 

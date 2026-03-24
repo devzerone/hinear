@@ -6,6 +6,7 @@ import * as React from "react";
 
 import { Field } from "@/components/atoms/Field";
 import { Select } from "@/components/atoms/Select";
+import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
 import { cn } from "@/lib/utils";
 
 interface SelectOption {
@@ -125,6 +126,7 @@ export function MobileIssueCreateScreen({
   statusOptions = DEFAULT_STATUS_OPTIONS,
 }: MobileIssueCreateScreenProps) {
   const formId = React.useId();
+  const [description, setDescription] = React.useState(defaultDescription);
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
@@ -280,18 +282,16 @@ export function MobileIssueCreateScreen({
             </span>
           </div>
 
-          <div className="flex flex-col gap-[10px] rounded-[12px] border border-[var(--app-color-border-soft)] bg-[#FCFCFD] p-3">
-            <textarea
-              className="min-h-[108px] w-full resize-none bg-transparent text-[13px] leading-[1.5] font-normal text-[var(--app-color-ink-900)] outline-none placeholder:text-[#8A90A2]"
-              defaultValue={defaultDescription}
-              id="mobile-create-issue-description"
-              name="description"
-              placeholder={"# 요약\n이슈 개요를 짧게 적어주세요..."}
-            />
-            <p className="text-[11px] leading-[1.45] font-[var(--app-font-weight-500)] text-[#8A90A2]">
-              /로 checklist나 code block을 추가할 수 있습니다.
-            </p>
-          </div>
+          <MarkdownEditor
+            value={description}
+            onChange={setDescription}
+            placeholder="# 요약\n이슈 개요를 짧게 적어주세요..."
+            minHeight="108px"
+          />
+          <input type="hidden" name="description" value={description} />
+          <p className="text-[11px] leading-[1.45] font-[var(--app-font-weight-500)] text-[#8A90A2]">
+            /로 checklist나 code block을 추가할 수 있습니다.
+          </p>
         </div>
       </form>
     </div>

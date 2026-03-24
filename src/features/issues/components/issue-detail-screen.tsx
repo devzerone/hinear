@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -227,45 +228,22 @@ export function IssueDetailLoadingScreen() {
 
 export function IssueDetailErrorScreen({
   boardHref,
-  onRetry,
 }: IssueDetailStateScreenProps) {
-  return (
-    <main className="app-shell">
-      <div className="app-stack">
-        <IssueStateCard
-          actions={
-            <>
-              <button
-                className={getButtonClassName("primary", "sm")}
-                onClick={onRetry}
-                type="button"
-              >
-                Retry
-              </button>
-              <Link
-                className={getButtonClassName("secondary", "sm")}
-                href={boardHref}
-              >
-                Back to board
-              </Link>
-            </>
-          }
-          title="Error"
-          titleClassName="text-[#9A3412]"
-        >
-          <div className="rounded-[14px] border border-[#FDBA74] bg-[#FFF7ED] px-[18px] py-4">
-            <p className="text-[16px] font-bold text-[#9A3412]">
-              We couldn&apos;t load this issue
-            </p>
-            <p className="mt-2 text-[13px] font-medium leading-5 text-[#7C2D12]">
-              Refresh the detail view to try again, or return to the board and
-              open another issue.
-            </p>
-          </div>
-        </IssueStateCard>
-      </div>
-    </main>
-  );
+  const router = useRouter();
+
+  useEffect(() => {
+    toast.error(
+      "We couldn't load this issue. Refresh the detail view to try again."
+    );
+
+    const timer = setTimeout(() => {
+      router.push(boardHref);
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [boardHref, router]);
+
+  return null;
 }
 
 export function IssueDetailNotFoundScreen({
