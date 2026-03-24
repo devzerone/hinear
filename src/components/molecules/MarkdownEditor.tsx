@@ -3,7 +3,6 @@
 import { EditorContent, useEditor } from "@tiptap/react";
 import { cn } from "@/lib/utils";
 import "./MarkdownEditor.css";
-import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
@@ -53,15 +52,15 @@ export function MarkdownEditor({
           keepMarks: true,
           keepAttributes: false,
         },
+        link: {
+          openOnClick: false,
+          HTMLAttributes: {
+            class: "text-[#4338CA] underline",
+          },
+        },
       }),
       Placeholder.configure({
         placeholder,
-      }),
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: {
-          class: "text-[#4338CA] underline",
-        },
       }),
       TaskList,
       TaskItem.configure({
