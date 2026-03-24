@@ -319,10 +319,14 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     assertQuerySucceeded("Failed to load project issues", error);
 
     const issues = (data ?? []).map(mapIssue);
-    const labelsByIssueId = await this.listLabelsByIssueIds(
-      issues.map((issue) => issue.id),
-      projectId
-    );
+
+    // 병렬로 관련 데이터 페칭
+    const [labelsByIssueId] = await Promise.all([
+      this.listLabelsByIssueIds(
+        issues.map((issue) => issue.id),
+        projectId
+      ),
+    ]);
 
     return issues.map((issue) => ({
       ...issue,
@@ -550,9 +554,14 @@ export class SupabaseIssuesRepository implements IssuesRepository {
 
     const issue = mapIssue(data);
 
+    // 병렬로 관련 데이터 페칭
+    const [labels] = await Promise.all([
+      this.listIssueLabels(issue.id, issue.projectId),
+    ]);
+
     return {
       ...issue,
-      labels: await this.listIssueLabels(issue.id, issue.projectId),
+      labels,
     };
   }
 }

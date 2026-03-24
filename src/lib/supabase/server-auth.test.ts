@@ -6,6 +6,11 @@ const { createRequestSupabaseServerClientMock } = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 
+// React cache 함수 mock - 테스트에서는 단순히 함수를 통과시킴
+vi.mock("react", () => ({
+  cache: (fn: unknown) => fn,
+}));
+
 vi.mock("@/lib/supabase/server-client", () => ({
   createRequestSupabaseServerClient: createRequestSupabaseServerClientMock,
 }));
@@ -24,6 +29,14 @@ describe("server auth helpers", () => {
 
   it("returns the authenticated user id when present", async () => {
     const upsert = vi.fn().mockResolvedValue({ error: null });
+    const select = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        maybeSingle: vi.fn().mockResolvedValue({
+          data: null, // 프로필이 없는 경우
+          error: null,
+        }),
+      }),
+    });
 
     createRequestSupabaseServerClientMock.mockResolvedValue({
       auth: {
@@ -42,6 +55,7 @@ describe("server auth helpers", () => {
       },
       from: vi.fn().mockReturnValue({
         upsert,
+        select,
       }),
     });
 

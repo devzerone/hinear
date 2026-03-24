@@ -29,6 +29,7 @@ export async function GET(_request: Request, context: RouteContext) {
     const { projectId } = await context.params;
     const repository = await getServerIssuesRepository();
     const issues = await repository.listIssuesByProject(projectId);
+
     const assigneeIds = [
       ...new Set(
         issues
@@ -36,13 +37,19 @@ export async function GET(_request: Request, context: RouteContext) {
           .filter((id): id is string => id !== null)
       ),
     ];
+
+    // 병렬로 프로필 데이터 페칭
     const supabase = await createRequestSupabaseServerClient();
-    const { data: profileRows } = assigneeIds.length
-      ? await supabase
-          .from("profiles")
-          .select("id, display_name, avatar_url")
-          .in("id", assigneeIds)
-      : { data: [] };
+    const [profileResult] = await Promise.all([
+      assigneeIds.length
+        ? supabase
+            .from("profiles")
+            .select("id, display_name, avatar_url")
+            .in("id", assigneeIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    const { data: profileRows } = profileResult;
     const assigneesById = new Map(
       (profileRows ?? []).map((profile) => [
         profile.id,
