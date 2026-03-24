@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, ChevronLeft, Ellipsis } from "lucide-react";
+import { ChevronLeft, Ellipsis } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -421,9 +421,11 @@ export function IssueDetailFullPageScreen({
                   {memberNamesById[comment.authorId] ?? comment.authorId} ·{" "}
                   {formatRelativeTime(comment.createdAt)}
                 </p>
-                <p className="text-[13px] leading-[1.45] text-[#4B5563]">
-                  {comment.body}
-                </p>
+                <div
+                  className="prose prose-sm max-w-none text-[13px] leading-[1.45] text-[#4B5563]"
+                  // biome-ignore lint/security/noDangerouslySetInnerHtml: User-generated markdown content
+                  dangerouslySetInnerHTML={{ __html: comment.body }}
+                />
               </div>
             ))
           ) : (
@@ -432,11 +434,11 @@ export function IssueDetailFullPageScreen({
             </p>
           )}
 
-          <textarea
-            className="min-h-[44px] w-full rounded-[12px] border border-[#E6E8EC] bg-[#FCFCFD] px-[14px] py-3 text-[12px] leading-[1.45] text-[#111318] outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-brand-300)]"
-            onChange={(event) => setCommentDraft(event.target.value)}
-            placeholder="댓글을 입력하세요..."
+          <MarkdownEditor
             value={commentDraft}
+            onChange={setCommentDraft}
+            placeholder="댓글을 입력하세요..."
+            minHeight="44px"
           />
           <div className="flex justify-end">
             <Button
@@ -511,12 +513,8 @@ export function IssueDetailFullPageScreen({
               {issueState.identifier} / Full page
             </p>
             <h1 className="text-[32px] leading-[1.05] font-[var(--app-font-weight-700)] text-[#111318]">
-              Issue Detail / Full page
+              Issue Full page
             </h1>
-            <p className="text-[13px] leading-[1.5] text-[#6B7280]">
-              Primary MVP route. Keep metadata and comments here; compact drawer
-              stays for board exploration.
-            </p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -536,15 +534,6 @@ export function IssueDetailFullPageScreen({
               Save changes
             </Button>
           </div>
-        </div>
-
-        <div className="flex items-center gap-3 rounded-[14px] border border-[#C7D2FE] bg-[#EEF2FF] px-[14px] py-3 text-[12px] leading-5 font-[var(--app-font-weight-600)] text-[#3730A3]">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>
-            Shared detail model: full page keeps metadata, full activity log,
-            and failure memo. Drawer stays compact and opens from board
-            exploration.
-          </span>
         </div>
 
         {errorMessage ? (
@@ -736,11 +725,12 @@ export function IssueDetailFullPageScreen({
                 >
                   New comment
                 </label>
-                <textarea
-                  className="mt-2 min-h-[96px] w-full rounded-[12px] border border-[#E6E8EC] bg-white px-4 py-3 text-[14px] leading-6 text-[#111318] outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-brand-300)]"
-                  id="issue-comment-draft"
-                  onChange={(event) => setCommentDraft(event.target.value)}
+                <MarkdownEditor
                   value={commentDraft}
+                  onChange={setCommentDraft}
+                  placeholder="댓글을 입력하세요..."
+                  minHeight="96px"
+                  className="mt-2"
                 />
                 <div className="mt-3 flex justify-end">
                   <Button
@@ -770,9 +760,11 @@ export function IssueDetailFullPageScreen({
                           {formatTimestamp(comment.createdAt)}
                         </span>
                       </div>
-                      <p className="mt-2 text-[13px] leading-6 text-[#374151]">
-                        {comment.body}
-                      </p>
+                      <div
+                        className="prose prose-sm max-w-none mt-2 text-[13px] leading-6 text-[#374151]"
+                        // biome-ignore lint/security/noDangerouslySetInnerHtml: User-generated markdown content
+                        dangerouslySetInnerHTML={{ __html: comment.body }}
+                      />
                     </div>
                   ))
                 ) : (
