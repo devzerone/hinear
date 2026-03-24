@@ -12,7 +12,8 @@ export class AuthenticationRequiredError extends Error {
   }
 }
 
-async function syncAuthenticatedProfile(
+// OAuth 콜백 전용 프로필 동기화 - 일반 API 요청에서는 호출되지 않음
+export async function syncAuthenticatedProfile(
   supabase: AppSupabaseServerClient,
   user: User
 ) {
@@ -27,24 +28,6 @@ async function syncAuthenticatedProfile(
     user.user_metadata?.name?.trim() ||
     null;
   const avatarUrl = user.user_metadata?.avatar_url?.trim() || null;
-
-  // 기존 프로필 확인
-  const { data: existingProfile } = await supabase
-    .from("profiles")
-    .select("display_name, avatar_url, email")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  // 프로필이 없거나 데이터가 변경된 경우에만 upsert
-  const needsUpdate =
-    !existingProfile ||
-    existingProfile.display_name !== displayName ||
-    existingProfile.avatar_url !== avatarUrl ||
-    existingProfile.email !== email;
-
-  if (!needsUpdate) {
-    return;
-  }
 
   await supabase.from("profiles").upsert(
     {
@@ -71,8 +54,6 @@ export const getAuthenticatedUserOrNull = cache(
     if (error || !user) {
       return null;
     }
-
-    await syncAuthenticatedProfile(supabase, user);
 
     return user;
   }
