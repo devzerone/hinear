@@ -367,12 +367,21 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     commentId: string,
     updates: { body: string }
   ): Promise<Comment> {
+    console.log(
+      "[updateComment] Updating comment:",
+      commentId,
+      "with body:",
+      updates.body
+    );
+
     const { data, error } = await this.client
       .from("comments")
       .update({ body: updates.body })
       .eq("id", commentId)
       .select()
       .single();
+
+    console.log("[updateComment] Data:", data, "Error:", error);
 
     assertQuerySucceeded("Failed to update comment", error);
 
