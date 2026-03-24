@@ -12,7 +12,9 @@ import {
   Bold,
   CheckSquare,
   Code,
+  Heading1,
   Heading2,
+  Heading3,
   Italic,
   Link as LinkIcon,
   List,
@@ -41,7 +43,7 @@ export function MarkdownEditor({
     extensions: [
       StarterKit.configure({
         heading: {
-          levels: [2, 3],
+          levels: [1, 2, 3, 4, 5, 6],
         },
         bulletList: {
           keepMarks: true,
@@ -155,12 +157,30 @@ export function MarkdownEditor({
         <div className="mx-1 h-4 w-px bg-[#E6E8EC]" />
         <ToolbarButton
           onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 1 }).run()
+          }
+          isActive={editor.isActive("heading", { level: 1 })}
+          title="Heading 1"
+        >
+          <Heading1 className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() =>
             editor.chain().focus().toggleHeading({ level: 2 }).run()
           }
           isActive={editor.isActive("heading", { level: 2 })}
-          title="Heading"
+          title="Heading 2"
         >
           <Heading2 className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 3 }).run()
+          }
+          isActive={editor.isActive("heading", { level: 3 })}
+          title="Heading 3"
+        >
+          <Heading3 className="h-4 w-4" />
         </ToolbarButton>
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
