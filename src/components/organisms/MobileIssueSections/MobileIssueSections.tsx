@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Chip } from "@/components/atoms/Chip";
-import { getIssuePath } from "@/features/projects/lib/paths";
+import { getIssuePath } from "@/features/projects/lib/project-routes";
 import { cn } from "@/lib/utils";
 import type {
   Issue,

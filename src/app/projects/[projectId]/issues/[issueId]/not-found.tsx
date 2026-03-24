@@ -6,7 +6,7 @@ import { IssueDetailNotFoundScreen } from "@/features/issues/components/issue-de
 import {
   getProjectIssueCreatePath,
   getProjectPath,
-} from "@/features/projects/lib/paths";
+} from "@/features/projects/lib/project-routes";
 
 export default function IssueDetailNotFoundPage() {
   const params = useParams<{ projectId: string }>();

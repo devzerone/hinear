@@ -1,7 +1,7 @@
 import { createIssueAction } from "@/features/issues/actions/create-issue-action";
-import { IssueDetailDrawerScreen } from "@/features/issues/components/issue-detail-drawer-screen";
 import { IssueDetailFullPageScreen } from "@/features/issues/components/issue-detail-full-page-screen";
-import { loadIssueDetail } from "@/features/issues/lib/load-issue-detail";
+import { IssueDetailDrawerScreen } from "@/features/issues/components/issue-drawer-screen";
+import { loadIssueDetail } from "@/features/issues/lib/issue-detail-loader";
 import { inviteProjectMemberAction } from "@/features/projects/actions/invite-project-member-action";
 import { manageProjectInvitationAction } from "@/features/projects/actions/manage-project-invitation-action";
 import { manageProjectMemberAction } from "@/features/projects/actions/manage-project-member-action";

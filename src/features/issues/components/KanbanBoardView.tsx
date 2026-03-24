@@ -9,7 +9,7 @@ import { MobileIssueListAppBar } from "@/components/molecules/MobileIssueListApp
 import { CreateIssueTabletModal } from "@/components/organisms/CreateIssueTabletModal";
 import { LinearDashboardHeader } from "@/components/organisms/LinearDashboardHeader";
 import { MobileIssueSections } from "@/components/organisms/MobileIssueSections";
-import { getProjectIssueCreatePath } from "@/features/projects/lib/paths";
+import { getProjectIssueCreatePath } from "@/features/projects/lib/project-routes";
 import type { IssueStatus } from "@/specs/issue-detail.contract";
 import { useIssues } from "../hooks/useIssues";
 import { KanbanBoard } from "./KanbanBoard";

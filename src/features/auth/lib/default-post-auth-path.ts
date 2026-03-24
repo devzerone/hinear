@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getProjectDashboardPath } from "@/features/projects/lib/paths";
+import { getProjectDashboardPath } from "@/features/projects/lib/project-routes";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
 import { createRequestSupabaseServerClient } from "@/lib/supabase/server-client";
 

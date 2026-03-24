@@ -4,7 +4,7 @@ import { manageProjectInvitationAction } from "@/features/projects/actions/manag
 import { manageProjectMemberAction } from "@/features/projects/actions/manage-project-member-action";
 import { ProjectWorkspaceScreen } from "@/features/projects/components/project-workspace-screen";
 import { loadProjectWorkspace } from "@/features/projects/lib/load-project-workspace";
-import { getProjectPath } from "@/features/projects/lib/paths";
+import { getProjectPath } from "@/features/projects/lib/project-routes";
 
 interface ProjectPageProps {
   params: Promise<{

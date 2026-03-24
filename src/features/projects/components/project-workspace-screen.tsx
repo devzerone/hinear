@@ -4,7 +4,7 @@ import {
   getProjectDashboardPath,
   getProjectPath,
   getProjectSettingsPath,
-} from "@/features/projects/lib/paths";
+} from "@/features/projects/lib/project-routes";
 import type {
   Project,
   ProjectInvitationSummary,

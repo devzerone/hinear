@@ -9,7 +9,7 @@ import {
   getProjectIssueCreatePath,
   getProjectPath,
   getProjectSettingsPath,
-} from "@/features/projects/lib/paths";
+} from "@/features/projects/lib/project-routes";
 
 interface NewProjectIssuePageProps {
   params: Promise<{

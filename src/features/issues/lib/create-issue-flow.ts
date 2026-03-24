@@ -1,6 +1,6 @@
 import type { IssuesRepository } from "@/features/issues/contracts";
 import { createIssueDraft } from "@/features/issues/lib/create-issue";
-import { getIssuePath } from "@/features/projects/lib/paths";
+import { getIssuePath } from "@/features/projects/lib/project-routes";
 
 export interface CreateIssueFlowInput {
   actorId: string;

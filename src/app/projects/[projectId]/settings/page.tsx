@@ -4,7 +4,7 @@ import { manageProjectMemberAction } from "@/features/projects/actions/manage-pr
 import { updateProjectAction } from "@/features/projects/actions/update-project-action";
 import { ProjectSettingsScreen } from "@/features/projects/components/project-settings-screen";
 import { loadProjectWorkspace } from "@/features/projects/lib/load-project-workspace";
-import { getProjectSettingsPath } from "@/features/projects/lib/paths";
+import { getProjectSettingsPath } from "@/features/projects/lib/project-routes";
 
 interface ProjectSettingsPageProps {
   params: Promise<{

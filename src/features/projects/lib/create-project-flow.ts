@@ -1,6 +1,6 @@
 import type { ProjectsRepository } from "@/features/projects/contracts";
 import { createProjectWithOwner } from "@/features/projects/lib/create-project";
-import { getProjectPath } from "@/features/projects/lib/paths";
+import { getProjectPath } from "@/features/projects/lib/project-routes";
 import type { ProjectType } from "@/features/projects/types";
 
 export interface CreateProjectFlowInput {
