@@ -532,24 +532,81 @@ export function IssueDetailFullPageScreen({
             titleClassName="text-[14px] font-[var(--app-font-weight-600)]"
           />
           {commentsState.length > 0 ? (
-            commentsState.slice(0, 1).map((comment) => (
-              <div className="flex flex-col gap-2" key={comment.id}>
-                <IssueCommentMeta
-                  authorLabel={
-                    memberNamesById[comment.authorId] ?? comment.authorId
-                  }
-                  className="[&_span:first-child]:text-[11px] [&_span:first-child]:font-[var(--app-font-weight-600)] [&_span:last-child]:text-[11px]"
-                  createdAt={comment.createdAt}
-                  dateVariant="relative"
-                  now={now}
-                />
+            <div className="flex flex-col gap-3">
+              {commentsState.map((comment) => (
                 <div
-                  className="prose prose-sm max-w-none text-[13px] leading-[1.45] text-[#4B5563]"
-                  // biome-ignore lint/security/noDangerouslySetInnerHtml: User-generated markdown content
-                  dangerouslySetInnerHTML={{ __html: comment.body }}
-                />
-              </div>
-            ))
+                  className="rounded-[14px] border border-[#E6E8EC] bg-[#FCFCFD] px-[18px] py-4"
+                  key={comment.id}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <IssueCommentMeta
+                      authorLabel={
+                        memberNamesById[comment.authorId] ?? comment.authorId
+                      }
+                      className="[&_span:first-child]:text-[11px] [&_span:first-child]:font-[var(--app-font-weight-600)] [&_span:last-child]:text-[11px]"
+                      createdAt={comment.createdAt}
+                      dateVariant="relative"
+                      now={now}
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="rounded p-1 text-[#6B7280] transition-colors hover:bg-[#F3F4F6] hover:text-[#111318]"
+                        onClick={() =>
+                          startEditComment(comment.id, comment.body)
+                        }
+                        title="Edit comment"
+                        type="button"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        className="rounded p-1 text-[#6B7280] transition-colors hover:bg-[#FEF2F2] hover:text-[#991B1B]"
+                        onClick={() => deleteComment(comment.id)}
+                        title="Delete comment"
+                        type="button"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                  {editingCommentId === comment.id ? (
+                    <div className="mt-3 flex flex-col gap-3">
+                      <MarkdownEditor
+                        value={editingCommentBody}
+                        onChange={setEditingCommentBody}
+                        placeholder="Edit your comment..."
+                        minHeight="96px"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          disabled={isSaving}
+                          onClick={cancelEditComment}
+                          size="sm"
+                          variant="secondary"
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          disabled={
+                            isSaving || editingCommentBody.trim().length === 0
+                          }
+                          onClick={() => saveCommentEdit(comment.id)}
+                          size="sm"
+                        >
+                          Save
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="prose prose-sm max-w-none mt-2 text-[13px] leading-[1.45] text-[#4B5563]"
+                      // biome-ignore lint/security/noDangerouslySetInnerHtml: User-generated markdown content
+                      dangerouslySetInnerHTML={{ __html: comment.body }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
           ) : (
             <IssueEmptyState
               className="text-[13px] leading-[1.45] text-[#6B7280]"
