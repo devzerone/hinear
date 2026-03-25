@@ -140,11 +140,16 @@ export function IssueDetailFullPageScreen({
   const [priorityDraft, setPriorityDraft] = useState(issue.priority);
   const [assigneeDraft, setAssigneeDraft] = useState(issue.assigneeId ?? "");
   const [dueDateDraft, setDueDateDraft] = useState(issue.dueDate);
-  const [selectedLabelIds, setSelectedLabelIds] = useState(
-    issue.labels.map((label) => label.id)
-  );
-  const [availableLabels, setAvailableLabels] = useState(availableLabelsProp);
+  const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
+  const [availableLabels, setAvailableLabels] = useState<Label[]>([]);
   const [commentDraft, setCommentDraft] = useState("");
+
+  // Prop 변경을 감지하여 상태 업데이트
+  useEffect(() => {
+    setActivityState(activityLog);
+    setAvailableLabels(availableLabelsProp);
+    setSelectedLabelIds(issue.labels.map((label) => label.id));
+  }, [issue, activityLog, availableLabelsProp]);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentBody, setEditingCommentBody] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);

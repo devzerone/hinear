@@ -1,6 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import { IssueDetailFullPageScreen } from "@/features/issues/components/issue-detail-full-page-screen";
 import { loadIssueDetail } from "@/features/issues/lib/issue-detail-loader";
+import { createRequestSupabaseServerClient } from "@/lib/supabase/server-client";
 
 interface IssueDetailPageProps {
   params: Promise<{
@@ -20,10 +20,7 @@ export default async function IssueDetailPage({
   );
 
   // 라벨 조회
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
-  );
+  const supabase = await createRequestSupabaseServerClient();
 
   const { data: labels } = await supabase
     .from("labels")
