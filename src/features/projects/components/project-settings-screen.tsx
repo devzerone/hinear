@@ -1,12 +1,17 @@
+"use client";
+
 import Link from "next/link";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 import { getButtonClassName } from "@/components/atoms/Button";
 import { SidebarDesktop } from "@/components/organisms/SidebarDesktop";
 import { NotificationSettingsCard } from "@/features/notifications/components/NotificationSettingsCard";
+import { GitHubIntegrationSettingsCard } from "@/features/projects/components/github-integration-settings-card";
 import { ProjectMetadataForm } from "@/features/projects/components/project-metadata-form";
 import { ProjectAccessCard } from "@/features/projects/components/project-operation-cards";
 import {
-  getProjectDashboardPath,
+  getProjectOverviewPath,
   getProjectPath,
   getProjectSettingsPath,
 } from "@/features/projects/lib/project-routes";
@@ -47,8 +52,50 @@ export function ProjectSettingsScreen({
   project,
   projects,
 }: ProjectSettingsScreenProps) {
+  const [isDeleting, startDeletingTransition] = useTransition();
+
   const projectSubtitle =
     project.type === "team" ? "Team Project" : "Personal Project";
+
+  const handleDeleteProject = () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this project? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    startDeletingTransition(async () => {
+      try {
+        const response = await fetch(
+          `/internal/projects/${project.id}/delete`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to delete project.");
+        }
+
+        toast.success("Project deleted successfully.");
+
+        // Redirect to projects list after a short delay
+        setTimeout(() => {
+          window.location.href = "/projects";
+        }, 500);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to delete project."
+        );
+      }
+    });
+  };
 
   return (
     <main className="min-h-screen bg-[var(--app-color-surface-0)] md:flex">
@@ -59,8 +106,8 @@ export function ProjectSettingsScreen({
             href: getProjectPath(entry.id),
             label: entry.name,
           }))}
-          dashboardHref={getProjectDashboardPath(project.id)}
-          dashboardLabel="Open dashboard"
+          dashboardHref={getProjectOverviewPath(project.id)}
+          dashboardLabel="Overview"
           navigationHrefs={{
             issues: getProjectPath(project.id),
           }}
@@ -145,12 +192,32 @@ export function ProjectSettingsScreen({
 
                 <NotificationSettingsCard />
 
+                <GitHubIntegrationSettingsCard projectId={project.id} />
+
+                <div className="rounded-[20px] border border-red-200 bg-red-50 p-6">
+                  <h2 className="text-[18px] font-bold text-red-900">
+                    Danger Zone
+                  </h2>
+                  <p className="mt-2 text-[13px] font-medium text-red-700">
+                    Once you delete a project, there is no going back. Please be
+                    certain.
+                  </p>
+                  <button
+                    className="mt-4 rounded-[10px] bg-red-600 px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={isDeleting}
+                    onClick={handleDeleteProject}
+                    type="button"
+                  >
+                    {isDeleting ? "Deleting..." : "Delete this project"}
+                  </button>
+                </div>
+
                 <div className="flex justify-end">
                   <Link
                     className={getButtonClassName("ghost")}
-                    href={getProjectDashboardPath(project.id)}
+                    href={getProjectOverviewPath(project.id)}
                   >
-                    Open dashboard
+                    Overview
                   </Link>
                 </div>
               </section>

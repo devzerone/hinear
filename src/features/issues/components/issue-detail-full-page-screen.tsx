@@ -141,10 +141,27 @@ export function IssueDetailFullPageScreen({
     requestedVersion: number;
   } | null>(null);
   const [isSaving, startSavingTransition] = useTransition();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setNow(Date.now());
   }, []);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest(".mobile-menu-container")) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    if (mobileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [mobileMenuOpen]);
 
   useEffect(() => {
     setIssueState(issue);
@@ -427,6 +444,59 @@ export function IssueDetailFullPageScreen({
     });
   };
 
+  const handleDeleteIssue = () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this issue? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    startSavingTransition(async () => {
+      try {
+        const response = await fetch(
+          `/internal/issues/${issueState.id}/delete`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              projectId: issueState.projectId,
+            }),
+          }
+        );
+
+        const data = (await response.json()) as unknown;
+
+        if (!response.ok) {
+          throw new Error(
+            getMutationErrorMessage({
+              actionLabel: "issue",
+              code: getMutationErrorCode(data),
+              fallbackMessage: getMutationErrorFallbackMessage(data),
+              status: response.status,
+            })
+          );
+        }
+
+        toast.success("Issue deleted successfully.");
+
+        // Redirect to project page after a short delay
+        setTimeout(() => {
+          if (boardHref) {
+            window.location.href = boardHref;
+          }
+        }, 500);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to delete issue."
+        );
+      }
+    });
+  };
+
   return (
     <main className="min-h-screen bg-[#FCFCFD]">
       <div className="flex flex-col gap-4 px-4 py-4 md:hidden">
@@ -469,16 +539,35 @@ export function IssueDetailFullPageScreen({
             </h1>
           </div>
 
-          <button
-            aria-label="More issue actions"
-            className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-[#E6E8EC] bg-white"
-            type="button"
-          >
-            <Ellipsis
-              aria-hidden="true"
-              className="h-[14px] w-[14px] text-[#6B7280]"
-            />
-          </button>
+          <div className="relative mobile-menu-container">
+            <button
+              aria-label="More issue actions"
+              className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-[#E6E8EC] bg-white"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              type="button"
+            >
+              <Ellipsis
+                aria-hidden="true"
+                className="h-[14px] w-[14px] text-[#6B7280]"
+              />
+            </button>
+
+            {mobileMenuOpen && (
+              <div className="absolute right-0 top-full z-50 mt-2 w-48 rounded-lg border border-[#E6E8EC] bg-white shadow-lg">
+                <button
+                  className="flex w-full items-center gap-2 whitespace-nowrap rounded-t-lg px-4 py-3 text-left text-[13px] font-medium text-red-600 hover:bg-red-50"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleDeleteIssue();
+                  }}
+                  type="button"
+                >
+                  <Trash2 className="h-4 w-4 flex-shrink-0" />
+                  <span>Delete issue</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <IssuePanel className="flex flex-col gap-3">
@@ -1050,6 +1139,27 @@ export function IssueDetailFullPageScreen({
                     message="No activity yet."
                   />
                 )}
+              </div>
+            </section>
+
+            <section className="rounded-[16px] border border-red-200 bg-red-50 p-4">
+              <IssueSectionHeader
+                title="Danger Zone"
+                titleClassName="text-[14px] font-[var(--app-font-weight-700)] text-red-900"
+              />
+              <div className="mt-4">
+                <p className="text-[12px] font-medium text-red-700">
+                  Once you delete an issue, there is no going back. Please be
+                  certain.
+                </p>
+                <button
+                  className="mt-3 rounded-[10px] bg-red-600 px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={isSaving}
+                  onClick={handleDeleteIssue}
+                  type="button"
+                >
+                  Delete this issue
+                </button>
               </div>
             </section>
           </aside>

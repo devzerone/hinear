@@ -1,12 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { ProjectDashboardScreen } from "@/features/projects/components/project-dashboard-screen";
+import { ProjectOverviewScreen } from "@/features/projects/components/project-overview-screen";
 
-describe("ProjectDashboardScreen", () => {
-  it("renders the dashboard route shell and recent issues", () => {
+describe("ProjectOverviewScreen", () => {
+  it("renders the overview route shell and recent issues", () => {
     render(
-      <ProjectDashboardScreen
+      <ProjectOverviewScreen
         issues={[
           {
             id: "issue-1",

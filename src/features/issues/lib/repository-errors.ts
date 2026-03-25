@@ -14,6 +14,7 @@ export type RepositoryErrorCode =
   | "PARENT_COMMENT_NOT_FOUND"
   | "PROJECT_KEY_TAKEN"
   | "PROJECT_INVITATION_EXISTS"
+  | "PROJECT_NOT_FOUND"
   | "VALIDATION_ERROR"
   | "UNKNOWN";
 
@@ -41,6 +42,7 @@ export function getRepositoryErrorStatus(code: RepositoryErrorCode): number {
     case "ISSUE_NOT_FOUND":
     case "NOT_MEMBER":
     case "PARENT_COMMENT_NOT_FOUND":
+    case "PROJECT_NOT_FOUND":
       return 404;
     case "ALREADY_MEMBER":
     case "CONFLICT":

@@ -7,6 +7,7 @@ import {
 } from "@/features/issues/lib/repository-errors";
 import type {
   CreateProjectInput,
+  DeleteProjectInput,
   InviteProjectMemberInput,
   ProjectsRepository,
   UpdateProjectInput,
@@ -202,6 +203,23 @@ export class SupabaseProjectsRepository implements ProjectsRepository {
     assertQuerySucceeded("Failed to update project", error);
 
     return mapProject(assertDataPresent("Failed to update project", data));
+  }
+
+  async deleteProject(input: DeleteProjectInput): Promise<void> {
+    // 먼저 프로젝트가 존재하는지 확인
+    const project = await this.getProjectById(input.projectId);
+
+    if (!project) {
+      throw createRepositoryError("PROJECT_NOT_FOUND", "Project not found.");
+    }
+
+    // 프로젝트 삭제 (cascade로 관련 데이터도 함께 삭제됨)
+    const { error } = await this.client
+      .from("projects")
+      .delete()
+      .eq("id", input.projectId);
+
+    assertQuerySucceeded("Failed to delete project", error);
   }
 
   async addProjectMember(member: ProjectMember): Promise<ProjectMember> {

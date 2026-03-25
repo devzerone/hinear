@@ -38,14 +38,14 @@ export function LinearDashboardHeader({
   className,
   dashboardHref,
   filterActive = false,
-  eyebrow = "Workspace / Board",
+  eyebrow = "Workspace / Issue Board",
   issues = [],
   onFilterClick,
   onCreateClick,
   onSearchValueChange,
   searchValue = "",
   subtitle = "Focused view of triage, build, and shipped work.",
-  title = "Issue board",
+  title = "Issue Board",
   ...props
 }: LinearDashboardHeaderProps) {
   const activeCount = issues.filter((issue) =>
@@ -75,7 +75,7 @@ export function LinearDashboardHeader({
           <HeaderAction
             href={dashboardHref}
             icon="board"
-            label="Dashboard"
+            label="Overview"
             variant="filter"
           />
           <HeaderSearchField
@@ -94,7 +94,7 @@ export function LinearDashboardHeader({
           <HeaderAction
             href={boardHref}
             icon="board"
-            label="Board"
+            label="Issue Board"
             variant={filterActive ? "primary" : "board"}
           />
           <HeaderAction

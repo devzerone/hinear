@@ -426,6 +426,52 @@ export function IssueDetailScreen({
     });
   };
 
+  const handleDeleteIssue = () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete this issue? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    startSavingTransition(async () => {
+      try {
+        const response = await fetch(
+          `/internal/issues/${issueState.id}/delete`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              projectId: issueState.projectId,
+            }),
+          }
+        );
+
+        const data = (await response.json()) as unknown;
+
+        if (!response.ok) {
+          throw new Error(
+            getMutationErrorMessage({
+              actionLabel: "issue",
+              code: getMutationErrorCode(data),
+              fallbackMessage: getMutationErrorFallbackMessage(data),
+              status: response.status,
+            })
+          );
+        }
+
+        toast.success("Issue deleted successfully.");
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to delete issue."
+        );
+      }
+    });
+  };
+
   return (
     <main className="app-shell">
       <div className="app-stack">
@@ -749,6 +795,27 @@ export function IssueDetailScreen({
                   message="No activity yet."
                 />
               )}
+            </DetailPanel>
+
+            <DetailPanel className="border-red-200 bg-red-50">
+              <IssueSectionHeader
+                title="Danger Zone"
+                titleClassName="text-[18px] font-bold text-red-900"
+              />
+              <div className="mt-4">
+                <p className="text-[13px] font-medium text-red-700">
+                  Once you delete an issue, there is no going back. Please be
+                  certain.
+                </p>
+                <Button
+                  className="mt-3 bg-red-600 text-white hover:bg-red-700"
+                  onClick={handleDeleteIssue}
+                  size="sm"
+                  variant="secondary"
+                >
+                  Delete this issue
+                </Button>
+              </div>
             </DetailPanel>
           </aside>
         </section>

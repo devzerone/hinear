@@ -27,6 +27,11 @@ export interface UpdateProjectInput {
   type: ProjectType;
 }
 
+export interface DeleteProjectInput {
+  projectId: string;
+  deletedBy: string;
+}
+
 export interface ProjectsRepository {
   createProject(input: CreateProjectInput): Promise<Project>;
   addProjectMember(member: ProjectMember): Promise<ProjectMember>;
@@ -34,6 +39,7 @@ export interface ProjectsRepository {
     input: InviteProjectMemberInput
   ): Promise<ProjectInvitation>;
   updateProject(input: UpdateProjectInput): Promise<Project>;
+  deleteProject(input: DeleteProjectInput): Promise<void>;
   getProjectById(projectId: string): Promise<Project | null>;
   getProjectByKey(key: string): Promise<Project | null>;
   listProjects(): Promise<Project[]>;
@@ -78,4 +84,18 @@ export interface ValidateProjectKeyInput {
 
 export interface ProjectExistsInput {
   key: string;
+}
+
+export interface UpdateGitHubIntegrationInput {
+  projectId: string;
+  enabled: boolean;
+  repoOwner?: string;
+  repoName?: string;
+}
+
+export interface GitHubIntegrationSettings {
+  enabled: boolean;
+  repoOwner?: string | null;
+  repoName?: string | null;
+  connected?: boolean;
 }

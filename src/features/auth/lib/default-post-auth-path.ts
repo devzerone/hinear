@@ -1,13 +1,13 @@
 import "server-only";
 
-import { getProjectDashboardPath } from "@/features/projects/lib/project-routes";
+import { getProjectOverviewPath } from "@/features/projects/lib/project-routes";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
 import { createRequestSupabaseServerClient } from "@/lib/supabase/server-client";
 
 const FALLBACK_POST_AUTH_PATH = "/projects/new";
-const DEFAULT_DASHBOARD_PATH = "/projects/dashboard";
+const DEFAULT_DASHBOARD_PATH = "/projects/overview";
 
-export async function getResolvedProjectDashboardPath(): Promise<string> {
+export async function getResolvedProjectOverviewPath(): Promise<string> {
   const actorId = await getAuthenticatedActorIdOrNull();
 
   if (!actorId) {
@@ -27,11 +27,11 @@ export async function getResolvedProjectDashboardPath(): Promise<string> {
     return FALLBACK_POST_AUTH_PATH;
   }
 
-  return getProjectDashboardPath(data.project_id);
+  return getProjectOverviewPath(data.project_id);
 }
 
 export async function getDefaultPostAuthPath(): Promise<string> {
-  const resolvedPath = await getResolvedProjectDashboardPath();
+  const resolvedPath = await getResolvedProjectOverviewPath();
 
   if (resolvedPath === FALLBACK_POST_AUTH_PATH) {
     return resolvedPath;

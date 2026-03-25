@@ -1,7 +1,7 @@
 import { SidebarDesktop } from "@/components/organisms/SidebarDesktop";
 import { KanbanBoardView } from "@/features/issues/components/KanbanBoardView";
 import {
-  getProjectDashboardPath,
+  getProjectOverviewPath,
   getProjectPath,
   getProjectSettingsPath,
 } from "@/features/projects/lib/project-routes";
@@ -60,8 +60,8 @@ export function ProjectWorkspaceScreen({
             href: getProjectPath(entry.id),
             label: entry.name,
           }))}
-          dashboardHref={getProjectDashboardPath(project.id)}
-          dashboardLabel="Open dashboard"
+          dashboardHref={getProjectOverviewPath(project.id)}
+          dashboardLabel="Overview"
           navigationHrefs={{
             issues: getProjectPath(project.id),
           }}
@@ -87,7 +87,7 @@ export function ProjectWorkspaceScreen({
               assigneeOptions={assigneeOptions}
               boardHref={getProjectPath(project.id)}
               createIssueAction={action}
-              dashboardHref={getProjectDashboardPath(project.id)}
+              dashboardHref={getProjectOverviewPath(project.id)}
               projectId={project.id}
               projectKey={project.key}
               projectName={project.name}

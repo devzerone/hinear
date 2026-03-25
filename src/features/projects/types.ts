@@ -21,6 +21,10 @@ export interface Project {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  // GitHub integration fields
+  githubRepoOwner?: string | null;
+  githubRepoName?: string | null;
+  githubIntegrationEnabled?: boolean;
 }
 
 export interface ProjectMember {

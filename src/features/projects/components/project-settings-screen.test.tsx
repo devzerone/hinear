@@ -7,6 +7,17 @@ vi.mock("@/features/notifications/components/NotificationSettingsCard", () => ({
   ),
 }));
 
+vi.mock(
+  "@/features/projects/components/github-integration-settings-card",
+  () => ({
+    GitHubIntegrationSettingsCard: () => (
+      <div data-testid="github-integration-settings-mock">
+        GitHub Integration
+      </div>
+    ),
+  })
+);
+
 import { ProjectSettingsScreen } from "@/features/projects/components/project-settings-screen";
 
 describe("ProjectSettingsScreen", () => {

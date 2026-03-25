@@ -1,9 +1,19 @@
+/**
+ * 이슈보드 페이지 경로를 반환합니다.
+ * @param projectId 프로젝트 ID
+ * @returns 이슈보드 경로 (예: /projects/{projectId})
+ */
 export function getProjectPath(projectId: string): string {
   return `/projects/${projectId}`;
 }
 
-export function getProjectDashboardPath(projectId: string): string {
-  return `/projects/${projectId}/dashboard`;
+/**
+ * 오버뷰 페이지 경로를 반환합니다.
+ * @param projectId 프로젝트 ID
+ * @returns 오버뷰 경로 (예: /projects/{projectId}/overview)
+ */
+export function getProjectOverviewPath(projectId: string): string {
+  return `/projects/${projectId}/overview`;
 }
 
 export function getProjectSettingsPath(projectId: string): string {

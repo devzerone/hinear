@@ -1,21 +1,21 @@
-import { ProjectDashboardScreen } from "@/features/projects/components/project-dashboard-screen";
+import { ProjectOverviewScreen } from "@/features/projects/components/project-overview-screen";
 import { loadProjectWorkspace } from "@/features/projects/lib/load-project-workspace";
 
-interface ProjectDashboardPageProps {
+interface ProjectOverviewPageProps {
   params: Promise<{
     projectId: string;
   }>;
 }
 
-export default async function ProjectDashboardPage({
+export default async function ProjectOverviewPage({
   params,
-}: ProjectDashboardPageProps) {
+}: ProjectOverviewPageProps) {
   const { projectId } = await params;
   const { accessibleProjects, issues, project, summary } =
-    await loadProjectWorkspace(projectId, `/projects/${projectId}/dashboard`);
+    await loadProjectWorkspace(projectId, `/projects/${projectId}/overview`);
 
   return (
-    <ProjectDashboardScreen
+    <ProjectOverviewScreen
       issues={issues}
       project={project}
       projects={accessibleProjects}

@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   getIssuePath,
-  getProjectDashboardPath,
   getProjectIssueCreatePath,
+  getProjectOverviewPath,
   getProjectPath,
   getProjectSettingsPath,
 } from "@/features/projects/lib/project-routes";
@@ -11,7 +11,7 @@ import {
 describe("project paths", () => {
   it("builds the canonical project routes", () => {
     expect(getProjectPath("project-1")).toBe("/projects/project-1");
-    expect(getProjectDashboardPath("project-1")).toBe(
+    expect(getProjectOverviewPath("project-1")).toBe(
       "/projects/project-1/dashboard"
     );
     expect(getProjectSettingsPath("project-1")).toBe(

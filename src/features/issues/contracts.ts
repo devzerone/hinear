@@ -89,6 +89,11 @@ export interface UpdateIssueInput {
   version: number;
 }
 
+export interface DeleteIssueInput {
+  issueId: string;
+  deletedBy: string;
+}
+
 export interface ListIssuesByProjectInput {
   projectId: string;
 }
@@ -153,6 +158,7 @@ export interface IssuesRepository {
   ): Promise<ActivityLogEntry>;
   getIssueById(issueId: string): Promise<Issue | null>;
   updateIssue(issueId: string, input: UpdateIssueInput): Promise<Issue>;
+  deleteIssue(input: DeleteIssueInput): Promise<void>;
 
   // 필터링 메서드
   listIssuesByStatus(input: ListIssuesByStatusInput): Promise<Issue[]>;

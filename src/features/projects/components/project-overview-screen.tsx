@@ -9,13 +9,13 @@ import { IssueStatusBadge } from "@/features/issues/components/IssueStatusBadge"
 import type { Issue } from "@/features/issues/types";
 import {
   getIssuePath,
-  getProjectDashboardPath,
+  getProjectOverviewPath,
   getProjectPath,
   getProjectSettingsPath,
 } from "@/features/projects/lib/project-routes";
 import type { Project } from "@/features/projects/types";
 
-interface ProjectDashboardScreenProps {
+interface ProjectOverviewScreenProps {
   project: Project;
   projects: Project[];
   summary: {
@@ -30,7 +30,7 @@ interface ProjectDashboardScreenProps {
   issues?: Issue[];
 }
 
-function getStatCards(summary: ProjectDashboardScreenProps["summary"]) {
+function getStatCards(summary: ProjectOverviewScreenProps["summary"]) {
   return [
     {
       label: "Total issues",
@@ -55,7 +55,7 @@ function getStatCards(summary: ProjectDashboardScreenProps["summary"]) {
   ];
 }
 
-function ProjectDashboardMobileHeader({ project }: { project: Project }) {
+function ProjectOverviewMobileHeader({ project }: { project: Project }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
@@ -63,7 +63,7 @@ function ProjectDashboardMobileHeader({ project }: { project: Project }) {
           {project.name}
         </h1>
         <p className="mt-[2px] truncate text-[12px] leading-[12px] font-[var(--app-font-weight-500)] text-[#6B7280]">
-          Project dashboard
+          Overview
         </p>
       </div>
 
@@ -90,7 +90,7 @@ function ProjectDashboardMobileHeader({ project }: { project: Project }) {
   );
 }
 
-function ProjectDashboardMobileSwitcher({
+function ProjectOverviewMobileSwitcher({
   project,
   projects,
 }: {
@@ -123,7 +123,7 @@ function ProjectDashboardMobileSwitcher({
                   ? "bg-[#F3F4F6] font-[var(--app-font-weight-600)] text-[#111318]"
                   : "font-[var(--app-font-weight-500)] text-[#4B5563]"
               }`}
-              href={getProjectDashboardPath(candidate.id)}
+              href={getProjectOverviewPath(candidate.id)}
               key={candidate.id}
             >
               {candidate.name}
@@ -191,12 +191,12 @@ function RecentActivityList({
   );
 }
 
-export function ProjectDashboardScreen({
+export function ProjectOverviewScreen({
   issues = [],
   project,
   projects,
   summary,
-}: ProjectDashboardScreenProps) {
+}: ProjectOverviewScreenProps) {
   const recentIssues = [...issues]
     .sort(
       (left, right) =>
@@ -205,7 +205,7 @@ export function ProjectDashboardScreen({
     .slice(0, 3);
   const orderedProjects = projects.map((candidate) => ({
     active: candidate.id === project.id,
-    href: getProjectDashboardPath(candidate.id),
+    href: getProjectOverviewPath(candidate.id),
     label: candidate.name,
   }));
 
@@ -257,8 +257,8 @@ export function ProjectDashboardScreen({
 
       <div className="min-w-0 flex-1 bg-[#FCFCFD]">
         <div className="flex w-full flex-col gap-4 px-4 py-4 md:hidden">
-          <ProjectDashboardMobileHeader project={project} />
-          <ProjectDashboardMobileSwitcher
+          <ProjectOverviewMobileHeader project={project} />
+          <ProjectOverviewMobileSwitcher
             project={project}
             projects={projects}
           />
