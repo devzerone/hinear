@@ -597,37 +597,55 @@ src/features/comments/components/
 
 ---
 
-## 8. 중요한 보안 이슈
+## 8. 보안 개선 완료 (2026-03-25)
 
-### ⚠️ 문서화되었지만 구현되지 않음
+### ✅ 세션 인식 Repository 리팩토링 완료
 
-`CLAUDE.md`에서:
+**Phase 1 완료사항:**
 
-> **현재 보안 경고**
-> Repository 구현체(`SupabaseProjectsRepository`, `SupabaseIssuesRepository`)는 현재 빠른 개발을 위해 `service-role` 클라이언트를 기본으로 사용합니다. 이는 **RLS를 우회**하며 프로덕션 사용 전 세션 인식 서버 클라이언트로 교체해야 합니다. Server Actions는 임시로 `HINEAR_ACTOR_ID` 환경 변수를 액터 폴백으로 사용합니다.
+1. **Invite Flow 보안 강화**
+   - `service-role` → SECURITY DEFINER 함수 + anon key
+   - `get_invitation_by_token()`, `accept_invitation_by_token()` 함수 추가
+   - 더 좁은 권한 범위로 보안 강화
 
-### 필수 변경사항
+2. **Server Actions Actor ID 전달 개선**
+   - `HINEAR_ACTOR_ID` 환경 변수 폴백 제거
+   - `getAuthenticatedActorIdOrNull()`로 세션에서 직접 조회
+   - 모든 Server Actions가 인증된 사용자 ID 사용
 
-**모든 Repository:**
-```typescript
-// 현재 (RLS 우회)
-private client = createClient(supabaseUrl, serviceRoleKey)
+3. **RLS 정책 확인 및 테스트**
+   - 모든 11개 테이블에 RLS 활성화 확인
+   - Supabase Security Advisor 검증 통과
+   - 자세한 내용은 [docs/rls-verification-report.md](rls-verification-report.md) 참조
 
-// 필수 (세션 인식)
-private client = await createClient(supabaseUrl, anonKey, {
-  auth: { storage: cookies() }
-})
-```
+**Phase 2 완료사항:**
 
-**Server Actions:**
-```typescript
-// 현재 (임시 폴백)
-const actorId = process.env.HINEAR_ACTOR_ID || userId
+1. **모든 Repository 세션 인식 클라이언트 사용**
+   - `SupabaseProjectsRepository` - `AppSupabaseServerClient` 사용
+   - `SupabaseIssuesRepository` - `AppSupabaseServerClient` 사용
+   - `SupabaseCommentsRepository` - `AppSupabaseServerClient` 사용
+   - `getServerProjectsRepository()` - `createRequestSupabaseServerClient()` 호출
+   - `getServerIssuesRepository()` - `createRequestSupabaseServerClient()` 호출
+   - 모든 repository 생성자에서 session-aware 클라이언트 전달
 
-// 필수 (세션에서)
-const { data: { user } } = await supabase.auth.getUser()
-const actorId = user.id
-```
+2. **createRequestSupabaseServerClient() 세션 인식 구조**
+   - cookies()에서 현재 요청의 세션 쿠키를 읽음
+   - anonKey 사용 (service-role 제거)
+   - createSsrServerClient로 SSR-safe 세션 인식 클라이언트 생성
+   - RLS가 auth.uid() 기반으로 정상 작동
+
+3. **service-role 제거 완료**
+   - 코드베이스 전체에서 service-role 검색 → 0개 파일
+   - 모든 데이터 접근이 세션 인식 클라이언트를 통해 이루어짐
+   - RLS 정책이 모든 요청에 적용됨
+
+**현재 상태:**
+- ✅ 알림 기능: 세션 인식 repository 사용
+- ✅ Invite flow: SECURITY DEFINER 함수 사용 (제한된 권한)
+- ✅ Server Actions: 세션 기반 actor ID 조회
+- ✅ RLS: 모든 테이블에 정책 적용 완료
+- ✅ 모든 Repository: 세션 인식 클라이언트 사용
+- ✅ service-role: 코드베이스에서 완전 제거
 
 ---
 
