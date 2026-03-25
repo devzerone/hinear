@@ -12,6 +12,9 @@ import type { Database } from "@/lib/supabase/types";
 
 export type AppSupabaseServerClient = SupabaseClient<Database>;
 
+// Export createClient for convenience in server actions
+export { createClient } from "@supabase/supabase-js";
+
 function createApiKeyServerClient(
   apiKey: string,
   accessToken?: string

@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PushSubscription } from "../types";
 
 export interface PushSubscriptionRecord {
@@ -13,12 +13,10 @@ export interface PushSubscriptionRecord {
 }
 
 export class SupabasePushSubscriptionsRepository {
-  private supabase;
+  private supabase: SupabaseClient;
 
-  constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+  constructor(supabase: SupabaseClient) {
+    this.supabase = supabase;
   }
 
   /**

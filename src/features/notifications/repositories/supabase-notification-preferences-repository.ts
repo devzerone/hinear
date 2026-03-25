@@ -1,4 +1,4 @@
-import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface NotificationPreferences {
   user_id: string;
@@ -11,12 +11,10 @@ export interface NotificationPreferences {
 }
 
 export class SupabaseNotificationPreferencesRepository {
-  private supabase;
+  private supabase: SupabaseClient;
 
-  constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+  constructor(supabase: SupabaseClient) {
+    this.supabase = supabase;
   }
 
   /**

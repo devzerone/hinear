@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import webpush from "web-push";
 import { SupabaseNotificationPreferencesRepository } from "@/features/notifications/repositories/supabase-notification-preferences-repository";
@@ -36,13 +37,21 @@ export async function POST(request: Request) {
       });
     }
 
+    // Supabase 클라이언트 생성
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
+    );
+
     // Repository로부터 활성 구독 조회
-    const subscriptionRepo = new SupabasePushSubscriptionsRepository();
+    const subscriptionRepo = new SupabasePushSubscriptionsRepository(supabase);
     const subscriptions =
       await subscriptionRepo.getActiveSubscriptions(targetUserIds);
 
     // 알림 설정 확인 (선택적 - 여기서는 간단히 모두 전송)
-    const preferencesRepo = new SupabaseNotificationPreferencesRepository();
+    const preferencesRepo = new SupabaseNotificationPreferencesRepository(
+      supabase
+    );
 
     // 필터링된 구독자 목록 (알림 설정 고려)
     const filteredSubscriptions = await filterSubscriptionsByPreferences(

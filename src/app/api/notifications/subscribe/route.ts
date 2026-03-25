@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     const subscription: PushSubscription = await request.json();
-    const repository = new SupabasePushSubscriptionsRepository();
+    const repository = new SupabasePushSubscriptionsRepository(supabase);
 
     // DB에 구독 정보 저장
     const result = await repository.subscribe(user.id, subscription);
