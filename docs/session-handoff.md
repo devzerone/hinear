@@ -1,5 +1,30 @@
 # Session Handoff
 
+## 2026-03-25 Update
+
+이 문서의 초기 내용은 2026-03-21~2026-03-23 기준 메모가 많아서, 아래 항목을 현재 기준 최신 사실로 우선 본다.
+
+- 이슈 상세 풀페이지/드로어의 라벨 편집이 동작한다.
+- 이슈 상세 초기 로드에서 activity log와 project label 목록이 함께 내려온다.
+- 이슈 상세 날짜/상대시간 포맷은 공통 유틸로 정리되었고 hydration mismatch 방어가 들어가 있다.
+- 데스크톱/모바일 이슈 생성 화면 모두 `LabelSelector` 기반 라벨 선택/생성을 지원한다.
+- `CreateIssueTabletModal`의 라벨 조회 무한 호출 버그는 수정되었다.
+- `BatchActionBar`는 서버 액션 테스트와 UI 테스트가 모두 추가되었다.
+- 칸반 보드 검색/필터는 URL 쿼리와 동기화되며, `POST /api/issues/search`를 통해 서버 검색 + 서버 필터링까지 연결된다.
+- 외부 API 라우트가 확장되었다.
+  - `/api/issues/search`
+  - `/api/issues/[issueId]`
+  - `/api/issues/[issueId]/comments`
+  - `/api/projects/[projectId]/members`
+  - `/api/users/[userId]/projects`
+  - `/api/members/check-access`
+  - `/api/notifications/preferences`
+  - `/api/notifications/subscribe`
+  - `/api/notifications/unsubscribe`
+- 알림 설정 카드는 실제 API(`/api/notifications/preferences`)와 연결되어 저장된다.
+- primary request path는 대부분 세션 인식 Supabase client를 쓰지만, 이슈 상세 읽기 경로 `loadIssueDetail()`만 `service-role + 명시적 멤버십 체크` 예외 경로를 사용한다.
+- 따라서 아래의 오래된 “service-role 완전 제거” 표현은 현재 기준으로는 예외가 하나 남아 있다고 이해해야 한다.
+
 ## Current Branch
 
 - `main`
@@ -258,8 +283,19 @@ Additional UI check run in this session:
 - main app flow currently works as:
   - create project
   - land on project workspace
-  - create issue
-  - land on full-page issue detail route
+  - create issue from desktop modal / mobile page
+  - open issue detail full page / drawer
+  - edit labels in detail full page and drawer
+  - use board search + filter via server-backed API
+
+## Current Priorities
+
+- 알림 실제 전달(푸시/이메일) 경로를 프로덕션 기준으로 끝까지 연결
+- `loadIssueDetail()`의 `service-role` 예외 경로를 다시 세션 인식 읽기 모델로 단순화할지 검토
+- 검색/필터 저장 프리셋, 정렬 같은 UX 고도화 검토
+
+## Additional Current Notes
+
 - Storybook is now part of the UI workflow for primitive verification
 - current primitive source of truth is `pen/components.pen`
 - token source of truth is `pen/components.pen` + `pen/Hinear.pen`

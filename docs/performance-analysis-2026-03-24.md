@@ -6,6 +6,11 @@
 
 ## 요약
 
+> **주의 (2026-03-25 업데이트):**
+> 이 문서는 2026-03-24 시점 측정치를 기반으로 한다.
+> 이후 대부분의 request path는 세션 인식 Supabase client로 전환되었고, 일부 API/검색/필터 구조도 변경되었다.
+> 다만 `loadIssueDetail()`는 현재도 `service-role + 명시적 멤버십 체크` 예외 경로를 사용하므로, 아래 `service-role` 관련 지적은 "완전 해소"가 아니라 "대부분 해소, 일부 예외 잔존"으로 읽는 것이 맞다.
+
 현재 성능은 **응답 크기가 421바이트에 불과함에도 2초 이상의 응답 시간**을 보이고 있습니다. 분석 결과 다음과 같은 여러 가지 아키텍처 문제가 원인으로 밝혀졌습니다:
 
 1. **반복되는 Supabase API 호출** (페이지 로드당 9개 호출)
@@ -133,7 +138,7 @@ GET | 200 | /rest/v1/issues?select=*&project_id=eq.xxx&order=issue_number.asc | 
 ### 아키텍처 이슈
 
 1. **레포지토리 패턴 구현**
-   - 현재 구현이 `service-role` 클라이언트 사용 (RLS 우회)
+   - 당시 구현은 `service-role` 클라이언트 사용 비중이 높았음 (현재는 대부분 세션 인식 클라이언트로 전환, 일부 예외만 남음)
    - 각 레포지토리 메서드가 개별 Supabase 호출
    - 배칭 처리나 쿼리 최적화 없음
 
@@ -248,7 +253,9 @@ const [issues, labels, profiles] = await Promise.all([
 
 #### 6. Service-role 클라이언트 교체
 
-**현재:** `service-role` 키 사용, RLS 우회
+**당시:** `service-role` 키 사용, RLS 우회
+
+**현재(2026-03-25):** 대부분 세션 인식 서버 클라이언트로 교체되었고, 이슈 상세 읽기 경로만 예외적으로 남아 있음
 
 **해결책:** 세션 인식 서버 클라이언트 구현
 
@@ -294,7 +301,7 @@ const [issues, labels, profiles] = await Promise.all([
 - [ ] React Server Components 최적화
 
 ### 3단계: 아키텍처 (3-4주차)
-- [ ] 세션 인식 클라이언트로 service-role 클라이언트 교체
+- [ ] 남아 있는 `loadIssueDetail()` 예외 경로까지 세션 인식 읽기 모델로 단순화 검토
 - [ ] 포괄적인 캐싱 전략 구현
 - [ ] 성능 모니터링 추가
 - [ ] 로드 테스트 및 최적화

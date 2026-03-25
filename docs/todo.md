@@ -68,6 +68,7 @@
 
 - primary app request path는 이제 request-bound Supabase SSR client를 사용한다.
 - `create project`, `create issue`, `issue detail load`는 더 이상 기본 service-role 저장소를 타지 않는다.
+- 단, 현재 이슈 상세 읽기 경로 `loadIssueDetail()`는 라벨/활동로그 초기 로드 안정화를 위해 `service-role + 명시적 멤버십 체크` 예외 경로를 사용한다.
 - server action actor source도 `HINEAR_ACTOR_ID` env fallback에서 authenticated user lookup으로 전환됐다.
 - `/auth` 매직링크 진입, `/auth/confirm` callback, `proxy.ts` refresh 경로가 추가됐다.
 - `/projects/new`, `/projects/[projectId]`, `/projects/[projectId]/issues/[issueId]`는 unauthenticated request를 `/auth?next=...`로 보낸다.
@@ -194,7 +195,23 @@
 
 - [ ] 관련 테스트 전체 실행 결과 확정
 - [ ] `0005_add_profiles.sql` 원격 적용 여부 최종 확인
-- [ ] docs/session-handoff, docs/logs 최신 상태 재정리
+- [ ] 문서 전반 최신 상태 재정리 완료 여부 재확인
+
+### 6. Current Product Follow-up
+
+- [x] 이슈 상세 풀페이지/드로어 라벨 편집
+- [x] 이슈 상세 activity log + available labels 초기 로드 안정화
+- [x] 이슈 상세 날짜 포맷 hydration mismatch 수정
+- [x] 데스크톱/모바일 이슈 생성 라벨 선택형 UI 통일
+- [x] 생성 모달 라벨 조회 무한 호출 수정
+- [x] 일괄 작업 서버 액션 테스트
+- [x] 일괄 작업 UI 테스트
+- [x] 보드 검색/필터 URL 쿼리 동기화
+- [x] 보드 검색/필터 서버 API 연동
+- [x] notifications preferences / subscribe / unsubscribe API 연결
+- [x] members / projects / issues search / comments 외부 API 라우트 확장
+- [ ] 알림 실제 전달 흐름 점검
+- [ ] `loadIssueDetail()` 예외 경로 단순화 검토
 
 ## Key Files
 

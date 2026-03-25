@@ -8,17 +8,25 @@
 
 이 문서는 모든 도메인 기능의 누락된 기능을 카탈로그화하여, 문서화된 요구사항과 현재 구현 상태를 비교합니다. 코드베이스 탐색 및 문서 검토를 기반으로 분석되었습니다.
 
+### 최근 업데이트 (2026-03-25)
+
+- ✅ 이슈 풀페이지 상세 화면에서 활동 로그와 프로젝트 라벨 목록을 안정적으로 로드하도록 개선
+- ✅ 이슈 상세 풀페이지/상세 화면/드로어 화면의 날짜 포맷 로직을 공통 유틸로 통합
+- ✅ 이슈 상세 풀페이지와 드로어 화면에서 라벨 선택/수정 UI(`LabelSelector`) 지원
+- ✅ 데스크톱 이슈 생성 모달(`CreateIssueTabletModal`)을 텍스트 입력형 라벨에서 선택형 라벨 UI로 업그레이드
+- ✅ 이슈 생성 모달에서 프로젝트 라벨 조회 무한 호출 버그 수정 (`useMemo` 기반 의존성 안정화)
+
 ---
 
 ## 요약 통계
 
-| 도메인 | 누락 파일 | 누락 메서드 | 누락 액션 | 우선순위 |
-|--------|--------------|-----------------|-----------------|----------|
-| Comments | 0 files ✅ | 0 methods ✅ | 0 actions ✅ | **MVP 1** |
-| ProjectMember | 0 files ✅ | 0 methods ✅ | 0 actions ✅ | **MVP 1** |
-| Issues | 0 files | 7 methods | 6 actions | **MVP 1** |
-| Projects | 0 files ✅ | 0 methods ✅ | 0 actions ✅ | **MVP 1** |
-| Notifications | 0 files | 5 methods | 3 actions | **MVP 2** |
+| 도메인 | 현재 상태 | 우선순위 |
+|--------|-----------|----------|
+| Comments | 핵심 구조/액션/컴포넌트 구현 완료 ✅ | **MVP 1** |
+| ProjectMember | 접근 제어/RBAC/멤버 관리 구현 완료 ✅ | **MVP 1** |
+| Issues | 핵심 상세/생성/검색/필터/API 흐름 구현, 일부 polish 남음 ⚠️ | **MVP 1** |
+| Projects | 생성/설정/접근 제어 구현 완료 ✅ | **MVP 1** |
+| Notifications | 설정 API/구독 API는 연결, 실제 전달 흐름은 추가 작업 필요 ⚠️ | **MVP 2** |
 
 ---
 
@@ -250,15 +258,30 @@ const PERMISSIONS = {
 
 ## 3. Issue 도메인
 
-**상태**: ⚠️ **핵심 존재, 고급 기능 누락**
+**상태**: ⚠️ **핵심 편집/상세/검색/API 흐름은 대부분 연결됨, 알림 전달·일부 예외 경로 정리가 남음**
 
-### 누락된 Repository 메서드
+### 최근 완료된 Issue UI/상세 기능
+
+- ✅ `loadIssueDetail()`가 활동 로그와 프로젝트 라벨 목록을 함께 반환하도록 확장됨
+- ✅ 이슈 상세 풀페이지에서 라벨 수정, 활동 로그 표시, 안정적인 초기 데이터 로드 지원
+- ✅ 이슈 드로어(모달)에서 라벨 수정 UI 지원
+- ✅ 데스크톱 이슈 생성 모달에서 프로젝트 라벨 조회/선택/생성 지원
+- ✅ 모바일 이슈 생성 화면에서도 프로젝트 라벨 조회/선택/생성 지원
+- ✅ 이슈 상세 관련 날짜/상대시간 포맷 유틸 공통화
+- ✅ 칸반 보드에서 검색어/상태/우선순위/담당자/라벨 필터 UI와 URL 쿼리 동기화 지원
+- ✅ 칸반 보드 검색/필터가 `POST /api/issues/search`와 연결되어 서버 검색 + 서버 필터링까지 수행
+- ✅ 칸반 보드에서 선택 이슈 대상 일괄 상태/담당자/우선순위 변경 UI와 서버 액션 연결
+- ✅ 일괄 작업 서버 액션 테스트 추가로 최신 버전 사용/부분 실패 누적 동작 검증
+- ✅ `BatchActionBar` UI 테스트 추가로 일괄 작업 호출/성공/실패 토스트 동작 검증
+- ⚠️ 일괄 작업은 기본 동작과 테스트는 갖췄지만 세부 UX 다듬기는 더 필요
+
+### Repository 구현 상태
 
 ```typescript
 interface IIssuesRepository extends IIssuesRepository {
   // 기존: create, update, delete, getById, listByProject
 
-  // 누락됨 - 필터링
+  // ✅ 구현됨 - 필터링
   listIssuesByStatus(projectId: string, status: IssueStatus): Promise<Issue[]>
   listIssuesByAssignee(projectId: string, assigneeId: string): Promise<Issue[]>
   listIssuesByPriority(projectId: string, priority: IssuePriority): Promise<Issue[]>
@@ -267,7 +290,7 @@ interface IIssuesRepository extends IIssuesRepository {
   // ✅ 구현됨 - 상태 전환 유효성 검사
   // isValidStatusTransition(status, newStatus): boolean
 
-  // 누락됨 - 검색 및 페이지네이션
+  // ✅ 구현됨 - 검색 및 페이지네이션
   searchIssues(projectId: string, query: string): Promise<Issue[]>
   getIssuesByProjectPage(
     projectId: string,
@@ -275,7 +298,7 @@ interface IIssuesRepository extends IIssuesRepository {
     limit: number
   ): Promise<PaginatedIssues>
 
-  // 누락됨 - 유틸리티
+  // ✅ 부분 구현됨 - 유틸리티
   countIssuesByProject(projectId: string): Promise<number>
   countIssuesByStatus(projectId: string): Promise<Record<IssueStatus, number>>
   getIssueByIdentifier(projectId: string, identifier: string): Promise<Issue | null>
@@ -283,7 +306,7 @@ interface IIssuesRepository extends IIssuesRepository {
 }
 ```
 
-### 누락된 Server Actions
+### Server Action 구현 상태
 
 ```typescript
 // update-issue-status-action.ts
@@ -310,17 +333,23 @@ export async function updateIssueAssigneeAction(
   version: number
 )
 
-// search-issues-action.ts
+// search-issues-action.ts ✅
 "use server"
 export async function searchIssuesAction(
   projectId: string,
   query: string
 )
 
-// batch-update-issues-action.ts
+// filter-issues-action.ts ✅
+"use server"
+export async function filterIssuesAction(
+  input: FilterIssuesInput
+)
+
+// batch-update-issues-action.ts ✅
 "use server"
 export async function batchUpdateIssuesAction(
-  updates: BatchIssueUpdate[]
+  input: BatchUpdateIssuesInput
 )
 
 // update-issue-due-date-action.ts
@@ -351,10 +380,9 @@ const VALID_TRANSITIONS: Record<IssueStatus, IssueStatus[]> = {
 };
 ```
 
-**누락된 파일:**
+**추가로 분리 검토 가능한 파일:**
 - `issue-identifier-generator.ts` - 강력한 PROJECTKEY-n 생성
-- `issue-filter-builder.ts` - 복잡한 필터 쿼리 빌드
-- `issue-pagination.ts` - 페이지네이션 로직
+- `issue-filter-builder.ts` - 현재 구현되어 있으며, 향후 서버 검색/필터 확장 시 재사용 범위 점검 가능
 
 **상태 머신 예시:**
 ```typescript
@@ -536,19 +564,21 @@ const TEMPLATES = {
 #### Issue 관리
 ```
 src/features/issues/components/
-├── IssueFilters.tsx           ❌ 고급 필터 패널
-├── IssueSearch.tsx            ❌ 검색 인터페이스
-├── IssueBulkActions.tsx       ❌ 일괄 작업
-├── IssuePagination.tsx        ❌ 페이지네이션 컨트롤
-└── IssueStatusBadge.tsx       ❌ 상태 표시
+├── KanbanBoardView.tsx        ✅ 보드 검색/필터 UI, URL 쿼리 동기화
+├── BatchActionBar.tsx         ✅ 보드 선택 이슈 일괄 상태/담당자/우선순위 변경
+├── IssueIdentifierBadge.tsx   ✅ 공통 이슈 식별자 배지 컴포넌트 구현 및 주요 화면 적용
+├── IssueLabelChip.tsx         ✅ 공통 라벨 칩 컴포넌트 구현 및 주요 화면 적용
+├── IssuePriorityBadge.tsx     ✅ 공통 우선순위 배지 컴포넌트 구현 및 주요 화면 적용
+└── IssueStatusBadge.tsx       ✅ 공통 상태 배지 컴포넌트 구현 및 주요 화면 적용
 ```
 
 #### Project 관리
 ```
 src/features/projects/components/
-├── ProjectSettings.tsx        ❌ 설정 폼
-├── ProjectKeyInput.tsx        ❌ 검증이 포함된 키 입력
-└── ProjectTypeSelector.tsx    ❌ 개인/팀 선택
+├── project-settings-screen.tsx ✅ 설정 화면 구현
+├── project-metadata-form.tsx  ✅ 프로젝트 이름/키/타입 폼 구현
+├── ProjectKeyInput.tsx        ⚠️ 전용 컴포넌트 파일은 없고 `project-metadata-form.tsx` + `project-key.ts`로 대체
+└── ProjectTypeSelector.tsx    ⚠️ 전용 컴포넌트 파일은 없고 생성/설정 화면 내부 UI로 구현
 ```
 
 #### Project Members
@@ -580,19 +610,21 @@ src/features/comments/components/
 ```
 /app/api/
 ├── projects/
-│   ├── [userId]/route.ts              ❌ GET 사용자 프로젝트
 │   └── [projectId]/
-│       └── members/route.ts           ❌ 멤버 관리
+│       └── members/route.ts           ✅ GET 멤버 목록
+├── users/
+│   └── [userId]/
+│       └── projects/route.ts          ✅ GET 사용자 프로젝트
 ├── issues/
-│   ├── search/route.ts                ❌ POST 이슈 검색
+│   ├── search/route.ts                ✅ POST 이슈 검색
 │   └── [issueId]/
-│       └── comments/route.ts          ❌ 댓글 작업
+│       └── comments/route.ts          ✅ GET/POST 댓글, 하위 `[commentId]` PATCH/DELETE
 ├── notifications/
-│   ├── preferences/route.ts           ❌ GET/PUT 설정
-│   ├── subscribe/route.ts             ❌ POST 푸시 구독
-│   └── unsubscribe/route.ts          ❌ DELETE 구독
+│   ├── preferences/route.ts           ✅ GET/PATCH 설정
+│   ├── subscribe/route.ts             ✅ POST 푸시 구독
+│   └── unsubscribe/route.ts           ✅ DELETE 구독
 └── members/
-    └── check-access/route.ts          ❌ POST 접근 유효성 검사
+    └── check-access/route.ts          ✅ POST 접근 유효성 검사
 ```
 
 ---
@@ -644,8 +676,14 @@ src/features/comments/components/
 - ✅ Invite flow: SECURITY DEFINER 함수 사용 (제한된 권한)
 - ✅ Server Actions: 세션 기반 actor ID 조회
 - ✅ RLS: 모든 테이블에 정책 적용 완료
-- ✅ 모든 Repository: 세션 인식 클라이언트 사용
-- ✅ service-role: 코드베이스에서 완전 제거
+- ⚠️ 대부분의 Repository는 세션 인식 클라이언트 사용
+- ⚠️ 단, 이슈 상세 읽기 경로(`loadIssueDetail`)는 라벨/활동로그 초기 로드 안정화를 위해 `service-role + 명시적 멤버십 체크(checkProjectAccess)` 예외 경로를 사용 중
+- ❗ 따라서 "service-role 완전 제거"는 현재 기준으로 더 이상 사실이 아님
+
+### 현재 보안 메모
+
+- 이슈 상세 로더는 `createServiceRoleSupabaseClient()`를 사용하지만, 호출 전 현재 사용자 인증 확인과 프로젝트 멤버십 검증을 수행함
+- 이 경로는 초기 상세 페이지에서 RLS 기반 읽기 누락 문제를 피하기 위한 예외 구현이며, 향후 세션 인식 읽기 모델로 재정리할 수 있음
 
 ---
 
@@ -668,13 +706,13 @@ src/features/comments/components/
 
 | 기능 | 도메인 | 영향 |
 |---------|--------|--------|
-| 일괄 Issue 작업 | issues | 일괄 업데이트 |
+| 일괄 Issue 작업 | issues | 일괄 상태/담당자/우선순위 업데이트 |
 | 알림 전달 | notifications | 푸시/이메일 |
 | RBAC 구현 | project-members | 세분화된 권한 |
 | Issue 템플릿 | issues | 빠른 생성 |
 | 고급 필터링 | issues | 복잡한 쿼리 |
 
-**MVP 2 상태:** ✅ **모든 기능 완료! (2026-03-25)**
+**MVP 2 상태:** ⚠️ **핵심 기능은 대부분 연결됨, 알림 실제 전달과 일부 예외 경로 정리가 필요**
 
 ### 🟢 MVP 3 - 좋은 기능
 
@@ -701,8 +739,8 @@ src/features/comments/components/
 7. ✅ Comment 컴포넌트
 
 ### Phase 3: 고급 기능 (5-6주)
-8. ⬜ 일괄 작업
-9. ⬜ 알림 전달
+8. ✅ 일괄 작업 구현 및 서버 액션/UI 테스트 완료
+9. ⬜ 알림 실제 전달 (푸시/이메일)
 10. ✅ RBAC 구현 (ProjectMember 도메인에 포함)
 
 ### Phase 4: 다듬기 (7-8주)
@@ -772,9 +810,11 @@ notifications (전달)
 2. **완료됨**: ProjectMember 도메인 구조 구현 ✅
 3. **완료됨**: Project 접근 제어 구현 ✅
 4. **완료됨**: Issue Closed 상태 추가 ✅
-5. **이번 주**: 세션 인식 클라이언트를 사용하도록 repository 리팩토링
-6. **다음 주**: Issue 검색/필터링 구현
-7. **그 후**: 누락된 repository 메서드 및 액션 구현
+5. **완료됨**: 이슈 상세 풀페이지/드로어 라벨 편집 UI 연결 ✅
+6. **완료됨**: 데스크톱 이슈 생성 모달 라벨 선택 UI 연결 ✅
+7. **완료됨**: 모바일 이슈 생성 화면도 `LabelSelector` 기반으로 통일 ✅
+8. **다음 우선순위**: 알림 실제 전달 연결, 이슈 상세 `service-role` 예외 경로 단순화, 검색/필터 저장 프리셋 같은 UX 고도화
+9. **후속 작업**: API 응답 계약을 남은 내부/외부 라우트까지 더 통일할지 검토
 
 ---
 
@@ -784,3 +824,9 @@ notifications (전달)
 *ProjectMember 도메인 구현: 2026-03-25*
 *Project 접근 제어 구현: 2026-03-25*
 *Issue Closed 상태 추가: 2026-03-25*
+*Issue detail / create modal label UX 업데이트: 2026-03-25*
+*Issue batch actions 상태 문서화 업데이트: 2026-03-25*
+*Issue board search / filter UI 업데이트: 2026-03-25*
+*Project/member/notification API 라우트 업데이트: 2026-03-25*
+*Issue batch action 테스트 업데이트: 2026-03-25*
+*Issue server search / filter 연결 업데이트: 2026-03-25*
