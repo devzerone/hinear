@@ -148,11 +148,6 @@ export function GitHubIntegrationSettingsCard({
     }
   }, [projectId]);
 
-  const startGitHubFlow = useCallback(() => {
-    setShowRepoSelector(true);
-    loadRepositories();
-  }, [loadRepositories]);
-
   useEffect(() => {
     const githubState = searchParams.get("github");
 
@@ -286,12 +281,9 @@ export function GitHubIntegrationSettingsCard({
             next={`/projects/${projectId}/settings`}
             projectId={projectId}
           />
-          <Button onClick={startGitHubFlow} size="sm" variant="secondary">
-            Choose repository after GitHub auth
-          </Button>
           <p className="text-xs text-[#6B7280]">
-            Repository selection uses your GitHub login, and issue sync uses the
-            server GitHub token configured for this app.
+            Click "Connect with GitHub" to authorize and select a repository.
+            Issue sync uses the server GitHub token configured for this app.
           </p>
         </div>
       )}
