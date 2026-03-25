@@ -7,6 +7,7 @@ import { Button } from "@/components/atoms/Button";
 import { Field } from "@/components/atoms/Field";
 import { Select } from "@/components/atoms/Select";
 import { DueDateField } from "@/components/molecules/DueDateField";
+import { LabelInput } from "@/components/molecules/LabelInput";
 import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +22,7 @@ interface CreateIssueTabletModalProps
   assigneeOptions?: SelectOption[];
   defaultDescription?: string;
   defaultDueDate?: string | null;
-  defaultLabels?: string;
+  defaultLabels?: string | string[];
   defaultPriority?: string;
   defaultStatus?: string;
   defaultTitle?: string;
@@ -30,6 +31,7 @@ interface CreateIssueTabletModalProps
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
   priorityOptions?: SelectOption[];
   statusOptions?: SelectOption[];
+  labelSuggestions?: string[];
 }
 
 const DEFAULT_STATUS_OPTIONS: SelectOption[] = [
@@ -54,6 +56,17 @@ const DEFAULT_ASSIGNEE_OPTIONS: SelectOption[] = [
   { label: "Alex Kim", value: "alex-kim" },
 ];
 
+const DEFAULT_LABEL_SUGGESTIONS = [
+  "버그",
+  "개선",
+  "기능",
+  "긴급",
+  "문서",
+  "디자인",
+  "백엔드",
+  "프론트엔드",
+];
+
 export function CreateIssueTabletModal({
   action,
   assigneeOptions = DEFAULT_ASSIGNEE_OPTIONS,
@@ -64,6 +77,7 @@ export function CreateIssueTabletModal({
   defaultPriority = "No Priority",
   defaultStatus = "Triage",
   defaultTitle = "",
+  labelSuggestions = DEFAULT_LABEL_SUGGESTIONS,
   onCancel,
   onClose,
   onSubmit,
@@ -71,8 +85,19 @@ export function CreateIssueTabletModal({
   statusOptions = DEFAULT_STATUS_OPTIONS,
   ...props
 }: CreateIssueTabletModalProps) {
+  // Parse defaultLabels - could be string (comma-separated) or string[]
+  const parsedDefaultLabels = Array.isArray(defaultLabels)
+    ? defaultLabels
+    : defaultLabels
+      ? defaultLabels
+          .split(",")
+          .map((l) => l.trim())
+          .filter(Boolean)
+      : [];
+
   const [description, setDescription] = React.useState(defaultDescription);
   const [dueDate, setDueDate] = React.useState<string | null>(defaultDueDate);
+  const [labels, setLabels] = React.useState<string[]>(parsedDefaultLabels);
 
   return (
     <div
@@ -202,11 +227,12 @@ export function CreateIssueTabletModal({
             >
               Labels
             </label>
-            <Field
-              defaultValue={defaultLabels}
+            <LabelInput
+              value={labels}
+              onChange={setLabels}
               id="create-issue-labels"
               name="labels"
-              placeholder="라벨 추가..."
+              suggestions={labelSuggestions}
             />
           </div>
 
