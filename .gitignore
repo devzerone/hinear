@@ -55,3 +55,4 @@ storybook-static
 # Windows Zone.Identifier files
 *:Zone.Identifier
 react-query-test-final.png
+public/src/
