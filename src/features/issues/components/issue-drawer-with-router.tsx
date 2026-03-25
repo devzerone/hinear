@@ -3,10 +3,11 @@
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { IssueDetailDrawerScreen } from "@/features/issues/components/issue-drawer-screen";
-import type { ActivityLogEntry, Issue } from "@/features/issues/types";
+import type { ActivityLogEntry, Issue, Label } from "@/features/issues/types";
 
 interface IssueDetailDrawerWithRouterProps {
   activityLog?: ActivityLogEntry[];
+  availableLabels?: Label[];
   assigneeOptions: Array<{
     label: string;
     value: string;
@@ -19,6 +20,7 @@ interface IssueDetailDrawerWithRouterProps {
 
 export function IssueDetailDrawerWithRouter({
   activityLog,
+  availableLabels,
   assigneeOptions,
   boardHref,
   fullPageHref,
@@ -60,6 +62,7 @@ export function IssueDetailDrawerWithRouter({
       >
         <IssueDetailDrawerScreen
           activityLog={activityLog}
+          availableLabels={availableLabels}
           assigneeOptions={assigneeOptions}
           boardHref={boardHref}
           fullPageHref={fullPageHref}

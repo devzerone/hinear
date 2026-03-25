@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 import { requireAuthRedirect } from "@/features/auth/actions/start-email-auth-action";
 import { getServerIssuesRepository } from "@/features/issues/repositories/server-issues-repository";
@@ -8,7 +8,7 @@ import type { IssuePriority, IssueStatus } from "@/features/issues/types";
 
 export interface BatchIssueUpdate {
   issueId: string;
-  version: number;
+  version?: number;
   status?: IssueStatus;
   priority?: IssuePriority;
   assigneeId?: string | null;
@@ -54,7 +54,7 @@ export async function batchUpdateIssuesAction(
         priority: update.priority,
         assigneeId: update.assigneeId,
         updatedBy: actorId,
-        version: update.version,
+        version: issue.version,
       });
 
       results.push({

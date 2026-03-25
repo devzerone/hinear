@@ -49,7 +49,7 @@ export interface HeaderActionProps
 }
 
 export interface HeaderSearchFieldProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
   label?: string;
 }
 
@@ -115,28 +115,29 @@ export const HeaderAction = React.forwardRef<
 HeaderAction.displayName = "HeaderAction";
 
 export const HeaderSearchField = React.forwardRef<
-  HTMLButtonElement,
+  HTMLInputElement,
   HeaderSearchFieldProps
->(({ className, label = "Search", type = "button", ...props }, ref) => {
+>(({ className, label = "Search", type = "text", ...props }, ref) => {
   return (
-    <button
+    <label
       className={cn(
         "flex w-[220px] items-center gap-2 rounded-[10px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-white)] px-3 py-[9px] text-left",
-        "cursor-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-brand-300)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+        "focus-within:ring-2 focus-within:ring-[var(--app-color-brand-300)] focus-within:ring-offset-2",
         className
       )}
-      ref={ref}
-      type={type}
-      {...props}
     >
       <Search
         aria-hidden="true"
         className="h-[14px] w-[14px] shrink-0 text-[var(--app-color-gray-400)]"
       />
-      <span className="text-[13px] leading-[13px] font-normal text-[var(--app-color-gray-400)]">
-        {label}
-      </span>
-    </button>
+      <input
+        {...props}
+        className="w-full border-none bg-transparent text-[13px] leading-[13px] font-normal text-[var(--app-color-ink-900)] outline-none placeholder:text-[var(--app-color-gray-400)]"
+        placeholder={label}
+        ref={ref}
+        type={type}
+      />
+    </label>
   );
 });
 

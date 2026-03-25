@@ -66,7 +66,7 @@ describe("ProjectDashboardScreen", () => {
     ).toBeGreaterThan(0);
     expect(
       screen
-        .getAllByRole("link", { name: "Open board" })
+        .getAllByRole("link", { name: "Open Project" })
         .some((link) => link.getAttribute("href") === "/projects/project-1")
     ).toBe(true);
     expect(
@@ -78,11 +78,12 @@ describe("ProjectDashboardScreen", () => {
     expect(
       screen
         .getAllByRole("link", {
-          name: /WEB-12 Refine create issue route plan/i,
+          name: /WEB-12.*Refine create issue route plan/i,
         })
         .some(
           (link) =>
-            link.getAttribute("href") === "/projects/project-1/issues/issue-1"
+            link.getAttribute("href") ===
+            "/projects/project-1/issues/issue-1?view=full"
         )
     ).toBe(true);
     expect(screen.getAllByText("Settings").length).toBeGreaterThan(0);

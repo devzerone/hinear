@@ -2,16 +2,23 @@
 
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import { Chip } from "@/components/atoms/Chip";
+import { Select } from "@/components/atoms/Select/Select";
 import { MobileIssueListAppBar } from "@/components/molecules/MobileIssueListAppBar";
 import { CreateIssueTabletModal } from "@/components/organisms/CreateIssueTabletModal";
 import { LinearDashboardHeader } from "@/components/organisms/LinearDashboardHeader";
 import { MobileIssueSections } from "@/components/organisms/MobileIssueSections";
 import { getProjectIssueCreatePath } from "@/features/projects/lib/project-routes";
-import type { IssueStatus } from "@/specs/issue-detail.contract";
+import {
+  ISSUE_PRIORITIES,
+  ISSUE_STATUSES,
+  type Issue,
+  type IssuePriority,
+  type IssueStatus,
+} from "@/specs/issue-detail.contract";
 import { useIssues } from "../hooks/useIssues";
 import { KanbanBoard } from "./KanbanBoard";
 
@@ -98,17 +105,203 @@ function MobileProjectSwitcher({
 }
 
 function MobileIssueFilterChips() {
+  return null;
+}
+
+interface BoardFilterState {
+  assigneeId: string;
+  labelId: string;
+  priority: string;
+  search: string;
+  status: string;
+}
+
+interface BoardFiltersProps {
+  activeFilterCount: number;
+  assigneeOptions: Array<{
+    label: string;
+    value: string;
+  }>;
+  availableLabels: Array<{
+    color: string;
+    id: string;
+    name: string;
+  }>;
+  filters: BoardFilterState;
+  onAssigneeChange: (value: string) => void;
+  onClear: () => void;
+  onLabelChange: (value: string) => void;
+  onPriorityChange: (value: string) => void;
+  onSearchChange: (value: string) => void;
+  onStatusChange: (value: string) => void;
+  resultCount: number;
+  totalCount: number;
+}
+
+function getSingleQueryValue(
+  searchParams: ReturnType<typeof useSearchParams>,
+  key: string
+) {
+  return searchParams.get(key)?.split(",")[0] ?? "";
+}
+
+function getAvailableLabels(issues: Issue[]) {
+  const labelsById = new Map<
+    string,
+    {
+      color: string;
+      id: string;
+      name: string;
+    }
+  >();
+
+  for (const issue of issues) {
+    for (const label of issue.labels) {
+      if (!labelsById.has(label.id)) {
+        labelsById.set(label.id, label);
+      }
+    }
+  }
+
+  return [...labelsById.values()].sort((left, right) =>
+    left.name.localeCompare(right.name)
+  );
+}
+
+function BoardFilters({
+  activeFilterCount,
+  assigneeOptions,
+  availableLabels,
+  filters,
+  onAssigneeChange,
+  onClear,
+  onLabelChange,
+  onPriorityChange,
+  onSearchChange,
+  onStatusChange,
+  resultCount,
+  totalCount,
+}: BoardFiltersProps) {
+  const selectableAssigneeOptions = assigneeOptions.filter(
+    (option) => option.value
+  );
+
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Chip size="sm" variant="accent">
-        Updated
-      </Chip>
-      <Chip size="sm" variant="neutral">
-        My issues
-      </Chip>
-      <Chip size="sm" variant="neutral">
-        Filter
-      </Chip>
+    <div className="rounded-[18px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-white)] p-4 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
+      <div className="flex flex-col gap-4">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,2fr)_repeat(4,minmax(0,1fr))]">
+          <label className="flex flex-col gap-2">
+            <span className="text-[11px] font-[var(--app-font-weight-600)] tracking-[0.08em] text-[var(--app-color-gray-500)] uppercase">
+              Search
+            </span>
+            <input
+              className="h-11 rounded-[10px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-white)] px-4 text-[14px] text-[var(--app-color-ink-900)] outline-none transition focus:border-[var(--app-color-brand-300)]"
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Title, identifier, label..."
+              type="search"
+              value={filters.search}
+            />
+          </label>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-[11px] font-[var(--app-font-weight-600)] tracking-[0.08em] text-[var(--app-color-gray-500)] uppercase">
+              Status
+            </span>
+            <Select onValueChange={onStatusChange} value={filters.status}>
+              <option value="">All statuses</option>
+              {ISSUE_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-[11px] font-[var(--app-font-weight-600)] tracking-[0.08em] text-[var(--app-color-gray-500)] uppercase">
+              Priority
+            </span>
+            <Select onValueChange={onPriorityChange} value={filters.priority}>
+              <option value="">All priorities</option>
+              {ISSUE_PRIORITIES.map((priority) => (
+                <option key={priority} value={priority}>
+                  {priority}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-[11px] font-[var(--app-font-weight-600)] tracking-[0.08em] text-[var(--app-color-gray-500)] uppercase">
+              Assignee
+            </span>
+            <Select onValueChange={onAssigneeChange} value={filters.assigneeId}>
+              <option value="">All assignees</option>
+              {selectableAssigneeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-[11px] font-[var(--app-font-weight-600)] tracking-[0.08em] text-[var(--app-color-gray-500)] uppercase">
+              Label
+            </span>
+            <Select onValueChange={onLabelChange} value={filters.labelId}>
+              <option value="">All labels</option>
+              {availableLabels.map((label) => (
+                <option key={label.id} value={label.id}>
+                  {label.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Chip size="sm" variant="accent">
+              {resultCount} of {totalCount} issues
+            </Chip>
+            {filters.status ? (
+              <Chip size="sm" variant="neutral">
+                Status: {filters.status}
+              </Chip>
+            ) : null}
+            {filters.priority ? (
+              <Chip size="sm" variant="neutral">
+                Priority: {filters.priority}
+              </Chip>
+            ) : null}
+            {filters.assigneeId ? (
+              <Chip size="sm" variant="neutral">
+                Assignee filtered
+              </Chip>
+            ) : null}
+            {filters.labelId ? (
+              <Chip size="sm" variant="neutral">
+                Label filtered
+              </Chip>
+            ) : null}
+            {filters.search ? (
+              <Chip size="sm" variant="outline">
+                Search: {filters.search}
+              </Chip>
+            ) : null}
+          </div>
+
+          <button
+            className="rounded-[10px] border border-[var(--app-color-border-soft)] px-3 py-2 text-[12px] font-[var(--app-font-weight-600)] text-[var(--app-color-ink-900)] disabled:opacity-50"
+            disabled={activeFilterCount === 0}
+            onClick={onClear}
+            type="button"
+          >
+            Clear filters
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -123,13 +316,48 @@ export function KanbanBoardView({
   projectName = "Project",
   projectOptions,
 }: KanbanBoardViewProps) {
+  const pathname = usePathname();
   const router = useRouter();
-  const { issues, loading, error, mutationError, updateIssue } =
-    useIssues(projectId);
+  const searchParams = useSearchParams();
   const [createModalStatus, setCreateModalStatus] =
     React.useState<IssueStatus | null>(null);
-
-  const boardErrorMessage = mutationError?.message ?? error?.message ?? null;
+  const [isFilterPanelOpen, setIsFilterPanelOpen] = React.useState(false);
+  const [isNavigatingFilters, startFilterTransition] = React.useTransition();
+  const [searchInput, setSearchInput] = React.useState(
+    getSingleQueryValue(searchParams, "search")
+  );
+  const statusFilter = getSingleQueryValue(searchParams, "statuses");
+  const priorityFilter = getSingleQueryValue(searchParams, "priorities");
+  const assigneeFilter = getSingleQueryValue(searchParams, "assigneeIds");
+  const labelFilter = getSingleQueryValue(searchParams, "labelIds");
+  const deferredSearchInput = React.useDeferredValue(searchInput);
+  const { issues, loading, error, mutationError, updateIssue } = useIssues(
+    projectId,
+    {
+      assigneeIds: assigneeFilter ? [assigneeFilter] : [],
+      labelIds: labelFilter ? [labelFilter] : [],
+      priorities: priorityFilter ? [priorityFilter as IssuePriority] : [],
+      searchQuery: deferredSearchInput,
+      statuses: statusFilter ? [statusFilter as IssueStatus] : [],
+    }
+  );
+  const availableLabels = getAvailableLabels(issues);
+  const filters: BoardFilterState = {
+    assigneeId: assigneeFilter,
+    labelId: labelFilter,
+    priority: priorityFilter,
+    search: deferredSearchInput.trim(),
+    status: statusFilter,
+  };
+  const filteredIssues = issues;
+  const activeFilterCount = [
+    filters.search,
+    filters.status,
+    filters.priority,
+    filters.assigneeId,
+    filters.labelId,
+  ].filter(Boolean).length;
+  const shouldShowFilters = isFilterPanelOpen || activeFilterCount > 0;
 
   // Show toast on mutation error
   React.useEffect(() => {
@@ -137,6 +365,13 @@ export function KanbanBoardView({
       toast.error("We couldn't update the board. Try again.");
     }
   }, [mutationError]);
+
+  React.useEffect(() => {
+    const nextSearch = getSingleQueryValue(searchParams, "search");
+    if (nextSearch !== searchInput) {
+      setSearchInput(nextSearch);
+    }
+  }, [searchInput, searchParams]);
 
   React.useEffect(() => {
     if (!createModalStatus) {
@@ -152,6 +387,77 @@ export function KanbanBoardView({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [createModalStatus]);
+
+  React.useEffect(() => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+    const nextSearch = deferredSearchInput.trim();
+
+    if (nextSearch) {
+      nextParams.set("search", nextSearch);
+    } else {
+      nextParams.delete("search");
+    }
+
+    const currentQuery = searchParams.toString();
+    const nextQuery = nextParams.toString();
+
+    if (currentQuery === nextQuery) {
+      return;
+    }
+
+    startFilterTransition(() => {
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+        scroll: false,
+      });
+    });
+  }, [deferredSearchInput, pathname, router, searchParams]);
+
+  function updateFilterQuery(key: string, value: string) {
+    const nextParams = new URLSearchParams(searchParams.toString());
+
+    if (value) {
+      nextParams.set(key, value);
+    } else {
+      nextParams.delete(key);
+    }
+
+    const currentQuery = searchParams.toString();
+    const nextQuery = nextParams.toString();
+
+    if (currentQuery === nextQuery) {
+      return;
+    }
+
+    startFilterTransition(() => {
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+        scroll: false,
+      });
+    });
+  }
+
+  function clearFilters() {
+    setSearchInput("");
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("search");
+    nextParams.delete("statuses");
+    nextParams.delete("priorities");
+    nextParams.delete("assigneeIds");
+    nextParams.delete("labelIds");
+
+    const currentQuery = searchParams.toString();
+    const nextQuery = nextParams.toString();
+
+    if (currentQuery === nextQuery) {
+      return;
+    }
+
+    startFilterTransition(() => {
+      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
+        scroll: false,
+      });
+    });
+  }
 
   if (loading) {
     return (
@@ -198,6 +504,7 @@ export function KanbanBoardView({
             onCreateClick={() =>
               router.push(getProjectIssueCreatePath(projectId))
             }
+            onSearchClick={() => setIsFilterPanelOpen((open) => !open)}
             title={projectName}
           />
           <MobileProjectSwitcher
@@ -205,8 +512,31 @@ export function KanbanBoardView({
             projectOptions={projectOptions}
           />
           <MobileIssueFilterChips />
+          {shouldShowFilters ? (
+            <BoardFilters
+              activeFilterCount={activeFilterCount}
+              assigneeOptions={assigneeOptions ?? []}
+              availableLabels={availableLabels}
+              filters={{
+                ...filters,
+                search: searchInput,
+              }}
+              onAssigneeChange={(value) =>
+                updateFilterQuery("assigneeIds", value)
+              }
+              onClear={clearFilters}
+              onLabelChange={(value) => updateFilterQuery("labelIds", value)}
+              onPriorityChange={(value) =>
+                updateFilterQuery("priorities", value)
+              }
+              onSearchChange={setSearchInput}
+              onStatusChange={(value) => updateFilterQuery("statuses", value)}
+              resultCount={filteredIssues.length}
+              totalCount={issues.length}
+            />
+          ) : null}
           <MobileIssueSections
-            issues={issues}
+            issues={filteredIssues}
             projectId={projectId}
             statuses={[
               "Triage",
@@ -221,19 +551,46 @@ export function KanbanBoardView({
       </div>
       <div className="hidden min-h-0 flex-1 flex-col gap-5 md:flex">
         <LinearDashboardHeader
+          activeFilterCount={activeFilterCount}
           boardHref={boardHref}
           dashboardHref={dashboardHref}
           eyebrow={`${projectName} / ${projectKey ?? "PRJ"}`}
-          issues={issues}
+          filterActive={shouldShowFilters || isNavigatingFilters}
+          issues={filteredIssues}
           onCreateClick={() => setCreateModalStatus("Triage")}
+          onFilterClick={() => setIsFilterPanelOpen((open) => !open)}
+          onSearchValueChange={(event) => setSearchInput(event.target.value)}
+          searchValue={searchInput}
           subtitle="Focused view of triage, build, and shipped work."
           title="Issue board"
         />
 
+        {shouldShowFilters ? (
+          <BoardFilters
+            activeFilterCount={activeFilterCount}
+            assigneeOptions={assigneeOptions ?? []}
+            availableLabels={availableLabels}
+            filters={{
+              ...filters,
+              search: searchInput,
+            }}
+            onAssigneeChange={(value) =>
+              updateFilterQuery("assigneeIds", value)
+            }
+            onClear={clearFilters}
+            onLabelChange={(value) => updateFilterQuery("labelIds", value)}
+            onPriorityChange={(value) => updateFilterQuery("priorities", value)}
+            onSearchChange={setSearchInput}
+            onStatusChange={(value) => updateFilterQuery("statuses", value)}
+            resultCount={filteredIssues.length}
+            totalCount={issues.length}
+          />
+        ) : null}
+
         <div className="min-h-0 flex-1 overflow-hidden">
           <KanbanBoard
             assigneeOptions={assigneeOptions ?? []}
-            issues={issues}
+            issues={filteredIssues}
             onAddCard={setCreateModalStatus}
             onNavigate={(href) => router.push(href)}
             onIssueUpdate={updateIssue}
@@ -258,6 +615,7 @@ export function KanbanBoardView({
             onClick={(event) => event.stopPropagation()}
             onCancel={() => setCreateModalStatus(null)}
             onClose={() => setCreateModalStatus(null)}
+            projectId={projectId}
           />
         </div>
       ) : null}

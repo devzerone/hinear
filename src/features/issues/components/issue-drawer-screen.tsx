@@ -5,12 +5,22 @@ import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/atoms/Button";
-import { Chip } from "@/components/atoms/Chip";
 import { Field } from "@/components/atoms/Field";
 import { Select } from "@/components/atoms/Select";
 import { ConflictDialog } from "@/components/molecules/ConflictDialog";
 import { DueDateField } from "@/components/molecules/DueDateField";
+import { LabelSelector } from "@/components/molecules/LabelSelector";
 import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
+import { createLabelAction } from "@/features/issues/actions/create-label-action";
+import { updateIssueLabelsAction } from "@/features/issues/actions/update-issue-labels-action";
+import { IssueActivityItem } from "@/features/issues/components/IssueActivityItem";
+import { IssueAssigneePill } from "@/features/issues/components/IssueAssigneePill";
+import { IssueDateMeta } from "@/features/issues/components/IssueDateMeta";
+import { IssueEmptyState } from "@/features/issues/components/IssueEmptyState";
+import { IssueFieldBlock } from "@/features/issues/components/IssueFieldBlock";
+import { IssueMetaRow } from "@/features/issues/components/IssueMetaRow";
+import { IssuePanel } from "@/features/issues/components/IssuePanel";
+import { IssueSectionHeader } from "@/features/issues/components/IssueSectionHeader";
 import {
   getMutationErrorCode,
   getMutationErrorFallbackMessage,
@@ -20,11 +30,13 @@ import type {
   ActivityLogEntry,
   ConflictError,
   Issue,
+  Label,
 } from "@/features/issues/types";
 import { ISSUE_PRIORITIES, ISSUE_STATUSES } from "@/features/issues/types";
 
 interface IssueDetailDrawerScreenProps {
   activityLog?: ActivityLogEntry[];
+  availableLabels?: Label[];
   assigneeOptions: Array<{
     label: string;
     value: string;
@@ -44,6 +56,7 @@ interface IssueUpdateResponse {
 }
 
 const EMPTY_ACTIVITY_LOG: ActivityLogEntry[] = [];
+const EMPTY_LABELS: Label[] = [];
 
 function isIssueUpdateResponse(value: unknown): value is IssueUpdateResponse {
   return Boolean(
@@ -64,34 +77,9 @@ function isConflictError(value: unknown): value is ConflictError {
   );
 }
 
-function formatRelativeTime(value: string) {
-  const diffMs = new Date(value).getTime() - Date.now();
-  const diffMinutes = Math.round(diffMs / 60000);
-  const rtf = new Intl.RelativeTimeFormat("ko-KR", { numeric: "auto" });
-
-  if (Math.abs(diffMinutes) < 60) {
-    return rtf.format(diffMinutes, "minute");
-  }
-
-  const diffHours = Math.round(diffMinutes / 60);
-
-  if (Math.abs(diffHours) < 24) {
-    return rtf.format(diffHours, "hour");
-  }
-
-  return rtf.format(Math.round(diffHours / 24), "day");
-}
-
-function formatCompactDate(value: string) {
-  return new Intl.DateTimeFormat("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
 export function IssueDetailDrawerScreen({
   activityLog = EMPTY_ACTIVITY_LOG,
+  availableLabels: availableLabelsProp = EMPTY_LABELS,
   assigneeOptions,
   boardHref,
   createdByName,
@@ -109,6 +97,12 @@ export function IssueDetailDrawerScreen({
   const [priorityDraft, setPriorityDraft] = useState(issue.priority);
   const [assigneeDraft, setAssigneeDraft] = useState(issue.assigneeId ?? "");
   const [dueDateDraft, setDueDateDraft] = useState(issue.dueDate);
+  const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>(() =>
+    issue.labels.map((label) => label.id)
+  );
+  const [availableLabels, setAvailableLabels] =
+    useState<Label[]>(availableLabelsProp);
+  const [now] = useState(() => Date.now());
   const [conflictInfo, setConflictInfo] = useState<{
     currentVersion: number;
     requestedVersion: number;
@@ -124,7 +118,13 @@ export function IssueDetailDrawerScreen({
     setPriorityDraft(issue.priority);
     setAssigneeDraft(issue.assigneeId ?? "");
     setDueDateDraft(issue.dueDate);
+    setSelectedLabelIds(issue.labels.map((label) => label.id));
   }, [activityLog, issue]);
+
+  useEffect(() => {
+    setAvailableLabels(availableLabelsProp);
+    setSelectedLabelIds(issue.labels.map((label) => label.id));
+  }, [availableLabelsProp, issue]);
 
   const hasPendingChanges =
     titleDraft.trim() !== issueState.title ||
@@ -132,13 +132,49 @@ export function IssueDetailDrawerScreen({
     statusDraft !== issueState.status ||
     priorityDraft !== issueState.priority ||
     assigneeDraft.trim() !== (issueState.assigneeId ?? "") ||
-    dueDateDraft !== issueState.dueDate;
+    dueDateDraft !== issueState.dueDate ||
+    JSON.stringify([...selectedLabelIds].sort()) !==
+      JSON.stringify([...issueState.labels.map((label) => label.id)].sort());
+
+  const handleLabelToggle = (labelId: string) => {
+    setSelectedLabelIds((current) =>
+      current.includes(labelId)
+        ? current.filter((id) => id !== labelId)
+        : [...current, labelId]
+    );
+  };
+
+  const handleCreateLabel = async (name: string) => {
+    const result = await createLabelAction({
+      projectId: issue.projectId,
+      name,
+    });
+
+    if (result.success && result.label) {
+      toast.success(`Label "${name}" created`);
+      setAvailableLabels((current) => [...current, result.label]);
+      setSelectedLabelIds((current) => [...current, result.label.id]);
+      return;
+    }
+
+    toast.error(result.error || "Failed to create label");
+  };
 
   function saveChanges() {
     setConflictInfo(null);
 
     startSavingTransition(async () => {
       try {
+        const labelResponse = await updateIssueLabelsAction({
+          issueId: issueState.id,
+          projectId: issueState.projectId,
+          labelIds: selectedLabelIds,
+        });
+
+        if (!labelResponse.success) {
+          throw new Error(labelResponse.error || "Failed to update labels");
+        }
+
         const response = await fetch(
           `/internal/issues/${issueState.id}/detail`,
           {
@@ -197,6 +233,7 @@ export function IssueDetailDrawerScreen({
         setPriorityDraft(data.issue.priority);
         setAssigneeDraft(data.issue.assigneeId ?? "");
         setDueDateDraft(data.issue.dueDate);
+        setSelectedLabelIds(data.issue.labels.map((label) => label.id));
         toast.success("Drawer changes saved.");
       } catch (error) {
         toast.error(
@@ -254,7 +291,7 @@ export function IssueDetailDrawerScreen({
       </header>
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pr-1">
-        <section className="flex flex-col gap-3 rounded-[16px] border border-[#E6E8EC] bg-white p-4">
+        <IssuePanel className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
             <span className="text-[12px] leading-[12px] font-[var(--app-font-weight-700)] text-[#5E6AD2]">
               {issueState.identifier}
@@ -275,13 +312,11 @@ export function IssueDetailDrawerScreen({
           />
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-[6px]">
-              <label
-                className="text-[11px] leading-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]"
-                htmlFor="drawer-status"
-              >
-                Status
-              </label>
+            <IssueFieldBlock
+              htmlFor="drawer-status"
+              label="Status"
+              labelClassName="font-[var(--app-font-weight-600)]"
+            >
               <Select
                 id="drawer-status"
                 onValueChange={(value) =>
@@ -295,15 +330,13 @@ export function IssueDetailDrawerScreen({
                   </option>
                 ))}
               </Select>
-            </div>
+            </IssueFieldBlock>
 
-            <div className="flex flex-col gap-[6px]">
-              <label
-                className="text-[11px] leading-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]"
-                htmlFor="drawer-priority"
-              >
-                Priority
-              </label>
+            <IssueFieldBlock
+              htmlFor="drawer-priority"
+              label="Priority"
+              labelClassName="font-[var(--app-font-weight-600)]"
+            >
               <Select
                 id="drawer-priority"
                 onValueChange={(value) =>
@@ -317,15 +350,13 @@ export function IssueDetailDrawerScreen({
                   </option>
                 ))}
               </Select>
-            </div>
+            </IssueFieldBlock>
 
-            <div className="flex flex-col gap-[6px]">
-              <label
-                className="text-[11px] leading-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]"
-                htmlFor="drawer-assignee"
-              >
-                Assignee
-              </label>
+            <IssueFieldBlock
+              htmlFor="drawer-assignee"
+              label="Assignee"
+              labelClassName="font-[var(--app-font-weight-600)]"
+            >
               <Select
                 id="drawer-assignee"
                 onValueChange={setAssigneeDraft}
@@ -337,7 +368,7 @@ export function IssueDetailDrawerScreen({
                   </option>
                 ))}
               </Select>
-            </div>
+            </IssueFieldBlock>
 
             <DueDateField
               id="drawer-dueDate"
@@ -347,23 +378,24 @@ export function IssueDetailDrawerScreen({
             />
           </div>
 
-          <div className="flex flex-wrap gap-[6px]">
-            {issueState.labels.map((label) => (
-              <Chip
-                className="border-transparent font-[var(--app-font-weight-500)]"
-                key={label.id}
-                size="sm"
-                style={{
-                  backgroundColor: `${label.color}1A`,
-                  color: label.color,
-                }}
-                variant="neutral"
-              >
-                {label.name}
-              </Chip>
-            ))}
+          <div className="flex flex-col gap-[6px]">
+            <span className="text-[11px] leading-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]">
+              Labels
+            </span>
+            <LabelSelector
+              availableLabels={availableLabels.map((label) => ({
+                color: label.color,
+                id: label.id,
+                name: label.name,
+              }))}
+              disabled={isSaving}
+              onCreateLabel={handleCreateLabel}
+              onLabelToggle={handleLabelToggle}
+              placeholder="Select labels"
+              selectedLabelIds={selectedLabelIds}
+            />
           </div>
-        </section>
+        </IssuePanel>
 
         <section className="flex flex-col gap-3 rounded-[16px] border border-[#E6E8EC] bg-white p-4">
           <div className="flex items-center justify-between gap-3">
@@ -384,63 +416,89 @@ export function IssueDetailDrawerScreen({
         </section>
 
         <section className="flex flex-col gap-3 rounded-[16px] border border-[#E6E8EC] bg-white p-4">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="text-[14px] leading-[14px] font-[var(--app-font-weight-700)] text-[#111318]">
-              Recent activity
-            </h3>
-            <Link
-              className="text-[12px] leading-[12px] font-[var(--app-font-weight-700)] text-[#4338CA]"
-              href={fullPageHref}
-            >
-              View full history
-            </Link>
-          </div>
+          <IssueSectionHeader
+            badge={
+              <Link
+                className="text-[12px] leading-[12px] font-[var(--app-font-weight-700)] text-[#4338CA]"
+                href={fullPageHref}
+              >
+                View full history
+              </Link>
+            }
+            title="Recent activity"
+            titleClassName="text-[14px] leading-[14px] font-[var(--app-font-weight-700)]"
+          />
 
           <div className="flex flex-col gap-2">
             {visibleActivity.length > 0 ? (
               visibleActivity.map((entry) => (
-                <div
+                <IssueActivityItem
+                  actorLabel={memberNamesById[entry.actorId] ?? entry.actorId}
                   className="rounded-[12px] bg-[#FCFCFD] px-[14px] py-3"
                   key={entry.id}
-                >
-                  <p className="text-[12px] leading-[12px] font-[var(--app-font-weight-700)] text-[#111318]">
-                    {entry.summary}
-                  </p>
-                  <p className="mt-1 text-[11px] leading-[1.45] font-[var(--app-font-weight-600)] text-[#374151]">
-                    {memberNamesById[entry.actorId] ?? entry.actorId}
-                  </p>
-                  <p className="mt-1 text-[12px] leading-[1.45] text-[#6B7280]">
-                    {formatRelativeTime(entry.createdAt)}
-                  </p>
-                </div>
+                  createdAt={entry.createdAt}
+                  dateLocale="ko-KR"
+                  dateVariant="relative"
+                  now={now}
+                  summary={entry.summary}
+                />
               ))
             ) : (
-              <div className="rounded-[12px] bg-[#FCFCFD] px-[14px] py-3 text-[12px] leading-[1.45] text-[#6B7280]">
-                No recent activity.
-              </div>
+              <IssueEmptyState
+                className="rounded-[12px] bg-[#FCFCFD] px-[14px] py-3 text-[12px] leading-[1.45] text-[#6B7280]"
+                message="No recent activity."
+              />
             )}
           </div>
         </section>
 
         <section className="flex flex-col gap-3 rounded-[16px] border border-[#E6E8EC] bg-white p-4">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="text-[14px] leading-[14px] font-[var(--app-font-weight-700)] text-[#111318]">
-              Metadata summary
-            </h3>
-            <span className="rounded-full bg-[#F3F4F6] px-[10px] py-[6px] text-[11px] leading-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]">
-              Compact
-            </span>
-          </div>
+          <IssueSectionHeader
+            badge={
+              <span className="rounded-full bg-[#F3F4F6] px-[10px] py-[6px] text-[11px] leading-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]">
+                Compact
+              </span>
+            }
+            title="Metadata"
+            titleClassName="text-[14px] leading-[14px] font-[var(--app-font-weight-700)]"
+          />
 
-          <div className="whitespace-pre-line text-[12px] leading-[1.5] text-[#6B7280]">
-            {[
-              `Created ${formatCompactDate(issueState.createdAt)} · Updated ${formatRelativeTime(issueState.updatedAt)}`,
-              createdByName || lastEditedByName
-                ? `Author ${createdByName ?? "Unknown"} · Last editor ${lastEditedByName ?? createdByName ?? "Unknown"}`
-                : null,
-            ]
-              .filter(Boolean)
-              .join("\n")}
+          <div className="flex flex-col gap-3">
+            <IssueMetaRow
+              label="Created"
+              value={
+                <IssueDateMeta value={issueState.createdAt} variant="compact" />
+              }
+            />
+            <IssueMetaRow
+              label="Updated"
+              value={
+                <IssueDateMeta
+                  locale="ko-KR"
+                  now={now}
+                  value={issueState.updatedAt}
+                  variant="relative"
+                />
+              }
+            />
+            <IssueMetaRow
+              label="Assignee"
+              value={
+                <IssueAssigneePill
+                  name={
+                    assigneeOptions.find(
+                      (option) => option.value === assigneeDraft
+                    )?.label ?? "Unassigned"
+                  }
+                  size="sm"
+                />
+              }
+            />
+            <IssueMetaRow label="Author" value={createdByName ?? "Unknown"} />
+            <IssueMetaRow
+              label="Last editor"
+              value={lastEditedByName ?? createdByName ?? "Unknown"}
+            />
           </div>
         </section>
       </div>

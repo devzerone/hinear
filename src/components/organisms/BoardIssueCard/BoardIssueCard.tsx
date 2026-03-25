@@ -1,21 +1,17 @@
 import * as React from "react";
 
-import { Avatar } from "@/components/atoms/Avatar";
-import { Chip } from "@/components/atoms/Chip";
+import { IssueAssigneePill } from "@/features/issues/components/IssueAssigneePill";
+import { IssueIdentifierBadge } from "@/features/issues/components/IssueIdentifierBadge";
+import { IssueLabelChip } from "@/features/issues/components/IssueLabelChip";
+import { IssuePriorityBadge } from "@/features/issues/components/IssuePriorityBadge";
+import { IssueStatusBadge } from "@/features/issues/components/IssueStatusBadge";
 import { cn } from "@/lib/utils";
 import type {
   IssuePriority,
+  IssueStatus,
   Label,
   UserRef,
 } from "@/specs/issue-detail.contract";
-
-const PRIORITY_LABEL_CLASS_NAMES: Record<IssuePriority, string> = {
-  "No Priority": "text-[var(--app-color-gray-400)]",
-  Low: "text-[var(--app-color-gray-400)]",
-  Medium: "text-[var(--color-amber-700)]",
-  High: "text-[var(--color-orange-700)]",
-  Urgent: "text-[var(--color-red-700)]",
-};
 
 function formatDueDate(dueDate: string): { text: string; className: string } {
   const today = new Date();
@@ -60,24 +56,13 @@ function formatDueDate(dueDate: string): { text: string; className: string } {
   }
 }
 
-function getChipVariant(label: Label) {
-  if (label.name.toLowerCase() === "copy") {
-    return "violet" as const;
-  }
-
-  if (!label.color) {
-    return "neutral" as const;
-  }
-
-  return undefined;
-}
-
 export interface BoardIssueCardProps
   extends React.HTMLAttributes<HTMLDivElement> {
   assignee?: UserRef | null;
   dueDate?: string | null;
   estimate?: string;
   issueKey: string;
+  issueStatus: IssueStatus;
   issueTitle: string;
   labels?: Label[];
   priority: IssuePriority;
@@ -94,6 +79,7 @@ export const BoardIssueCard = React.forwardRef<
       dueDate,
       estimate,
       issueKey,
+      issueStatus,
       issueTitle,
       labels = [],
       priority,
@@ -111,17 +97,11 @@ export const BoardIssueCard = React.forwardRef<
         {...props}
       >
         <div className="flex items-center justify-between gap-3">
-          <span className="text-[12px] leading-[12px] font-[var(--app-font-weight-600)] text-[var(--app-color-brand-500)]">
-            {issueKey}
-          </span>
-          <span
-            className={cn(
-              "text-[11px] leading-[11px] font-[var(--app-font-weight-500)]",
-              PRIORITY_LABEL_CLASS_NAMES[priority]
-            )}
-          >
-            {priority}
-          </span>
+          <IssueIdentifierBadge identifier={issueKey} size="sm" />
+          <div className="flex items-center gap-2">
+            <IssueStatusBadge size="sm" status={issueStatus} />
+            <IssuePriorityBadge priority={priority} size="sm" />
+          </div>
         </div>
 
         <p className="text-[13px] leading-[1.45] font-[var(--app-font-weight-500)] text-[var(--app-color-ink-900)]">
@@ -131,31 +111,9 @@ export const BoardIssueCard = React.forwardRef<
         {labels.length > 0 ? (
           <div className="flex flex-col gap-[6px]">
             <div className="flex flex-wrap gap-[6px]">
-              {labels.map((label) => {
-                const variant = getChipVariant(label);
-
-                return (
-                  <Chip
-                    className={cn(
-                      !variant &&
-                        "border-transparent font-[var(--app-font-weight-500)]"
-                    )}
-                    key={label.id}
-                    size="sm"
-                    style={
-                      !variant
-                        ? {
-                            backgroundColor: `${label.color}1A`,
-                            color: label.color,
-                          }
-                        : undefined
-                    }
-                    variant={variant ?? "neutral"}
-                  >
-                    {label.name}
-                  </Chip>
-                );
-              })}
+              {labels.map((label) => (
+                <IssueLabelChip key={label.id} label={label} size="sm" />
+              ))}
             </div>
           </div>
         ) : null}
@@ -163,16 +121,10 @@ export const BoardIssueCard = React.forwardRef<
         {(assignee || estimate || dueDate) && (
           <div className="flex items-center justify-between gap-3">
             {assignee ? (
-              <div className="flex min-w-0 items-center gap-2">
-                <Avatar
-                  className="bg-[var(--color-teal-700)]"
-                  name={assignee.name}
-                  src={assignee.avatarUrl ?? null}
-                />
-                <span className="truncate text-[12px] leading-[12px] font-[var(--app-font-weight-500)] text-[var(--app-color-gray-500)]">
-                  {assignee.name}
-                </span>
-              </div>
+              <IssueAssigneePill
+                avatarUrl={assignee.avatarUrl ?? null}
+                name={assignee.name}
+              />
             ) : (
               <div />
             )}

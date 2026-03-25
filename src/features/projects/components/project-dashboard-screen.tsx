@@ -3,6 +3,9 @@ import Link from "next/link";
 
 import { getButtonClassName } from "@/components/atoms/Button";
 import { SidebarItem } from "@/components/molecules/SidebarItem";
+import { IssueDateMeta } from "@/features/issues/components/IssueDateMeta";
+import { IssueIdentifierBadge } from "@/features/issues/components/IssueIdentifierBadge";
+import { IssueStatusBadge } from "@/features/issues/components/IssueStatusBadge";
 import type { Issue } from "@/features/issues/types";
 import {
   getIssuePath,
@@ -25,37 +28,6 @@ interface ProjectDashboardScreenProps {
     totalIssueCount: number;
   };
   issues?: Issue[];
-}
-
-function formatUpdatedAt(value: string) {
-  const diffInHours = Math.round(
-    (new Date(value).getTime() - Date.now()) / (1000 * 60 * 60)
-  );
-
-  if (Math.abs(diffInHours) < 24) {
-    return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
-      diffInHours,
-      "hour"
-    );
-  }
-
-  return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
-    Math.round(diffInHours / 24),
-    "day"
-  );
-}
-
-function getIssueStatusTone(status: Issue["status"]) {
-  switch (status) {
-    case "Done":
-      return "bg-[#22C55E]";
-    case "In Progress":
-      return "bg-[#E42313]";
-    case "Backlog":
-      return "bg-[#6B7280]";
-    default:
-      return "bg-[#9CA3AF]";
-  }
 }
 
 function getStatCards(summary: ProjectDashboardScreenProps["summary"]) {
@@ -206,7 +178,7 @@ function RecentActivityList({
               {issue.identifier} {issue.title}
             </p>
             <p className="mt-1 text-[11px] leading-[11px] font-[var(--app-font-weight-500)] text-[#6B7280]">
-              {formatUpdatedAt(issue.updatedAt)}
+              <IssueDateMeta value={issue.updatedAt} variant="relative" />
             </p>
           </Link>
         ))
@@ -371,15 +343,26 @@ export function ProjectDashboardScreen({
                     href={getIssuePath(project.id, issue.id, { view: "full" })}
                     key={issue.id}
                   >
-                    <span
-                      className={`mt-[5px] h-[8px] w-[8px] shrink-0 rounded-full ${getIssueStatusTone(issue.status)}`}
+                    <IssueStatusBadge
+                      className="mt-[2px] shrink-0"
+                      size="sm"
+                      status={issue.status}
                     />
                     <div className="flex min-w-0 flex-1 flex-col gap-1">
-                      <p className="truncate text-[13px] leading-[1.35] font-[var(--app-font-weight-600)] text-[#111318]">
-                        {issue.identifier} {issue.title}
-                      </p>
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <IssueIdentifierBadge
+                          identifier={issue.identifier}
+                          size="sm"
+                        />
+                        <p className="min-w-0 truncate text-[13px] leading-[1.35] font-[var(--app-font-weight-600)] text-[#111318]">
+                          {issue.title}
+                        </p>
+                      </div>
                       <p className="text-[11px] leading-[11px] text-[#6B7280]">
-                        {formatUpdatedAt(issue.updatedAt)}
+                        <IssueDateMeta
+                          value={issue.updatedAt}
+                          variant="relative"
+                        />
                       </p>
                     </div>
                   </Link>

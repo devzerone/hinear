@@ -1,38 +1,13 @@
 import Link from "next/link";
 
-import { Chip } from "@/components/atoms/Chip";
+import { IssueIdentifierBadge } from "@/features/issues/components/IssueIdentifierBadge";
+import { IssueLabelChip } from "@/features/issues/components/IssueLabelChip";
+import { IssuePriorityBadge } from "@/features/issues/components/IssuePriorityBadge";
+import { IssueStatusBadge } from "@/features/issues/components/IssueStatusBadge";
 import { getIssuePath } from "@/features/projects/lib/project-routes";
-import { cn } from "@/lib/utils";
-import type {
-  Issue,
-  IssuePriority,
-  IssueStatus,
-  Label,
-} from "@/specs/issue-detail.contract";
+import type { Issue, IssueStatus } from "@/specs/issue-detail.contract";
 
 const MOBILE_SECTION_ORDER: IssueStatus[] = ["Triage", "In Progress", "Done"];
-
-const PRIORITY_CLASS_NAMES: Record<IssuePriority, string> = {
-  "No Priority": "text-[var(--app-color-gray-400)]",
-  Low: "text-[var(--app-color-gray-400)]",
-  Medium: "text-[var(--app-color-gray-400)]",
-  High: "text-[var(--app-color-ink-900)]",
-  Urgent: "text-[var(--color-red-700)]",
-};
-
-function getChipVariant(label: Label) {
-  const normalized = label.name.toLowerCase();
-
-  if (normalized === "copy" || normalized === "analytics") {
-    return "violet" as const;
-  }
-
-  if (normalized === "blocked") {
-    return "danger" as const;
-  }
-
-  return "neutral" as const;
-}
 
 export interface MobileIssueSectionsProps {
   issues: Issue[];
@@ -53,17 +28,11 @@ function MobileIssueCard({
       href={getIssuePath(projectId, issue.id, { view: "full" })}
     >
       <div className="flex items-start justify-between gap-3">
-        <span className="text-[12px] leading-[12px] font-[var(--app-font-weight-600)] text-[var(--app-color-brand-500)]">
-          {issue.identifier}
-        </span>
-        <span
-          className={cn(
-            "shrink-0 text-[11px] leading-[11px] font-[var(--app-font-weight-500)]",
-            PRIORITY_CLASS_NAMES[issue.priority]
-          )}
-        >
-          {issue.priority}
-        </span>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <IssueIdentifierBadge identifier={issue.identifier} size="sm" />
+          <IssueStatusBadge size="sm" status={issue.status} />
+        </div>
+        <IssuePriorityBadge priority={issue.priority} size="sm" />
       </div>
 
       <p className="text-[13px] leading-[1.45] font-[var(--app-font-weight-500)] text-[var(--app-color-ink-900)]">
@@ -73,21 +42,7 @@ function MobileIssueCard({
       {issue.labels.length > 0 ? (
         <div className="flex flex-wrap gap-[6px]">
           {issue.labels.map((label) => (
-            <Chip
-              key={label.id}
-              size="sm"
-              style={
-                getChipVariant(label) === "neutral" && label.color
-                  ? {
-                      backgroundColor: `${label.color}1A`,
-                      color: label.color,
-                    }
-                  : undefined
-              }
-              variant={getChipVariant(label)}
-            >
-              {label.name}
-            </Chip>
+            <IssueLabelChip key={label.id} label={label} size="sm" />
           ))}
         </div>
       ) : null}
@@ -120,9 +75,7 @@ export function MobileIssueSections({
       {sections.map((section) => (
         <section className="flex w-full flex-col gap-2" key={section.status}>
           <div className="flex items-center justify-between gap-3">
-            <h3 className="text-[13px] leading-[13px] font-[var(--app-font-weight-600)] text-[var(--app-color-ink-900)]">
-              {section.status}
-            </h3>
+            <IssueStatusBadge size="sm" status={section.status} />
             <span className="text-[12px] leading-[12px] font-[var(--app-font-weight-600)] text-[var(--app-color-gray-500)]">
               {section.issues.length}
             </span>

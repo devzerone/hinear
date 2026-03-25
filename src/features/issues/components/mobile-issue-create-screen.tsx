@@ -3,10 +3,16 @@
 import { CalendarDays, X } from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
+import { toast } from "sonner";
 
 import { Field } from "@/components/atoms/Field";
 import { Select } from "@/components/atoms/Select";
+import { LabelSelector } from "@/components/molecules/LabelSelector";
 import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
+import { createLabelAction } from "@/features/issues/actions/create-label-action";
+import { getLabelsAction } from "@/features/issues/actions/get-labels-action";
+import { createLabelKey, getLabelColor } from "@/features/issues/lib/labels";
+import type { Label } from "@/features/issues/types";
 import { cn } from "@/lib/utils";
 
 interface SelectOption {
@@ -27,6 +33,7 @@ interface MobileIssueCreateScreenProps {
   defaultStatus?: string;
   defaultTitle?: string;
   priorityOptions?: SelectOption[];
+  projectId?: string;
   statusOptions?: SelectOption[];
 }
 
@@ -123,10 +130,126 @@ export function MobileIssueCreateScreen({
   defaultStatus = "Triage",
   defaultTitle = "",
   priorityOptions = DEFAULT_PRIORITY_OPTIONS,
+  projectId,
   statusOptions = DEFAULT_STATUS_OPTIONS,
 }: MobileIssueCreateScreenProps) {
   const formId = React.useId();
   const [description, setDescription] = React.useState(defaultDescription);
+  const parsedDefaultLabels = React.useMemo(
+    () =>
+      defaultLabels
+        ? defaultLabels
+            .split(",")
+            .map((label) => label.trim())
+            .filter(Boolean)
+        : [],
+    [defaultLabels]
+  );
+  const [availableLabels, setAvailableLabels] = React.useState<Label[]>([]);
+  const [selectedLabelIds, setSelectedLabelIds] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const fallbackLabels: Label[] = parsedDefaultLabels.map((labelName) => ({
+      color: getLabelColor(createLabelKey(labelName)),
+      id: `draft:${createLabelKey(labelName)}`,
+      name: labelName,
+    }));
+
+    if (!projectId) {
+      setAvailableLabels(fallbackLabels);
+      setSelectedLabelIds(fallbackLabels.map((label) => label.id));
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    async function loadLabels() {
+      const result = await getLabelsAction(projectId);
+
+      if (!isMounted) {
+        return;
+      }
+
+      const existingLabels = result.success ? result.labels : [];
+      const mergedLabels = [
+        ...existingLabels,
+        ...fallbackLabels.filter(
+          (fallbackLabel) =>
+            !existingLabels.some(
+              (existingLabel) =>
+                createLabelKey(existingLabel.name) ===
+                createLabelKey(fallbackLabel.name)
+            )
+        ),
+      ];
+
+      setAvailableLabels(mergedLabels);
+      setSelectedLabelIds(
+        mergedLabels
+          .filter((label) =>
+            parsedDefaultLabels.some(
+              (defaultLabel) =>
+                createLabelKey(defaultLabel) === createLabelKey(label.name)
+            )
+          )
+          .map((label) => label.id)
+      );
+    }
+
+    loadLabels();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [parsedDefaultLabels, projectId]);
+
+  const selectedLabels = availableLabels.filter((label) =>
+    selectedLabelIds.includes(label.id)
+  );
+  const labelsFormValue = selectedLabels.map((label) => label.name).join(", ");
+
+  const handleLabelToggle = (labelId: string) => {
+    setSelectedLabelIds((current) =>
+      current.includes(labelId)
+        ? current.filter((id) => id !== labelId)
+        : [...current, labelId]
+    );
+  };
+
+  const handleCreateLabel = async (name: string) => {
+    const normalizedName = name.trim();
+    if (!normalizedName) {
+      return;
+    }
+
+    if (!projectId) {
+      const createdLabel: Label = {
+        color: getLabelColor(createLabelKey(normalizedName)),
+        id: `draft:${createLabelKey(normalizedName)}`,
+        name: normalizedName,
+      };
+
+      setAvailableLabels((current) => [...current, createdLabel]);
+      setSelectedLabelIds((current) => [...current, createdLabel.id]);
+      return;
+    }
+
+    const result = await createLabelAction({
+      name: normalizedName,
+      projectId,
+    });
+
+    if (result.success && result.label) {
+      toast.success(`Label "${normalizedName}" created`);
+      setAvailableLabels((current) => [...current, result.label]);
+      setSelectedLabelIds((current) => [...current, result.label.id]);
+      return;
+    }
+
+    toast.error(result.error || "Failed to create label");
+  };
 
   return (
     <div className={cn("flex flex-col gap-4", className)}>
@@ -260,13 +383,20 @@ export function MobileIssueCreateScreen({
           >
             Labels
           </label>
-          <Field
-            className="h-auto rounded-[10px] bg-[#FCFCFD] px-[14px] py-3 text-[13px] leading-[13px]"
-            defaultValue={defaultLabels}
-            id="mobile-create-issue-labels"
-            name="labels"
-            placeholder="라벨 추가..."
-          />
+          <div id="mobile-create-issue-labels">
+            <LabelSelector
+              availableLabels={availableLabels.map((label) => ({
+                color: label.color,
+                id: label.id,
+                name: label.name,
+              }))}
+              onCreateLabel={handleCreateLabel}
+              onLabelToggle={handleLabelToggle}
+              placeholder="Select labels"
+              selectedLabelIds={selectedLabelIds}
+            />
+          </div>
+          <input name="labels" type="hidden" value={labelsFormValue} />
         </div>
 
         <div className="flex flex-col gap-2">

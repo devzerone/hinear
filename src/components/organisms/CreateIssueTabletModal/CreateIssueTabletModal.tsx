@@ -8,8 +8,12 @@ import { Button } from "@/components/atoms/Button";
 import { Field } from "@/components/atoms/Field";
 import { Select } from "@/components/atoms/Select";
 import { DueDateField } from "@/components/molecules/DueDateField";
-import { LabelInput } from "@/components/molecules/LabelInput";
+import { LabelSelector } from "@/components/molecules/LabelSelector";
 import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
+import { createLabelAction } from "@/features/issues/actions/create-label-action";
+import { getLabelsAction } from "@/features/issues/actions/get-labels-action";
+import { createLabelKey, getLabelColor } from "@/features/issues/lib/labels";
+import type { Label } from "@/features/issues/types";
 import { cn } from "@/lib/utils";
 
 interface SelectOption {
@@ -31,8 +35,8 @@ interface CreateIssueTabletModalProps
   onClose?: React.ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
   priorityOptions?: SelectOption[];
+  projectId?: string;
   statusOptions?: SelectOption[];
-  labelSuggestions?: string[];
 }
 
 const DEFAULT_STATUS_OPTIONS: SelectOption[] = [
@@ -57,17 +61,6 @@ const DEFAULT_ASSIGNEE_OPTIONS: SelectOption[] = [
   { label: "Alex Kim", value: "alex-kim" },
 ];
 
-const DEFAULT_LABEL_SUGGESTIONS = [
-  "버그",
-  "개선",
-  "기능",
-  "긴급",
-  "문서",
-  "디자인",
-  "백엔드",
-  "프론트엔드",
-];
-
 export function CreateIssueTabletModal({
   action,
   assigneeOptions = DEFAULT_ASSIGNEE_OPTIONS,
@@ -78,28 +71,136 @@ export function CreateIssueTabletModal({
   defaultPriority = "No Priority",
   defaultStatus = "Triage",
   defaultTitle = "",
-  labelSuggestions = DEFAULT_LABEL_SUGGESTIONS,
   onCancel,
   onClose,
   onSubmit,
   priorityOptions = DEFAULT_PRIORITY_OPTIONS,
+  projectId,
   statusOptions = DEFAULT_STATUS_OPTIONS,
   ...props
 }: CreateIssueTabletModalProps) {
   // Parse defaultLabels - could be string (comma-separated) or string[]
-  const parsedDefaultLabels = Array.isArray(defaultLabels)
-    ? defaultLabels
-    : defaultLabels
-      ? defaultLabels
-          .split(",")
-          .map((l) => l.trim())
-          .filter(Boolean)
-      : [];
+  const parsedDefaultLabels = React.useMemo(
+    () =>
+      Array.isArray(defaultLabels)
+        ? defaultLabels
+        : defaultLabels
+          ? defaultLabels
+              .split(",")
+              .map((l) => l.trim())
+              .filter(Boolean)
+          : [],
+    [defaultLabels]
+  );
 
   const [description, setDescription] = React.useState(defaultDescription);
   const [dueDate, setDueDate] = React.useState<string | null>(defaultDueDate);
-  const [labels, setLabels] = React.useState<string[]>(parsedDefaultLabels);
+  const [availableLabels, setAvailableLabels] = React.useState<Label[]>([]);
+  const [selectedLabelIds, setSelectedLabelIds] = React.useState<string[]>([]);
   const [title, setTitle] = React.useState(defaultTitle);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const fallbackLabels: Label[] = parsedDefaultLabels.map((labelName) => ({
+      color: getLabelColor(createLabelKey(labelName)),
+      id: `draft:${createLabelKey(labelName)}`,
+      name: labelName,
+    }));
+
+    if (!projectId) {
+      setAvailableLabels(fallbackLabels);
+      setSelectedLabelIds(fallbackLabels.map((label) => label.id));
+      return () => {
+        isMounted = false;
+      };
+    }
+
+    async function loadLabels() {
+      const result = await getLabelsAction(projectId);
+
+      if (!isMounted) {
+        return;
+      }
+
+      const existingLabels = result.success ? result.labels : [];
+      const mergedLabels = [
+        ...existingLabels,
+        ...fallbackLabels.filter(
+          (fallbackLabel) =>
+            !existingLabels.some(
+              (existingLabel) =>
+                createLabelKey(existingLabel.name) ===
+                createLabelKey(fallbackLabel.name)
+            )
+        ),
+      ];
+
+      setAvailableLabels(mergedLabels);
+      setSelectedLabelIds(
+        mergedLabels
+          .filter((label) =>
+            parsedDefaultLabels.some(
+              (defaultLabel) =>
+                createLabelKey(defaultLabel) === createLabelKey(label.name)
+            )
+          )
+          .map((label) => label.id)
+      );
+    }
+
+    loadLabels();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [parsedDefaultLabels, projectId]);
+
+  const selectedLabels = availableLabels.filter((label) =>
+    selectedLabelIds.includes(label.id)
+  );
+  const labelsFormValue = selectedLabels.map((label) => label.name).join(", ");
+
+  const handleLabelToggle = (labelId: string) => {
+    setSelectedLabelIds((current) =>
+      current.includes(labelId)
+        ? current.filter((id) => id !== labelId)
+        : [...current, labelId]
+    );
+  };
+
+  const handleCreateLabel = async (name: string) => {
+    const normalizedName = name.trim();
+    if (!normalizedName) {
+      return;
+    }
+
+    if (!projectId) {
+      const createdLabel: Label = {
+        color: getLabelColor(createLabelKey(normalizedName)),
+        id: `draft:${createLabelKey(normalizedName)}`,
+        name: normalizedName,
+      };
+
+      setAvailableLabels((current) => [...current, createdLabel]);
+      setSelectedLabelIds((current) => [...current, createdLabel.id]);
+      return;
+    }
+
+    const result = await createLabelAction({
+      name: normalizedName,
+      projectId,
+    });
+
+    if (result.success && result.label) {
+      toast.success(`Label "${normalizedName}" created`);
+      setAvailableLabels((current) => [...current, result.label]);
+      setSelectedLabelIds((current) => [...current, result.label.id]);
+      return;
+    }
+
+    toast.error(result.error || "Failed to create label");
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     // Title 유효성 검사
@@ -244,13 +345,20 @@ export function CreateIssueTabletModal({
             >
               Labels
             </label>
-            <LabelInput
-              value={labels}
-              onChange={setLabels}
-              id="create-issue-labels"
-              name="labels"
-              suggestions={labelSuggestions}
-            />
+            <div id="create-issue-labels">
+              <LabelSelector
+                availableLabels={availableLabels.map((label) => ({
+                  color: label.color,
+                  id: label.id,
+                  name: label.name,
+                }))}
+                onCreateLabel={handleCreateLabel}
+                onLabelToggle={handleLabelToggle}
+                placeholder="Select labels"
+                selectedLabelIds={selectedLabelIds}
+              />
+            </div>
+            <input name="labels" type="hidden" value={labelsFormValue} />
           </div>
 
           <div className="flex flex-col gap-2">

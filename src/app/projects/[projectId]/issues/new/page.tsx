@@ -42,6 +42,7 @@ export default async function NewProjectIssuePage({
             action={createIssueAction.bind(null, projectId)}
             assigneeOptions={assigneeOptions}
             cancelHref={getProjectPath(projectId)}
+            projectId={projectId}
           />
         </div>
 
@@ -76,6 +77,7 @@ export default async function NewProjectIssuePage({
             action={createIssueAction.bind(null, projectId)}
             assigneeOptions={assigneeOptions}
             className="w-full max-w-[720px]"
+            projectId={projectId}
           />
         </div>
       </div>

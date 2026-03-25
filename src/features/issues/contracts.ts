@@ -10,6 +10,7 @@ import type {
 
 // API 응답을 위한 타입들
 export interface Assignee {
+  id: string;
   name: string;
   avatarUrl: string | null;
 }

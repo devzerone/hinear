@@ -1,6 +1,4 @@
 "use client";
-
-import { X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Select } from "@/components/atoms/Select/Select";
@@ -49,7 +47,6 @@ export function BatchActionBar({
         updates: selectedIssueIds.map((issueId) => ({
           issueId,
           status,
-          version: 1, // Note: This should be the actual version from the issue
         })),
       });
 
@@ -81,7 +78,6 @@ export function BatchActionBar({
         updates: selectedIssueIds.map((issueId) => ({
           issueId,
           assigneeId: assigneeId || null,
-          version: 1,
         })),
       });
 
@@ -111,7 +107,6 @@ export function BatchActionBar({
         updates: selectedIssueIds.map((issueId) => ({
           issueId,
           priority,
-          version: 1,
         })),
       });
 

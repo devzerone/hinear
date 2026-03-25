@@ -2,9 +2,10 @@ import "server-only";
 
 import { notFound } from "next/navigation";
 
-import { getServerIssuesRepository } from "@/features/issues/repositories/server-issues-repository";
-import { getServerProjectsRepository } from "@/features/projects/repositories/server-projects-repository";
+import { SupabaseIssuesRepository } from "@/features/issues/repositories/supabase-issues-repository";
+import { SupabaseProjectsRepository } from "@/features/projects/repositories/supabase-projects-repository";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
+import { createServiceRoleSupabaseClient } from "@/lib/supabase/server-client";
 
 export async function loadIssueDetail(
   projectId: string,
@@ -18,18 +19,41 @@ export async function loadIssueDetail(
     throw new Error("Authentication required");
   }
 
-  const issuesRepository = await getServerIssuesRepository();
-  const projectsRepository = await getServerProjectsRepository();
+  const supabase = createServiceRoleSupabaseClient();
+  const issuesRepository = new SupabaseIssuesRepository(supabase);
+  const projectsRepository = new SupabaseProjectsRepository(supabase);
 
-  const [project, issue, members, comments] = await Promise.all([
+  const hasProjectAccess = await projectsRepository.checkProjectAccess(
+    projectId,
+    actorId
+  );
+
+  if (!hasProjectAccess) {
+    notFound();
+  }
+
+  const [
+    project,
+    issue,
+    members,
+    comments,
+    activityLog,
+    { data: availableLabels, error: labelsError },
+  ] = await Promise.all([
     projectsRepository.getProjectById(projectId),
     issuesRepository.getIssueById(issueId),
     projectsRepository.listProjectMembers(projectId),
     issuesRepository.listCommentsByIssueId(issueId),
+    issuesRepository.listActivityLogByIssueId(issueId),
+    supabase.from("labels").select().eq("project_id", projectId).order("name"),
   ]);
 
   if (!project || !issue) {
     notFound();
+  }
+
+  if (labelsError) {
+    throw new Error(`Failed to load labels: ${labelsError.message}`);
   }
 
   // Build assignee options
@@ -47,7 +71,8 @@ export async function loadIssueDetail(
   }
 
   return {
-    activityLog: [], // TODO: Implement activity log loading
+    activityLog,
+    availableLabels: availableLabels ?? [],
     comments,
     assigneeOptions,
     memberNamesById,

@@ -1,5 +1,23 @@
 import { render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const { pushMock, toastErrorMock } = vi.hoisted(() => ({
+  pushMock: vi.fn(),
+  toastErrorMock: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: pushMock,
+  }),
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    error: toastErrorMock,
+    success: vi.fn(),
+  },
+}));
 
 import {
   IssueDetailErrorScreen,
@@ -10,8 +28,15 @@ import {
 import { server } from "@/mocks/server";
 
 describe("IssueDetailScreen", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
   // Clean up test-specific MSW handlers after each test
   afterEach(() => {
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+    vi.clearAllMocks();
     server.resetHandlers();
   });
 
@@ -108,15 +133,14 @@ describe("IssueDetailScreen", () => {
       />
     );
 
-    expect(screen.getByRole("heading", { name: "Error" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
-    expect(
-      screen.getByText(/return to the board and open another issue/i)
-    ).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to board" })).toHaveAttribute(
-      "href",
-      "/projects/project-1"
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "We couldn't load this issue. Refresh the detail view to try again."
     );
+    expect(pushMock).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(2000);
+
+    expect(pushMock).toHaveBeenCalledWith("/projects/project-1");
   });
 
   it("renders the not-found state with replacement path", () => {

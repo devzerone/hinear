@@ -4,10 +4,11 @@ import { AnimatePresence } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { IssueDetailDrawerWithRouter } from "@/features/issues/components/issue-drawer-with-router";
-import type { ActivityLogEntry, Issue } from "@/features/issues/types";
+import type { ActivityLogEntry, Issue, Label } from "@/features/issues/types";
 
 interface ModalData {
   activityLog: ActivityLogEntry[];
+  availableLabels: Label[];
   assigneeOptions: Array<{ label: string; value: string }>;
   issue: Issue;
   memberNamesById: Record<string, string>;
@@ -45,6 +46,7 @@ export function ProjectModalProvider({ projectId }: { projectId: string }) {
 
         setModalData({
           activityLog: data.activityLog || [],
+          availableLabels: data.availableLabels || [],
           assigneeOptions: [
             { label: "Unassigned", value: "" },
             ...(data.assigneeOptions || []),
@@ -66,15 +68,12 @@ export function ProjectModalProvider({ projectId }: { projectId: string }) {
     loadModalData();
   }, [issueId, projectId, router]);
 
-  const handleClose = () => {
-    router.push(`/projects/${projectId}`);
-  };
-
   return (
     <AnimatePresence initial={false} mode="sync">
       {modalData && !isLoading && (
         <IssueDetailDrawerWithRouter
           key={modalData.issueId}
+          availableLabels={modalData.availableLabels}
           boardHref={`/projects/${projectId}`}
           fullPageHref={`/projects/${projectId}/issues/${modalData.issueId}?view=full`}
           activityLog={modalData.activityLog}

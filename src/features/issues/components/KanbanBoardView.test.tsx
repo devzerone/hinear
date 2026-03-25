@@ -2,9 +2,32 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
+
 const { mockKanbanBoardProps, useIssuesMock } = vi.hoisted(() => ({
   mockKanbanBoardProps: vi.fn(),
   useIssuesMock: vi.fn(),
+}));
+const { navigationState, toastErrorMock } = vi.hoisted(() => ({
+  navigationState: {
+    searchParams: "",
+  },
+  toastErrorMock: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/projects/project-1",
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+  }),
+  useSearchParams: () => new URLSearchParams(navigationState.searchParams),
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    error: toastErrorMock,
+  },
 }));
 
 vi.mock("@/features/issues/hooks/useIssues", () => ({
@@ -35,6 +58,7 @@ import { KanbanBoardView } from "@/features/issues/components/KanbanBoardView";
 
 describe("KanbanBoardView", () => {
   afterEach(() => {
+    navigationState.searchParams = "";
     vi.clearAllMocks();
   });
 
@@ -90,6 +114,30 @@ describe("KanbanBoardView", () => {
     ).toBeInTheDocument();
   });
 
+  it("passes URL filter state through to the issues hook", () => {
+    navigationState.searchParams =
+      "search=bug&statuses=Todo&priorities=High&assigneeIds=user-2&labelIds=label-1";
+    useIssuesMock.mockReturnValue({
+      issues: [],
+      loading: false,
+      error: null,
+      mutationError: null,
+      updateIssue: vi.fn(),
+    });
+
+    render(
+      <KanbanBoardView projectId="project-1" projectName="Web Platform" />
+    );
+
+    expect(useIssuesMock).toHaveBeenCalledWith("project-1", {
+      assigneeIds: ["user-2"],
+      labelIds: ["label-1"],
+      priorities: ["High"],
+      searchQuery: "bug",
+      statuses: ["Todo"],
+    });
+  });
+
   it("shows the mapped board-update error message", async () => {
     const user = userEvent.setup();
     const updateIssue = vi.fn().mockRejectedValue(new Error("ignored"));
@@ -131,10 +179,8 @@ describe("KanbanBoardView", () => {
     );
 
     expect(updateIssue).toHaveBeenCalledWith("issue-1", { status: "Done" });
-    expect(
-      screen.getByText(
-        "We couldn't update that issue on the board. Refresh and try again."
-      )
-    ).toBeInTheDocument();
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "We couldn't update the board. Try again."
+    );
   });
 });

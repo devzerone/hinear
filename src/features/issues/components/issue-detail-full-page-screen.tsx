@@ -15,6 +15,19 @@ import { LabelSelector } from "@/components/molecules/LabelSelector";
 import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
 import { createLabelAction } from "@/features/issues/actions/create-label-action";
 import { updateIssueLabelsAction } from "@/features/issues/actions/update-issue-labels-action";
+import { IssueActivityItem } from "@/features/issues/components/IssueActivityItem";
+import { IssueAssigneePill } from "@/features/issues/components/IssueAssigneePill";
+import { IssueCommentMeta } from "@/features/issues/components/IssueCommentMeta";
+import { IssueDateMeta } from "@/features/issues/components/IssueDateMeta";
+import { IssueEmptyState } from "@/features/issues/components/IssueEmptyState";
+import { IssueFieldBlock } from "@/features/issues/components/IssueFieldBlock";
+import { IssueIdentifierBadge } from "@/features/issues/components/IssueIdentifierBadge";
+import { IssueLabelChip } from "@/features/issues/components/IssueLabelChip";
+import { IssueMetaRow } from "@/features/issues/components/IssueMetaRow";
+import { IssuePanel } from "@/features/issues/components/IssuePanel";
+import { IssuePriorityBadge } from "@/features/issues/components/IssuePriorityBadge";
+import { IssueSectionHeader } from "@/features/issues/components/IssueSectionHeader";
+import { IssueStatusBadge } from "@/features/issues/components/IssueStatusBadge";
 import {
   getMutationErrorCode,
   getMutationErrorFallbackMessage,
@@ -36,6 +49,7 @@ interface IssueDetailFullPageScreenProps {
   }>;
   availableLabels?: Label[];
   boardHref?: string;
+  initialNow: number;
   issue: Issue;
   comments?: Comment[];
   activityLog?: ActivityLogEntry[];
@@ -85,49 +99,13 @@ function isConflictError(value: unknown): value is ConflictError {
   );
 }
 
-function formatTimestamp(value: string) {
-  const date = new Date(value);
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const hours = date.getHours();
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const period = hours < 12 ? "오전" : "오후";
-  const hour12 = hours % 12 || 12;
-
-  return `${year}. ${month}. ${day}. ${period} ${hour12}:${minutes}`;
-}
-
-function getPriorityTone(priority: Issue["priority"]) {
-  if (priority === "Urgent" || priority === "High") return "text-[#DC2626]";
-  if (priority === "Medium") return "text-[#D97706]";
-  return "text-[#6B7280]";
-}
-
-function formatRelativeTime(value: string) {
-  const diffInHours = Math.round(
-    (new Date(value).getTime() - Date.now()) / (1000 * 60 * 60)
-  );
-
-  if (Math.abs(diffInHours) < 24) {
-    return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
-      diffInHours,
-      "hour"
-    );
-  }
-
-  return new Intl.RelativeTimeFormat("en", { numeric: "auto" }).format(
-    Math.round(diffInHours / 24),
-    "day"
-  );
-}
-
 export function IssueDetailFullPageScreen({
   activityLog = EMPTY_ACTIVITY_LOG,
   assigneeOptions = [],
   availableLabels: availableLabelsProp = [],
   boardHref,
   comments = EMPTY_COMMENTS,
+  initialNow,
   issue,
   memberNamesById = {},
 }: IssueDetailFullPageScreenProps) {
@@ -140,16 +118,20 @@ export function IssueDetailFullPageScreen({
   const [priorityDraft, setPriorityDraft] = useState(issue.priority);
   const [assigneeDraft, setAssigneeDraft] = useState(issue.assigneeId ?? "");
   const [dueDateDraft, setDueDateDraft] = useState(issue.dueDate);
-  const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
-  const [availableLabels, setAvailableLabels] = useState<Label[]>([]);
+  const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>(() =>
+    issue.labels.map((label) => label.id)
+  );
+  const [availableLabels, setAvailableLabels] =
+    useState<Label[]>(availableLabelsProp);
   const [commentDraft, setCommentDraft] = useState("");
+  const [now, setNow] = useState(() =>
+    Number.isFinite(initialNow) ? initialNow : Date.now()
+  );
 
-  // Prop 변경을 감지하여 상태 업데이트
   useEffect(() => {
-    setActivityState(activityLog);
     setAvailableLabels(availableLabelsProp);
     setSelectedLabelIds(issue.labels.map((label) => label.id));
-  }, [issue, activityLog, availableLabelsProp]);
+  }, [issue, availableLabelsProp]);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentBody, setEditingCommentBody] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
@@ -159,6 +141,10 @@ export function IssueDetailFullPageScreen({
     requestedVersion: number;
   } | null>(null);
   const [isSaving, startSavingTransition] = useTransition();
+
+  useEffect(() => {
+    setNow(Date.now());
+  }, []);
 
   useEffect(() => {
     setIssueState(issue);
@@ -495,36 +481,27 @@ export function IssueDetailFullPageScreen({
           </button>
         </div>
 
-        <section className="flex flex-col gap-3 rounded-[16px] border border-[#E6E8EC] bg-white p-4">
-          <span className="text-[12px] font-[var(--app-font-weight-700)] text-[#5E6AD2]">
-            {issueState.identifier}
-          </span>
+        <IssuePanel className="flex flex-col gap-3">
+          <IssueIdentifierBadge identifier={issueState.identifier} size="sm" />
           <h2 className="text-[20px] leading-[1.25] font-[var(--app-font-weight-600)] text-[#111318]">
             {issueState.title}
           </h2>
           <div className="flex flex-wrap items-center gap-2">
-            <Chip size="sm" variant="neutral">
-              {issueState.status}
-            </Chip>
-            <Chip
-              size="sm"
-              variant={
-                issueState.priority === "Urgent" ||
-                issueState.priority === "High"
-                  ? "danger"
-                  : "neutral"
-              }
-            >
-              {issueState.priority}
-            </Chip>
+            <IssueStatusBadge size="sm" status={issueState.status} />
+            <IssuePriorityBadge priority={issueState.priority} size="sm" />
           </div>
           <p className="text-[12px] leading-[1.45] font-[var(--app-font-weight-500)] text-[#6B7280]">
             {assigneeLabel} assigned ·{" "}
-            {formatRelativeTime(issueState.updatedAt)} updated
+            <IssueDateMeta
+              now={now}
+              value={issueState.updatedAt}
+              variant="relative"
+            />{" "}
+            updated
           </p>
-        </section>
+        </IssuePanel>
 
-        <section className="flex flex-col gap-3 rounded-[16px] border border-[#E6E8EC] bg-white p-4">
+        <IssuePanel className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-[14px] font-[var(--app-font-weight-600)] text-[#111318]">
               Description
@@ -539,28 +516,29 @@ export function IssueDetailFullPageScreen({
           {issueState.labels.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {issueState.labels.map((label) => (
-                <span
-                  className="text-[12px] leading-[12px] font-[var(--app-font-weight-500)] text-[#4338CA]"
-                  key={label.id}
-                >
-                  {label.name}
-                </span>
+                <IssueLabelChip key={label.id} label={label} size="sm" />
               ))}
             </div>
           ) : null}
-        </section>
+        </IssuePanel>
 
         <section className="flex flex-col gap-3 rounded-[16px] border border-[#E6E8EC] bg-white p-4">
-          <h2 className="text-[14px] font-[var(--app-font-weight-600)] text-[#111318]">
-            Comments
-          </h2>
+          <IssueSectionHeader
+            title="Comments"
+            titleClassName="text-[14px] font-[var(--app-font-weight-600)]"
+          />
           {commentsState.length > 0 ? (
             commentsState.slice(0, 1).map((comment) => (
               <div className="flex flex-col gap-2" key={comment.id}>
-                <p className="text-[11px] font-[var(--app-font-weight-600)] text-[#111318]">
-                  {memberNamesById[comment.authorId] ?? comment.authorId} ·{" "}
-                  {formatRelativeTime(comment.createdAt)}
-                </p>
+                <IssueCommentMeta
+                  authorLabel={
+                    memberNamesById[comment.authorId] ?? comment.authorId
+                  }
+                  className="[&_span:first-child]:text-[11px] [&_span:first-child]:font-[var(--app-font-weight-600)] [&_span:last-child]:text-[11px]"
+                  createdAt={comment.createdAt}
+                  dateVariant="relative"
+                  now={now}
+                />
                 <div
                   className="prose prose-sm max-w-none text-[13px] leading-[1.45] text-[#4B5563]"
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: User-generated markdown content
@@ -569,9 +547,10 @@ export function IssueDetailFullPageScreen({
               </div>
             ))
           ) : (
-            <p className="text-[13px] leading-[1.45] text-[#6B7280]">
-              No comments yet.
-            </p>
+            <IssueEmptyState
+              className="text-[13px] leading-[1.45] text-[#6B7280]"
+              message="No comments yet."
+            />
           )}
 
           <MarkdownEditor
@@ -593,47 +572,58 @@ export function IssueDetailFullPageScreen({
         </section>
 
         <section className="flex flex-col gap-2 rounded-[16px] border border-[#E6E8EC] bg-white p-[14px]">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-[14px] font-[var(--app-font-weight-600)] text-[#111318]">
-              Metadata
-            </h2>
-            <Chip size="sm" variant="neutral">
-              Summary
-            </Chip>
-          </div>
+          <IssueSectionHeader
+            badge={
+              <Chip size="sm" variant="neutral">
+                Summary
+              </Chip>
+            }
+            title="Metadata"
+            titleClassName="text-[14px] font-[var(--app-font-weight-600)]"
+          />
           <p className="whitespace-pre-wrap text-[11px] leading-[1.45] font-[var(--app-font-weight-500)] text-[#4B5563]">
-            {`Created ${formatTimestamp(issueState.createdAt)} · Updated ${formatRelativeTime(
-              issueState.updatedAt
-            )}\nAuthor ${memberNamesById[issueState.createdBy] ?? issueState.createdBy} · Last editor ${lastEditedByLabel}`}
+            Created <IssueDateMeta value={issueState.createdAt} /> · Updated{" "}
+            <IssueDateMeta
+              now={now}
+              value={issueState.updatedAt}
+              variant="relative"
+            />
+            {"\n"}Author{" "}
+            {memberNamesById[issueState.createdBy] ?? issueState.createdBy} ·{" "}
+            Last editor {lastEditedByLabel}
           </p>
         </section>
 
         <section className="flex flex-col gap-2 rounded-[16px] border border-[#E6E8EC] bg-white p-[14px]">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-[13px] font-[var(--app-font-weight-600)] text-[#111318]">
-              Recent activity
-            </h2>
-            <span className="text-[11px] font-[var(--app-font-weight-700)] text-[#4338CA]">
-              View full history
-            </span>
-          </div>
+          <IssueSectionHeader
+            badge={
+              <span className="text-[11px] font-[var(--app-font-weight-700)] text-[#4338CA]">
+                View full history
+              </span>
+            }
+            title="Recent activity"
+            titleClassName="text-[13px] font-[var(--app-font-weight-600)]"
+          />
           {activityState.length > 0 ? (
-            activityState.slice(0, 2).map((entry) => (
-              <div
-                className="flex flex-col gap-[2px] rounded-[12px] bg-[#FCFCFD] px-3 py-[10px]"
-                key={entry.id}
-              >
-                <p className="text-[11px] font-[var(--app-font-weight-600)] text-[#111318]">
-                  {memberNamesById[entry.actorId] ?? entry.actorId} ·{" "}
-                  {formatRelativeTime(entry.createdAt)}
-                </p>
-                <p className="text-[11px] leading-[1.45] font-[var(--app-font-weight-500)] text-[#4B5563]">
-                  {entry.summary}
-                </p>
-              </div>
-            ))
+            activityState
+              .slice(0, 2)
+              .map((entry) => (
+                <IssueActivityItem
+                  actorLabel={memberNamesById[entry.actorId] ?? entry.actorId}
+                  className="rounded-[12px] bg-[#FCFCFD] px-3 py-[10px]"
+                  key={entry.id}
+                  createdAt={entry.createdAt}
+                  dateVariant="relative"
+                  now={now}
+                  summary={entry.summary}
+                  variant="plain"
+                />
+              ))
           ) : (
-            <p className="text-[12px] text-[#6B7280]">No activity yet.</p>
+            <IssueEmptyState
+              className="text-[12px] text-[#6B7280]"
+              message="No activity yet."
+            />
           )}
         </section>
       </div>
@@ -710,13 +700,11 @@ export function IssueDetailFullPageScreen({
               </div>
 
               <div className="mt-4 grid gap-3 md:grid-cols-2">
-                <div className="flex flex-col gap-[6px]">
-                  <label
-                    className="text-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]"
-                    htmlFor="full-issue-status"
-                  >
-                    Status
-                  </label>
+                <IssueFieldBlock
+                  htmlFor="full-issue-status"
+                  label="Status"
+                  labelClassName="font-[var(--app-font-weight-600)]"
+                >
                   <Select
                     id="full-issue-status"
                     onValueChange={(value) =>
@@ -730,15 +718,13 @@ export function IssueDetailFullPageScreen({
                       </option>
                     ))}
                   </Select>
-                </div>
+                </IssueFieldBlock>
 
-                <div className="flex flex-col gap-[6px]">
-                  <label
-                    className="text-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]"
-                    htmlFor="full-issue-priority"
-                  >
-                    Priority
-                  </label>
+                <IssueFieldBlock
+                  htmlFor="full-issue-priority"
+                  label="Priority"
+                  labelClassName="font-[var(--app-font-weight-600)]"
+                >
                   <Select
                     id="full-issue-priority"
                     onValueChange={(value) =>
@@ -752,15 +738,13 @@ export function IssueDetailFullPageScreen({
                       </option>
                     ))}
                   </Select>
-                </div>
+                </IssueFieldBlock>
 
-                <div className="flex flex-col gap-[6px]">
-                  <label
-                    className="text-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]"
-                    htmlFor="full-issue-assignee"
-                  >
-                    Assignee
-                  </label>
+                <IssueFieldBlock
+                  htmlFor="full-issue-assignee"
+                  label="Assignee"
+                  labelClassName="font-[var(--app-font-weight-600)]"
+                >
                   <Select
                     id="full-issue-assignee"
                     onValueChange={setAssigneeDraft}
@@ -775,7 +759,7 @@ export function IssueDetailFullPageScreen({
                       </option>
                     ))}
                   </Select>
-                </div>
+                </IssueFieldBlock>
 
                 <DueDateField
                   id="full-issue-dueDate"
@@ -816,14 +800,15 @@ export function IssueDetailFullPageScreen({
             </section>
 
             <section className="rounded-[16px] border border-[#E6E8EC] bg-white p-4">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-[14px] font-[var(--app-font-weight-700)] text-[#111318]">
-                  Comments
-                </h2>
-                <span className="text-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]">
-                  {commentsState.length} items
-                </span>
-              </div>
+              <IssueSectionHeader
+                badge={
+                  <span className="text-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]">
+                    {commentsState.length} items
+                  </span>
+                }
+                title="Comments"
+                titleClassName="text-[14px] font-[var(--app-font-weight-700)]"
+              />
 
               <div className="mt-4 rounded-[12px] border border-[#E6E8EC] bg-[#FCFCFD] p-4">
                 <label
@@ -859,14 +844,14 @@ export function IssueDetailFullPageScreen({
                       key={comment.id}
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-[12px] font-[var(--app-font-weight-700)] text-[#111318]">
-                          {memberNamesById[comment.authorId] ??
-                            comment.authorId}
-                        </span>
+                        <IssueCommentMeta
+                          authorLabel={
+                            memberNamesById[comment.authorId] ??
+                            comment.authorId
+                          }
+                          createdAt={comment.createdAt}
+                        />
                         <div className="flex items-center gap-3">
-                          <span className="text-[11px] text-[#6B7280]">
-                            {formatTimestamp(comment.createdAt)}
-                          </span>
                           <div className="flex items-center gap-1">
                             <button
                               className="rounded p-1 text-[#6B7280] transition-colors hover:bg-[#F3F4F6] hover:text-[#111318]"
@@ -928,9 +913,10 @@ export function IssueDetailFullPageScreen({
                     </div>
                   ))
                 ) : (
-                  <div className="rounded-[12px] border border-dashed border-[#D7DCE5] bg-[#FCFCFD] px-4 py-5 text-[13px] text-[#6B7280]">
-                    No comments yet.
-                  </div>
+                  <IssueEmptyState
+                    className="rounded-[12px] border border-dashed border-[#D7DCE5] bg-[#FCFCFD] px-4 py-5 text-[13px] text-[#6B7280]"
+                    message="No comments yet."
+                  />
                 )}
               </div>
             </section>
@@ -938,55 +924,70 @@ export function IssueDetailFullPageScreen({
 
           <aside className="flex flex-col gap-4">
             <section className="rounded-[16px] border border-[#E6E8EC] bg-white p-4">
-              <h2 className="text-[14px] font-[var(--app-font-weight-700)] text-[#111318]">
-                Metadata
-              </h2>
+              <IssueSectionHeader
+                title="Metadata"
+                titleClassName="text-[14px] font-[var(--app-font-weight-700)]"
+              />
               <div className="mt-4 grid gap-3">
-                <MetadataRow
+                <IssueMetaRow
                   label="Created"
-                  value={formatTimestamp(issueState.createdAt)}
+                  value={<IssueDateMeta value={issueState.createdAt} />}
                 />
-                <MetadataRow
+                <IssueMetaRow
                   label="Updated"
-                  value={formatTimestamp(issueState.updatedAt)}
+                  value={<IssueDateMeta value={issueState.updatedAt} />}
                 />
-                <MetadataRow label="Status" value={issueState.status} />
-                <MetadataRow
+                <IssueMetaRow
+                  label="Status"
+                  value={
+                    <IssueStatusBadge size="sm" status={issueState.status} />
+                  }
+                />
+                <IssueMetaRow
                   label="Priority"
-                  toneClassName={getPriorityTone(issueState.priority)}
-                  value={issueState.priority}
+                  value={
+                    <IssuePriorityBadge
+                      priority={issueState.priority}
+                      size="sm"
+                    />
+                  }
                 />
-                <MetadataRow label="Assignee" value={assigneeLabel} />
-                <MetadataRow label="Last editor" value={lastEditedByLabel} />
+                <IssueMetaRow
+                  label="Assignee"
+                  value={<IssueAssigneePill name={assigneeLabel} size="sm" />}
+                />
+                <IssueMetaRow label="Last editor" value={lastEditedByLabel} />
               </div>
             </section>
 
             <section className="rounded-[16px] border border-[#E6E8EC] bg-white p-4">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-[14px] font-[var(--app-font-weight-700)] text-[#111318]">
-                  Activity log
-                </h2>
-                <span className="text-[11px] text-[#6B7280]">Latest</span>
-              </div>
+              <IssueSectionHeader
+                badge={
+                  <span className="text-[11px] text-[#6B7280]">Latest</span>
+                }
+                title="Activity log"
+                titleClassName="text-[14px] font-[var(--app-font-weight-700)]"
+              />
               <div className="mt-4 flex flex-col gap-3">
                 {activityState.length > 0 ? (
-                  activityState.slice(0, 4).map((entry) => (
-                    <div key={entry.id}>
-                      <p className="text-[12px] font-[var(--app-font-weight-700)] text-[#111318]">
-                        {entry.summary}
-                      </p>
-                      <p className="mt-1 text-[11px] font-[var(--app-font-weight-600)] text-[#374151]">
-                        {memberNamesById[entry.actorId] ?? entry.actorId}
-                      </p>
-                      <p className="mt-1 text-[11px] text-[#6B7280]">
-                        {formatTimestamp(entry.createdAt)}
-                      </p>
-                    </div>
-                  ))
+                  activityState
+                    .slice(0, 4)
+                    .map((entry) => (
+                      <IssueActivityItem
+                        actorLabel={
+                          memberNamesById[entry.actorId] ?? entry.actorId
+                        }
+                        createdAt={entry.createdAt}
+                        key={entry.id}
+                        summary={entry.summary}
+                        variant="plain"
+                      />
+                    ))
                 ) : (
-                  <div className="text-[12px] text-[#6B7280]">
-                    No activity yet.
-                  </div>
+                  <IssueEmptyState
+                    className="text-[12px] text-[#6B7280]"
+                    message="No activity yet."
+                  />
                 )}
               </div>
             </section>
@@ -994,24 +995,5 @@ export function IssueDetailFullPageScreen({
         </section>
       </div>
     </main>
-  );
-}
-
-function MetadataRow({
-  label,
-  toneClassName,
-  value,
-}: {
-  label: string;
-  toneClassName?: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-[11px] font-[var(--app-font-weight-600)] text-[#6B7280]">
-        {label}
-      </span>
-      <span className={toneClassName ?? "text-[#111318]"}>{value}</span>
-    </div>
   );
 }

@@ -56,7 +56,7 @@ export function KanbanColumn({
   const issueIds = issues.map((issue) => issue.id);
 
   return (
-    <div className="flex h-full w-[232px] flex-shrink-0 p-2">
+    <div className="flex h-full w-[312px] flex-shrink-0 p-2">
       <div
         ref={setNodeRef}
         className={cn(

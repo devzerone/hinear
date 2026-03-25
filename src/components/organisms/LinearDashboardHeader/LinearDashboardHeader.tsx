@@ -18,22 +18,32 @@ function isBlockedIssue(issue: Issue) {
 
 export interface LinearDashboardHeaderProps
   extends React.HTMLAttributes<HTMLDivElement> {
+  activeFilterCount?: number;
   boardHref?: string;
   dashboardHref?: string;
+  filterActive?: boolean;
   eyebrow?: string;
   issues?: Issue[];
+  onFilterClick?: React.ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
   onCreateClick?: React.ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
+  onSearchValueChange?: React.ChangeEventHandler<HTMLInputElement>;
+  searchValue?: string;
   subtitle?: string;
   title?: string;
 }
 
 export function LinearDashboardHeader({
+  activeFilterCount = 0,
   boardHref,
   className,
   dashboardHref,
+  filterActive = false,
   eyebrow = "Workspace / Board",
   issues = [],
+  onFilterClick,
   onCreateClick,
+  onSearchValueChange,
+  searchValue = "",
   subtitle = "Focused view of triage, build, and shipped work.",
   title = "Issue board",
   ...props
@@ -68,13 +78,24 @@ export function LinearDashboardHeader({
             label="Dashboard"
             variant="filter"
           />
-          <HeaderSearchField label="Search" />
-          <HeaderAction icon="filter" label="Filter" variant="filter" />
+          <HeaderSearchField
+            label="Search issues"
+            onChange={onSearchValueChange}
+            value={searchValue}
+          />
+          <HeaderAction
+            icon="filter"
+            label={
+              activeFilterCount > 0 ? `Filter ${activeFilterCount}` : "Filter"
+            }
+            onClick={onFilterClick}
+            variant="filter"
+          />
           <HeaderAction
             href={boardHref}
             icon="board"
             label="Board"
-            variant="board"
+            variant={filterActive ? "primary" : "board"}
           />
           <HeaderAction
             icon="plus"

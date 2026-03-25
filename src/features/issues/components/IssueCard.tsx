@@ -94,6 +94,7 @@ export function IssueCard({
           dueDate={issue.dueDate}
           estimate={undefined}
           issueKey={issue.identifier}
+          issueStatus={issue.status}
           issueTitle={issue.title}
           labels={issue.labels}
           onClick={

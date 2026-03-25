@@ -12,6 +12,18 @@ import { Select } from "@/components/atoms/Select";
 import { Skeleton } from "@/components/atoms/Skeleton";
 import { ConflictDialog } from "@/components/molecules/ConflictDialog";
 import { DueDateField } from "@/components/molecules/DueDateField";
+import { IssueActivityItem } from "@/features/issues/components/IssueActivityItem";
+import { IssueCommentMeta } from "@/features/issues/components/IssueCommentMeta";
+import { IssueDateMeta } from "@/features/issues/components/IssueDateMeta";
+import { IssueEmptyState } from "@/features/issues/components/IssueEmptyState";
+import { IssueFieldBlock } from "@/features/issues/components/IssueFieldBlock";
+import { IssueIdentifierBadge } from "@/features/issues/components/IssueIdentifierBadge";
+import { IssueLabelChip } from "@/features/issues/components/IssueLabelChip";
+import { IssueMetaRow } from "@/features/issues/components/IssueMetaRow";
+import { IssuePanel } from "@/features/issues/components/IssuePanel";
+import { IssuePriorityBadge } from "@/features/issues/components/IssuePriorityBadge";
+import { IssueSectionHeader } from "@/features/issues/components/IssueSectionHeader";
+import { IssueStatusBadge } from "@/features/issues/components/IssueStatusBadge";
 import {
   getMutationErrorCode,
   getMutationErrorFallbackMessage,
@@ -82,20 +94,6 @@ function isConflictError(value: unknown): value is ConflictError {
   );
 }
 
-function formatTimestamp(value: string): string {
-  return new Intl.DateTimeFormat("ko-KR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function getPriorityVariant(priority: Issue["priority"]) {
-  if (priority === "Urgent") return "danger" as const;
-  if (priority === "High") return "violet" as const;
-  if (priority === "Medium") return "outline" as const;
-  return "neutral" as const;
-}
-
 function DetailPanel({
   children,
   className,
@@ -104,25 +102,9 @@ function DetailPanel({
   className?: string;
 }) {
   return (
-    <section
-      className={[
-        "rounded-[20px] border border-[#E6E8EC] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]",
-        className ?? "",
-      ].join(" ")}
-    >
+    <IssuePanel className={className} padding="lg" shadow="elevated">
       {children}
-    </section>
-  );
-}
-
-function DetailField({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col gap-[6px]">
-      <span className="text-[11px] font-semibold text-[#6B7280]">{label}</span>
-      <div className="rounded-[10px] border border-[#E6E8EC] bg-white px-3 py-[10px] text-[13px] font-medium text-[#374151]">
-        {value}
-      </div>
-    </div>
+    </IssuePanel>
   );
 }
 
@@ -138,7 +120,7 @@ function IssueStateCard({
   titleClassName?: string;
 }) {
   return (
-    <section className="rounded-[20px] border border-[#E6E8EC] bg-white p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)]">
+    <IssuePanel padding="lg" shadow="elevated">
       <div className="flex flex-col gap-3">
         <h1 className={`text-[20px] font-bold ${titleClassName}`}>{title}</h1>
         {children}
@@ -146,7 +128,7 @@ function IssueStateCard({
           <div className="flex flex-wrap gap-3 pt-1">{actions}</div>
         ) : null}
       </div>
-    </section>
+    </IssuePanel>
   );
 }
 
@@ -459,11 +441,9 @@ export function IssueDetailScreen({
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <Chip variant="accent">{issueState.identifier}</Chip>
-                <Chip variant="outline">{issueState.status}</Chip>
-                <Chip variant={getPriorityVariant(issueState.priority)}>
-                  {issueState.priority}
-                </Chip>
+                <IssueIdentifierBadge identifier={issueState.identifier} />
+                <IssueStatusBadge status={issueState.status} />
+                <IssuePriorityBadge priority={issueState.priority} />
                 {isSaving ? <Chip variant="neutral">Saving</Chip> : null}
               </div>
               <label
@@ -499,71 +479,62 @@ export function IssueDetailScreen({
 
               {/* Issue Control Row */}
               <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="flex flex-col gap-[6px]">
-                  <label
-                    className="text-[11px] leading-[11px] font-semibold text-[#6B7280]"
-                    htmlFor="detail-issue-status"
+                <IssueFieldBlock
+                  bodyClassName="flex items-center justify-between rounded-[10px] border border-[#E6E8EC] bg-white px-[10px] py-[12px]"
+                  htmlFor="detail-issue-status"
+                  label="Status"
+                  labelClassName="font-semibold"
+                >
+                  <Select
+                    id="detail-issue-status"
+                    onValueChange={(value) =>
+                      setStatusDraft(value as Issue["status"])
+                    }
+                    value={statusDraft}
                   >
-                    Status
-                  </label>
-                  <div className="flex items-center justify-between rounded-[10px] border border-[#E6E8EC] bg-white px-[10px] py-[12px]">
-                    <Select
-                      id="detail-issue-status"
-                      onValueChange={(value) =>
-                        setStatusDraft(value as Issue["status"])
-                      }
-                      value={statusDraft}
-                    >
-                      {ISSUE_STATUSES.map((status) => (
-                        <option key={status} value={status}>
-                          {status}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                </div>
+                    {ISSUE_STATUSES.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </Select>
+                </IssueFieldBlock>
 
-                <div className="flex flex-col gap-[6px]">
-                  <label
-                    className="text-[11px] leading-[11px] font-semibold text-[#6B7280]"
-                    htmlFor="detail-issue-priority"
+                <IssueFieldBlock
+                  bodyClassName="flex items-center justify-between rounded-[10px] border border-[#E6E8EC] bg-white px-[10px] py-[12px]"
+                  htmlFor="detail-issue-priority"
+                  label="Priority"
+                  labelClassName="font-semibold"
+                >
+                  <Select
+                    id="detail-issue-priority"
+                    onValueChange={(value) =>
+                      setPriorityDraft(value as Issue["priority"])
+                    }
+                    value={priorityDraft}
                   >
-                    Priority
-                  </label>
-                  <div className="flex items-center justify-between rounded-[10px] border border-[#E6E8EC] bg-white px-[10px] py-[12px]">
-                    <Select
-                      id="detail-issue-priority"
-                      onValueChange={(value) =>
-                        setPriorityDraft(value as Issue["priority"])
-                      }
-                      value={priorityDraft}
-                    >
-                      {ISSUE_PRIORITIES.map((priority) => (
-                        <option key={priority} value={priority}>
-                          {priority}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                </div>
+                    {ISSUE_PRIORITIES.map((priority) => (
+                      <option key={priority} value={priority}>
+                        {priority}
+                      </option>
+                    ))}
+                  </Select>
+                </IssueFieldBlock>
 
-                <div className="flex flex-col gap-[6px]">
-                  <label
-                    className="text-[11px] leading-[11px] font-semibold text-[#6B7280]"
-                    htmlFor="detail-issue-assignee"
-                  >
-                    Assignee
-                  </label>
-                  <div className="flex items-center justify-between rounded-[10px] border border-[#E6E8EC] bg-white px-[10px] py-[12px]">
-                    <Field
-                      id="detail-issue-assignee"
-                      onChange={(event) => setAssigneeDraft(event.target.value)}
-                      placeholder="Assign to..."
-                      value={assigneeDraft}
-                      className="border-0 bg-transparent p-0 text-[13px]"
-                    />
-                  </div>
-                </div>
+                <IssueFieldBlock
+                  bodyClassName="flex items-center justify-between rounded-[10px] border border-[#E6E8EC] bg-white px-[10px] py-[12px]"
+                  htmlFor="detail-issue-assignee"
+                  label="Assignee"
+                  labelClassName="font-semibold"
+                >
+                  <Field
+                    id="detail-issue-assignee"
+                    onChange={(event) => setAssigneeDraft(event.target.value)}
+                    placeholder="Assign to..."
+                    value={assigneeDraft}
+                    className="border-0 bg-transparent p-0 text-[13px]"
+                  />
+                </IssueFieldBlock>
 
                 <div className="flex flex-col gap-[6px]">
                   <DueDateField
@@ -638,14 +609,15 @@ export function IssueDetailScreen({
             </DetailPanel>
 
             <DetailPanel>
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-[18px] font-bold text-[#111318]">
-                  Comments
-                </h2>
-                <span className="text-[12px] font-semibold text-[#6B7280]">
-                  {commentsState.length} total
-                </span>
-              </div>
+              <IssueSectionHeader
+                badge={
+                  <span className="text-[12px] font-semibold text-[#6B7280]">
+                    {commentsState.length} total
+                  </span>
+                }
+                title="Comments"
+                titleClassName="text-[18px] font-bold"
+              />
 
               <div className="mt-4 rounded-[16px] border border-[#E6E8EC] bg-[#FCFCFD] p-4">
                 <label
@@ -678,14 +650,11 @@ export function IssueDetailScreen({
                       key={comment.id}
                       className="rounded-[14px] border border-[#E6E8EC] bg-[#FCFCFD] px-[18px] py-4"
                     >
-                      <div className="flex items-center justify-between gap-3">
-                        <strong className="text-[13px] font-semibold text-[#111318]">
-                          {comment.authorId}
-                        </strong>
-                        <span className="text-[12px] font-medium text-[#6B7280]">
-                          {formatTimestamp(comment.createdAt)}
-                        </span>
-                      </div>
+                      <IssueCommentMeta
+                        authorLabel={comment.authorId}
+                        className="[&_span:first-child]:text-[13px] [&_span:first-child]:font-semibold [&_span:last-child]:text-[12px] [&_span:last-child]:font-medium"
+                        createdAt={comment.createdAt}
+                      />
                       <p className="mt-3 text-[14px] leading-6 font-medium text-[#111318]">
                         {comment.body}
                       </p>
@@ -693,91 +662,92 @@ export function IssueDetailScreen({
                   ))}
                 </ul>
               ) : (
-                <div className="mt-4 rounded-[14px] border border-dashed border-[#D7DCE5] bg-[#FCFCFD] px-[18px] py-6 text-[13px] font-medium text-[#8A90A2]">
-                  No comments yet.
-                </div>
+                <IssueEmptyState
+                  className="mt-4 rounded-[14px] border border-dashed border-[#D7DCE5] bg-[#FCFCFD] px-[18px] py-6 text-[13px] font-medium text-[#8A90A2]"
+                  message="No comments yet."
+                />
               )}
             </DetailPanel>
           </div>
 
           <aside className="flex flex-col gap-6">
             <DetailPanel>
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-[18px] font-bold text-[#111318]">
-                  Metadata
-                </h2>
-              </div>
+              <IssueSectionHeader
+                title="Metadata"
+                titleClassName="text-[18px] font-bold"
+              />
               <div className="mt-4 grid gap-3">
-                <DetailField label="Issue ID" value={issueState.identifier} />
-                <DetailField
-                  label="Created"
-                  value={formatTimestamp(issueState.createdAt)}
+                <IssueMetaRow
+                  label="Issue ID"
+                  value={issueState.identifier}
+                  variant="boxed"
                 />
-                <DetailField
+                <IssueMetaRow
+                  label="Created"
+                  value={<IssueDateMeta value={issueState.createdAt} />}
+                  variant="boxed"
+                />
+                <IssueMetaRow
                   label="Updated"
-                  value={formatTimestamp(issueState.updatedAt)}
+                  value={<IssueDateMeta value={issueState.updatedAt} />}
+                  variant="boxed"
                 />
               </div>
             </DetailPanel>
 
             <DetailPanel>
-              <h2 className="text-[18px] font-bold text-[#111318]">Labels</h2>
+              <IssueSectionHeader
+                title="Labels"
+                titleClassName="text-[18px] font-bold"
+              />
               <div className="mt-4 rounded-[14px] border border-[#E6E8EC] bg-[#FCFCFD] px-[18px] py-4">
                 {issueState.labels.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {issueState.labels.map((label) => (
-                      <Chip
+                      <IssueLabelChip
                         className="border"
                         key={label.id}
+                        label={label}
                         size="sm"
-                        style={{
-                          backgroundColor: `${label.color}1A`,
-                          borderColor: `${label.color}33`,
-                          color: label.color,
-                        }}
-                        variant="neutral"
-                      >
-                        {label.name}
-                      </Chip>
+                      />
                     ))}
                   </div>
                 ) : (
-                  <span className="text-[13px] font-medium text-[#8A90A2]">
-                    No labels selected
-                  </span>
+                  <IssueEmptyState
+                    className="text-[13px] font-medium text-[#8A90A2]"
+                    message="No labels selected"
+                  />
                 )}
               </div>
             </DetailPanel>
 
             <DetailPanel>
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-[18px] font-bold text-[#111318]">
-                  Activity
-                </h2>
-                <span className="text-[12px] font-semibold text-[#6B7280]">
-                  {activityState.length} events
-                </span>
-              </div>
+              <IssueSectionHeader
+                badge={
+                  <span className="text-[12px] font-semibold text-[#6B7280]">
+                    {activityState.length} events
+                  </span>
+                }
+                title="Activity"
+                titleClassName="text-[18px] font-bold"
+              />
               {activityState.length > 0 ? (
                 <ul className="mt-4 flex flex-col gap-3">
                   {activityState.map((entry) => (
-                    <li
-                      key={entry.id}
-                      className="rounded-[14px] border border-[#E6E8EC] bg-[#FCFCFD] px-[18px] py-4"
-                    >
-                      <strong className="text-[13px] font-semibold text-[#111318]">
-                        {entry.summary}
-                      </strong>
-                      <div className="mt-2 text-[12px] font-medium text-[#6B7280]">
-                        {formatTimestamp(entry.createdAt)}
-                      </div>
+                    <li className="list-none" key={entry.id}>
+                      <IssueActivityItem
+                        className="rounded-[14px] border border-[#E6E8EC] bg-[#FCFCFD] px-[18px] py-4"
+                        createdAt={entry.createdAt}
+                        summary={entry.summary}
+                      />
                     </li>
                   ))}
                 </ul>
               ) : (
-                <div className="mt-4 rounded-[14px] border border-dashed border-[#D7DCE5] bg-[#FCFCFD] px-[18px] py-6 text-[13px] font-medium text-[#8A90A2]">
-                  No activity yet.
-                </div>
+                <IssueEmptyState
+                  className="mt-4 rounded-[14px] border border-dashed border-[#D7DCE5] bg-[#FCFCFD] px-[18px] py-6 text-[13px] font-medium text-[#8A90A2]"
+                  message="No activity yet."
+                />
               )}
             </DetailPanel>
           </aside>

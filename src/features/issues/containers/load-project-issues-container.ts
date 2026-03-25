@@ -100,6 +100,7 @@ export async function loadProjectIssuesContainer(
       (profilesResult.data ?? []).map((profile) => [
         profile.id,
         {
+          id: profile.id,
           avatarUrl: profile.avatar_url,
           name: profile.display_name?.trim() || profile.id,
         },
