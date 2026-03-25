@@ -125,7 +125,7 @@ function formatRelativeTime(value: string) {
 export function IssueDetailFullPageScreen({
   activityLog = EMPTY_ACTIVITY_LOG,
   assigneeOptions = [],
-  availableLabels = [],
+  availableLabels: availableLabelsProp = [],
   boardHref,
   comments = EMPTY_COMMENTS,
   issue,
@@ -143,6 +143,7 @@ export function IssueDetailFullPageScreen({
   const [selectedLabelIds, setSelectedLabelIds] = useState(
     issue.labels.map((label) => label.id)
   );
+  const [availableLabels, setAvailableLabels] = useState(availableLabelsProp);
   const [commentDraft, setCommentDraft] = useState("");
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editingCommentBody, setEditingCommentBody] = useState("");
@@ -200,7 +201,8 @@ export function IssueDetailFullPageScreen({
 
     if (result.success && result.label) {
       toast.success(`Label "${name}" created`);
-      // 새 라벨을 자동으로 선택
+      // 새 라벨을 목록에 추가하고 자동으로 선택
+      setAvailableLabels((current) => [...current, result.label]);
       setSelectedLabelIds((current) => [...current, result.label.id]);
     } else {
       toast.error(result.error || "Failed to create label");
