@@ -6,6 +6,7 @@ import * as React from "react";
 import { Button } from "@/components/atoms/Button";
 import { Field } from "@/components/atoms/Field";
 import { Select } from "@/components/atoms/Select";
+import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
 import { cn } from "@/lib/utils";
 
 interface SelectOption {
@@ -51,32 +52,6 @@ const DEFAULT_ASSIGNEE_OPTIONS: SelectOption[] = [
   { label: "Alex Kim", value: "alex-kim" },
 ];
 
-const TOOLBAR_ACTIONS = [
-  { label: "H1", snippet: "# " },
-  { label: "B", snippet: "**bold**" },
-  { label: "</>", snippet: "`code`" },
-  { label: "List", snippet: "- item" },
-  { label: "Link", snippet: "[title](https://)" },
-] as const;
-
-function EditorToolButton({
-  label,
-  onClick,
-}: {
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      className="rounded-[8px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-surface-50)] px-2 py-[6px] text-[11px] leading-[11px] font-[var(--app-font-weight-600)] text-[var(--app-color-ink-900)]"
-      onClick={onClick}
-      type="button"
-    >
-      {label}
-    </button>
-  );
-}
-
 export function CreateIssueTabletModal({
   action,
   assigneeOptions = DEFAULT_ASSIGNEE_OPTIONS,
@@ -94,34 +69,6 @@ export function CreateIssueTabletModal({
   ...props
 }: CreateIssueTabletModalProps) {
   const [description, setDescription] = React.useState(defaultDescription);
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-
-  function insertSnippet(snippet: string) {
-    const textarea = textareaRef.current;
-
-    if (!textarea) {
-      setDescription((current) => `${current}\n${snippet}`.trim());
-      return;
-    }
-
-    const selectionStart = textarea.selectionStart ?? description.length;
-    const selectionEnd = textarea.selectionEnd ?? description.length;
-
-    setDescription((current) => {
-      const nextValue =
-        current.slice(0, selectionStart) +
-        snippet +
-        current.slice(selectionEnd);
-
-      requestAnimationFrame(() => {
-        textarea.focus();
-        const cursor = selectionStart + snippet.length;
-        textarea.setSelectionRange(cursor, cursor);
-      });
-
-      return nextValue;
-    });
-  }
 
   return (
     <div
@@ -251,45 +198,20 @@ export function CreateIssueTabletModal({
             >
               Description
             </label>
-            <p className="text-[12px] leading-[1.45] font-normal text-[var(--app-color-gray-500)]">
-              Markdown으로 heading, list, link, code block을 작성할 수 있습니다.
-            </p>
 
-            <div className="flex flex-col gap-3 rounded-[12px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-white)] p-3">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex flex-wrap gap-2">
-                  {TOOLBAR_ACTIONS.map((action) => (
-                    <EditorToolButton
-                      key={action.label}
-                      label={action.label}
-                      onClick={() => insertSnippet(action.snippet)}
-                    />
-                  ))}
-                </div>
-                <span className="rounded-full bg-[var(--app-color-brand-50)] px-[10px] py-[5px] text-[11px] leading-[11px] font-[var(--app-font-weight-600)] text-[var(--app-color-brand-700)]">
-                  Markdown
-                </span>
-              </div>
+            <MarkdownEditor
+              value={description}
+              onChange={setDescription}
+              placeholder="# 요약&#10;이슈의 핵심 내용을 짧게 적어주세요...&#10;&#10;- 기대 동작&#10;- 현재 문제&#10;- 배포 메모"
+              minHeight="160px"
+            />
 
-              <textarea
-                className="min-h-[108px] w-full rounded-[10px] bg-[var(--app-color-surface-0)] px-[14px] py-3 text-[13px] leading-[1.5] font-normal text-[var(--app-color-ink-900)] outline-none placeholder:text-[var(--app-color-gray-400)]"
-                id="create-issue-description"
-                name="description"
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="# 요약"
-                ref={textareaRef}
-                value={description}
-              />
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-[11px] leading-[11px] font-normal text-[var(--app-color-gray-400)]">
-                  /로 code block, checklist, quote를 추가할 수 있습니다.
-                </span>
-                <span className="text-[11px] leading-[11px] font-[var(--app-font-weight-500)] text-[var(--app-color-gray-400)]">
-                  Tab으로 들여쓰기
-                </span>
-              </div>
-            </div>
+            <input
+              id="create-issue-description"
+              name="description"
+              type="hidden"
+              value={description}
+            />
           </div>
 
           <div className="flex items-center justify-end gap-[10px]">
