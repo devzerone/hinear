@@ -105,7 +105,7 @@ export function CreateIssueTabletModal({
     // Title 유효성 검사
     if (!title.trim()) {
       e.preventDefault();
-      toast.error("이슈 제목을 입력해주세요.");
+      toast.error("Please enter a title.");
       return;
     }
 
