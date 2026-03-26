@@ -20,6 +20,12 @@ interface Repository {
   description: string | null;
 }
 
+interface ConnectRepositoryErrorResponse {
+  error?: string;
+  installUrl?: string | null;
+  success?: boolean;
+}
+
 export function GitHubIntegrationSettingsCard({
   projectId,
   initialSettings,
@@ -105,9 +111,16 @@ export function GitHubIntegrationSettingsCard({
         body: JSON.stringify({ repoOwner: owner, repoName: name }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as ConnectRepositoryErrorResponse &
+        Record<string, unknown>;
 
       if (!response.ok || !data.success) {
+        if (response.status === 409 && data.installUrl) {
+          toast.info("Redirecting to GitHub App installation...");
+          window.location.href = data.installUrl;
+          return;
+        }
+
         throw new Error(data.error ?? "Failed to connect repository");
       }
 

@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   createGitHubInstallationClientForRepositoryMock: vi.fn(),
   createRequestSupabaseServerClientMock: vi.fn(),
   disconnectGitHubIntegrationMock: vi.fn(),
+  getGitHubAppInstallationUrlMock: vi.fn(),
   getGitHubIntegrationMock: vi.fn(),
   getRepositoryMock: vi.fn(),
   requireAuthenticatedActorIdMock: vi.fn(),
@@ -22,6 +23,16 @@ vi.mock("@/lib/supabase/server-client", () => ({
 vi.mock("@/lib/github/app-auth", () => ({
   createGitHubInstallationClientForRepository:
     mocks.createGitHubInstallationClientForRepositoryMock,
+  getGitHubAppInstallationUrl: mocks.getGitHubAppInstallationUrlMock,
+  GitHubAppInstallationRequiredError: class extends Error {
+    installUrl: string | null;
+
+    constructor(installUrl: string | null) {
+      super("GitHub App must be installed on the selected repository.");
+      this.name = "GitHubAppInstallationRequiredError";
+      this.installUrl = installUrl;
+    }
+  },
   isGitHubAppConfigured: vi.fn(() => true),
 }));
 
@@ -62,6 +73,9 @@ describe("API /api/projects/[projectId]/github", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.requireAuthenticatedActorIdMock.mockResolvedValue("user-1");
+    mocks.getGitHubAppInstallationUrlMock.mockReturnValue(
+      "https://github.com/apps/hinear/installations/new"
+    );
     mocks.createGitHubInstallationClientForRepositoryMock.mockResolvedValue({
       getRepository: mocks.getRepositoryMock,
     });
@@ -138,6 +152,44 @@ describe("API /api/projects/[projectId]/github", () => {
       success: false,
       error:
         "GitHub App credentials are not configured on the server (GITHUB_APP_ID, GITHUB_APP_PRIVATE_KEY)",
+    });
+  });
+
+  it("POST returns install URL when the GitHub App is not installed on the repository", async () => {
+    mocks.createGitHubInstallationClientForRepositoryMock.mockRejectedValue(
+      new Error("GitHubAppInstallationRequiredError")
+    );
+    mocks.createRequestSupabaseServerClientMock.mockResolvedValue(
+      createSupabaseOwnerCheckMock("owner")
+    );
+
+    const appAuthModule = await import("@/lib/github/app-auth");
+    mocks.createGitHubInstallationClientForRepositoryMock.mockRejectedValue(
+      new appAuthModule.GitHubAppInstallationRequiredError(
+        "https://github.com/apps/hinear/installations/new"
+      )
+    );
+
+    const response = await POST(
+      {
+        json: vi.fn().mockResolvedValue({
+          repoOwner: "zerone",
+          repoName: "hinear",
+        }),
+        cookies: {
+          get: vi.fn().mockReturnValue({ value: "oauth-token" }),
+        },
+      } as any,
+      {
+        params: Promise.resolve({ projectId: "project-1" }),
+      }
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      success: false,
+      error: "Install the GitHub App on this repository before connecting it.",
+      installUrl: "https://github.com/apps/hinear/installations/new",
     });
   });
 

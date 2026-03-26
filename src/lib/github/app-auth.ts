@@ -17,6 +17,13 @@ interface GitHubRepositoryInstallation {
   id: number;
 }
 
+export class GitHubAppInstallationRequiredError extends Error {
+  constructor(readonly installUrl: string | null) {
+    super("GitHub App must be installed on the selected repository.");
+    this.name = "GitHubAppInstallationRequiredError";
+  }
+}
+
 function base64UrlEncode(input: string): string {
   return Buffer.from(input)
     .toString("base64")
@@ -53,6 +60,16 @@ function getGitHubAppCredentials(): GitHubAppCredentials | null {
 
 export function isGitHubAppConfigured(): boolean {
   return Boolean(getGitHubAppCredentials());
+}
+
+export function getGitHubAppInstallationUrl(): string | null {
+  const appSlug = process.env.GITHUB_APP_SLUG?.trim();
+
+  if (!appSlug) {
+    return null;
+  }
+
+  return `https://github.com/apps/${appSlug}/installations/new`;
 }
 
 function createGitHubAppJwt(credentials: GitHubAppCredentials): string {
@@ -117,11 +134,25 @@ export async function createGitHubInstallationClientForRepository(
   }
 
   const appJwt = createGitHubAppJwt(credentials);
+  let installation: GitHubRepositoryInstallation;
 
-  const installation = await githubAppFetch<GitHubRepositoryInstallation>(
-    `/repos/${owner}/${name}/installation`,
-    appJwt
-  );
+  try {
+    installation = await githubAppFetch<GitHubRepositoryInstallation>(
+      `/repos/${owner}/${name}/installation`,
+      appJwt
+    );
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes("GitHub App API error: 404")
+    ) {
+      throw new GitHubAppInstallationRequiredError(
+        getGitHubAppInstallationUrl()
+      );
+    }
+
+    throw error;
+  }
 
   const installationToken =
     await githubAppFetch<GitHubInstallationTokenResponse>(

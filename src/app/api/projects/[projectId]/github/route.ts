@@ -3,6 +3,8 @@ import { GitHubIntegrationRepository } from "@/features/projects/repositories/gi
 import { GitHubApiClient } from "@/lib/github/api-client";
 import {
   createGitHubInstallationClientForRepository,
+  GitHubAppInstallationRequiredError,
+  getGitHubAppInstallationUrl,
   isGitHubAppConfigured,
 } from "@/lib/github/app-auth";
 import { requireAuthenticatedActorId } from "@/lib/supabase/server-auth";
@@ -145,6 +147,19 @@ export async function POST(
     return response;
   } catch (error) {
     console.error("GitHub integration failed:", error);
+
+    if (error instanceof GitHubAppInstallationRequiredError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Install the GitHub App on this repository before connecting it.",
+          installUrl: error.installUrl ?? getGitHubAppInstallationUrl(),
+        },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
