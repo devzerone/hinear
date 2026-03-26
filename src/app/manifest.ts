@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
-
-const PRIMARY_COLOR = "#5e6ad2";
+import { PWA_PRIMARY_COLOR } from "@/app/pwa-metadata";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -10,36 +9,36 @@ export default function manifest(): MetadataRoute.Manifest {
       "Project-first issue tracking for personal and team workflows.",
     start_url: "/",
     display: "standalone",
-    background_color: PRIMARY_COLOR,
-    theme_color: PRIMARY_COLOR,
+    background_color: PWA_PRIMARY_COLOR,
+    theme_color: PWA_PRIMARY_COLOR,
     orientation: "portrait",
     icons: [
       {
-        src: "/icon-192.png",
+        src: "/api/pwa/icon?size=192",
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icon-192.png",
+        src: "/api/pwa/icon?size=192",
         sizes: "192x192",
         type: "image/png",
         purpose: "maskable",
       },
       {
-        src: "/icon-512.png",
+        src: "/api/pwa/icon?size=512",
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icon-512.png",
+        src: "/api/pwa/icon?size=512",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
       },
       {
-        src: "/apple-icon-180.png",
+        src: "/api/pwa/icon?size=180",
         sizes: "180x180",
         type: "image/png",
       },

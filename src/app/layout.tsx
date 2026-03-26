@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
+import { PWA_PRIMARY_COLOR, PWA_STARTUP_IMAGES } from "@/app/pwa-metadata";
 import { ServiceWorkerRegister } from "@/components/organisms/ServiceWorkerRegister";
 import "./globals.css";
-
-const PRIMARY_COLOR = "#5e6ad2";
 
 function getMetadataBase() {
   const origin =
@@ -48,35 +47,37 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/icon.png",
+        url: "/api/pwa/icon?size=512",
         type: "image/png",
         sizes: "512x512",
       },
       {
-        url: "/icon-192.png",
+        url: "/api/pwa/icon?size=192",
         type: "image/png",
         sizes: "192x192",
       },
     ],
     apple: [
       {
-        url: "/apple-icon-180.png",
+        url: "/api/pwa/icon?size=180",
         type: "image/png",
         sizes: "180x180",
       },
     ],
-    shortcut: ["/icon.png"],
+    shortcut: ["/api/pwa/icon?size=192"],
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    startupImage: PWA_STARTUP_IMAGES,
+    statusBarStyle: "black-translucent",
     title: "Hinear",
   },
   manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
-  themeColor: PRIMARY_COLOR,
+  themeColor: PWA_PRIMARY_COLOR,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
