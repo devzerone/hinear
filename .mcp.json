@@ -1,5 +1,10 @@
 {
   "mcpServers": {
+    "hinear": {
+      "type": "stdio",
+      "command": "pnpm",
+      "args": ["--dir", "/home/choiho/zerone/hinear", "mcp:hinear"]
+    },
     "supabase": {
       "type": "http",
       "url": "https://mcp.supabase.com/mcp?project_ref=pmyrrckkiomjwjqntymr"
