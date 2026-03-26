@@ -42,15 +42,16 @@ export function createServer() {
               supabaseUrlConfigured: Boolean(env.supabaseUrl),
               supabaseAnonKeyConfigured: Boolean(env.supabaseAnonKey),
               userIdConfigured: Boolean(session.userId),
-              implementedTools: ["list_projects"],
-              scaffoldedTools: [
+              implementedTools: [
+                "list_projects",
                 "search_issues",
                 "get_issue_detail",
                 "create_issue",
                 "update_issue_status",
                 "add_comment",
               ],
-              note: "list_projects is connected. The remaining adapters still need to be wired to Hinear domain logic.",
+              scaffoldedTools: [],
+              note: "The Hinear MCP MVP is connected and ready for local use once auth and Supabase env are configured.",
             },
             null,
             2
