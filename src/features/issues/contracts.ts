@@ -182,6 +182,30 @@ export interface IssuesRepository {
   filterIssues(input: FilterIssuesInput): Promise<Issue[]>;
 }
 
+// Attachment types for image upload functionality
+export interface AttachmentUploadInput {
+  issueId: string;
+  projectId: string;
+  file: File;
+  uploadedBy: string;
+}
+
+export interface AttachmentUploadResult {
+  storagePath: string;
+  publicUrl: string;
+  filename: string;
+  mimeType: string;
+  sizeBytes: number;
+  attachmentId: string;
+}
+
+export interface IssueAttachmentsRepository {
+  uploadAttachment(
+    input: AttachmentUploadInput
+  ): Promise<AttachmentUploadResult>;
+  deleteAttachment(storagePath: string, issueId: string): Promise<void>;
+}
+
 export function isConflictError(error: unknown): error is ConflictError {
   return Boolean(
     error &&

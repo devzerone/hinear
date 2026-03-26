@@ -408,10 +408,12 @@ export function IssueDetailDrawerScreen({
           </div>
 
           <MarkdownEditor
+            issueId={issueState.id}
             value={descriptionDraft}
             onChange={setDescriptionDraft}
             placeholder="이슈에 대한 자세한 설명을 작성해주세요..."
             minHeight="160px"
+            projectId={issueState.projectId}
           />
         </section>
 

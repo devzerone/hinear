@@ -3,6 +3,7 @@
 import { EditorContent, useEditor } from "@tiptap/react";
 import { cn } from "@/lib/utils";
 import "./MarkdownEditor.css";
+import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import TaskItem from "@tiptap/extension-task-item";
 import TaskList from "@tiptap/extension-task-list";
@@ -14,6 +15,7 @@ import {
   Heading1,
   Heading2,
   Heading3,
+  Image as ImageIcon,
   Italic,
   Link as LinkIcon,
   List,
@@ -28,6 +30,8 @@ interface MarkdownEditorProps {
   placeholder?: string;
   className?: string;
   minHeight?: string;
+  issueId?: string;
+  projectId?: string;
 }
 
 export function MarkdownEditor({
@@ -36,7 +40,45 @@ export function MarkdownEditor({
   placeholder = "입력해주세요...",
   className,
   minHeight = "160px",
+  issueId,
+  projectId,
 }: MarkdownEditorProps) {
+  const [isUploading, setIsUploading] = React.useState(false);
+
+  const handleImageUpload = async (file: File): Promise<string> => {
+    if (!issueId || !projectId) {
+      throw new Error(
+        "Issue ID and Project ID are required for image uploads."
+      );
+    }
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("issueId", issueId);
+      formData.append("projectId", projectId);
+
+      const response = await fetch(
+        `/internal/issues/${issueId}/attachments/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to upload image");
+      }
+
+      const result = await response.json();
+      return result.data.publicUrl;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -59,6 +101,13 @@ export function MarkdownEditor({
           },
         },
       }),
+      Image.configure({
+        HTMLAttributes: {
+          class: "max-w-full h-auto rounded-lg my-4",
+        },
+        inline: false,
+        allowBase64: false,
+      }),
       Placeholder.configure({
         placeholder,
       }),
@@ -79,6 +128,29 @@ export function MarkdownEditor({
           "text-[13px] leading-[1.55] text-[#111318]"
         ),
       },
+      handlePaste: (view, event) => {
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+
+        for (const item of items) {
+          if (item.type.indexOf("image") !== -1) {
+            event.preventDefault();
+            const file = item.getAsFile();
+            if (file && issueId && projectId) {
+              handleImageUpload(file)
+                .then((url) => {
+                  editor?.chain().focus().setImage({ src: url }).run();
+                })
+                .catch((error) => {
+                  console.error("Image upload failed:", error);
+                  alert("이미지 업로드에 실패했습니다: " + error.message);
+                });
+            }
+            return true;
+          }
+        }
+        return false;
+      },
     },
   });
 
@@ -97,19 +169,23 @@ export function MarkdownEditor({
     isActive,
     children,
     title,
+    disabled,
   }: {
     onClick: () => void;
     isActive?: boolean;
     children: React.ReactNode;
     title: string;
+    disabled?: boolean;
   }) => (
     <button
       type="button"
       onClick={onClick}
       title={title}
+      disabled={disabled}
       className={cn(
         "rounded px-2 py-1 text-[#6B7280] transition-colors hover:bg-[#F3F4F6] hover:text-[#111318]",
-        isActive && "bg-[#EEF2FF] text-[#4338CA]"
+        isActive && "bg-[#EEF2FF] text-[#4338CA]",
+        disabled && "opacity-50 cursor-not-allowed"
       )}
     >
       {children}
@@ -215,6 +291,41 @@ export function MarkdownEditor({
         >
           <LinkIcon className="h-4 w-4" />
         </ToolbarButton>
+        {issueId && projectId && (
+          <ToolbarButton
+            onClick={() => {
+              const input = document.createElement("input");
+              input.type = "file";
+              input.accept = "image/*";
+              input.onchange = async (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (file) {
+                  try {
+                    const url = await handleImageUpload(file);
+                    editor?.chain().focus().setImage({ src: url }).run();
+                  } catch (error) {
+                    console.error("Image upload failed:", error);
+                    alert(
+                      "이미지 업로드에 실패했습니다: " +
+                        (error instanceof Error
+                          ? error.message
+                          : "알 수 없는 오류")
+                    );
+                  }
+                }
+              };
+              input.click();
+            }}
+            title="Upload Image"
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#6B7280] border-t-transparent" />
+            ) : (
+              <ImageIcon className="h-4 w-4" />
+            )}
+          </ToolbarButton>
+        )}
       </div>
       <div suppressHydrationWarning>
         <EditorContent editor={editor} />

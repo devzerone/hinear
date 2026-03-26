@@ -12,6 +12,7 @@ import { Select } from "@/components/atoms/Select";
 import { Skeleton } from "@/components/atoms/Skeleton";
 import { ConflictDialog } from "@/components/molecules/ConflictDialog";
 import { DueDateField } from "@/components/molecules/DueDateField";
+import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
 import { IssueActivityItem } from "@/features/issues/components/IssueActivityItem";
 import { IssueCommentMeta } from "@/features/issues/components/IssueCommentMeta";
 import { IssueDateMeta } from "@/features/issues/components/IssueDateMeta";
@@ -36,6 +37,7 @@ import type {
   Issue,
 } from "@/features/issues/types";
 import { ISSUE_PRIORITIES, ISSUE_STATUSES } from "@/features/issues/types";
+import { hasMeaningfulRichTextContent } from "@/lib/rich-text";
 
 interface IssueDetailScreenProps {
   boardHref?: string;
@@ -290,6 +292,8 @@ export function IssueDetailScreen({
     requestedVersion: number;
   } | null>(null);
   const [isSaving, startSavingTransition] = useTransition();
+  const hasDescriptionContent = hasMeaningfulRichTextContent(descriptionDraft);
+  const hasCommentContent = hasMeaningfulRichTextContent(commentDraft);
 
   useEffect(() => {
     setIssueState(issue);
@@ -624,18 +628,19 @@ export function IssueDetailScreen({
                   Description
                 </h2>
                 <Chip variant="outline">
-                  {descriptionDraft.trim().length > 0 ? "Ready" : "Empty"}
+                  {hasDescriptionContent ? "Ready" : "Empty"}
                 </Chip>
               </div>
-              <label className="sr-only" htmlFor="issue-description">
-                Description
-              </label>
-              <textarea
-                className="mt-4 min-h-[220px] w-full rounded-[16px] border border-[#E6E8EC] bg-[#FCFCFD] px-[18px] py-4 text-[14px] leading-6 font-medium text-[#111318] outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-brand-300)]"
-                id="issue-description"
-                onChange={(event) => setDescriptionDraft(event.target.value)}
-                value={descriptionDraft}
-              />
+              <div className="mt-4">
+                <MarkdownEditor
+                  value={descriptionDraft}
+                  onChange={(value) => setDescriptionDraft(value)}
+                  placeholder="Add a description..."
+                  minHeight="220px"
+                  issueId={issueState.id}
+                  projectId={issueState.projectId}
+                />
+              </div>
               <div className="mt-4 flex justify-end">
                 <Button
                   disabled={
@@ -672,15 +677,18 @@ export function IssueDetailScreen({
                 >
                   Add comment
                 </label>
-                <textarea
-                  className="mt-2 min-h-[120px] w-full rounded-[14px] border border-[#E6E8EC] bg-white px-4 py-3 text-[14px] leading-6 font-medium text-[#111318] outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-color-brand-300)]"
-                  id="issue-comment"
-                  onChange={(event) => setCommentDraft(event.target.value)}
+                <MarkdownEditor
+                  className="mt-2"
+                  issueId={issueState.id}
+                  minHeight="120px"
+                  onChange={setCommentDraft}
+                  placeholder="Write a comment..."
+                  projectId={issueState.projectId}
                   value={commentDraft}
                 />
                 <div className="mt-3 flex justify-end">
                   <Button
-                    disabled={isSaving || commentDraft.trim().length === 0}
+                    disabled={isSaving || !hasCommentContent}
                     onClick={submitComment}
                     size="sm"
                   >
@@ -701,9 +709,11 @@ export function IssueDetailScreen({
                         className="[&_span:first-child]:text-[13px] [&_span:first-child]:font-semibold [&_span:last-child]:text-[12px] [&_span:last-child]:font-medium"
                         createdAt={comment.createdAt}
                       />
-                      <p className="mt-3 text-[14px] leading-6 font-medium text-[#111318]">
-                        {comment.body}
-                      </p>
+                      <div
+                        className="prose prose-sm mt-3 max-w-none whitespace-pre-wrap text-[14px] leading-6 font-medium text-[#111318]"
+                        // biome-ignore lint/security/noDangerouslySetInnerHtml: Comment HTML is produced by the editor flow.
+                        dangerouslySetInnerHTML={{ __html: comment.body }}
+                      />
                     </li>
                   ))}
                 </ul>

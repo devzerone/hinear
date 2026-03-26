@@ -4,6 +4,7 @@ import {
   inferMutationErrorCode,
 } from "@/features/issues/lib/mutation-error-messages";
 import { getServerIssuesRepository } from "@/features/issues/repositories/server-issues-repository";
+import { hasMeaningfulRichTextContent } from "@/lib/rich-text";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
 
 interface RouteContext {
@@ -27,7 +28,10 @@ export async function PATCH(request: Request, context: RouteContext) {
     const { commentId } = await context.params;
     const body = await request.json();
 
-    if (typeof body.body !== "string" || body.body.trim().length === 0) {
+    if (
+      typeof body.body !== "string" ||
+      !hasMeaningfulRichTextContent(body.body)
+    ) {
       return NextResponse.json(
         { code: "INVALID_COMMENT_BODY", error: "Comment body is required." },
         { status: 422 }

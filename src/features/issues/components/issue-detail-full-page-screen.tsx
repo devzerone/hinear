@@ -49,6 +49,7 @@ import type {
 } from "@/features/issues/types";
 import { ISSUE_PRIORITIES, ISSUE_STATUSES } from "@/features/issues/types";
 import { getIssueBranchNamePreview } from "@/lib/github/branching";
+import { hasMeaningfulRichTextContent } from "@/lib/rich-text";
 
 interface IssueDetailFullPageScreenProps {
   assigneeOptions?: Array<{
@@ -174,6 +175,9 @@ export function IssueDetailFullPageScreen({
   const [branchModalIntent, setBranchModalIntent] =
     useState<GitHubBranchIntent | null>(null);
   const [branchTitleDraft, setBranchTitleDraft] = useState("");
+  const hasCommentContent = hasMeaningfulRichTextContent(commentDraft);
+  const hasEditingCommentContent =
+    hasMeaningfulRichTextContent(editingCommentBody);
 
   useEffect(() => {
     setNow(Date.now());
@@ -923,10 +927,12 @@ export function IssueDetailFullPageScreen({
                   {editingCommentId === comment.id ? (
                     <div className="mt-3 flex flex-col gap-3">
                       <MarkdownEditor
+                        issueId={issueState.id}
                         value={editingCommentBody}
                         onChange={setEditingCommentBody}
                         placeholder="Edit your comment..."
                         minHeight="96px"
+                        projectId={issueState.projectId}
                       />
                       <div className="flex justify-end gap-2">
                         <Button
@@ -938,9 +944,7 @@ export function IssueDetailFullPageScreen({
                           Cancel
                         </Button>
                         <Button
-                          disabled={
-                            isSaving || editingCommentBody.trim().length === 0
-                          }
+                          disabled={isSaving || !hasEditingCommentContent}
                           onClick={() => saveCommentEdit(comment.id)}
                           size="sm"
                         >
@@ -966,14 +970,16 @@ export function IssueDetailFullPageScreen({
           )}
 
           <MarkdownEditor
+            issueId={issueState.id}
             value={commentDraft}
             onChange={setCommentDraft}
             placeholder="댓글을 입력하세요..."
             minHeight="44px"
+            projectId={issueState.projectId}
           />
           <div className="flex justify-end">
             <Button
-              disabled={isSaving || commentDraft.trim().length === 0}
+              disabled={isSaving || !hasCommentContent}
               onClick={submitComment}
               size="sm"
               variant="secondary"
@@ -1205,11 +1211,13 @@ export function IssueDetailFullPageScreen({
               </h2>
 
               <MarkdownEditor
+                issueId={issueState.id}
                 value={descriptionDraft}
                 onChange={setDescriptionDraft}
                 placeholder="이슈에 대한 자세한 설명을 작성해주세요..."
                 minHeight="240px"
                 className="mt-4"
+                projectId={issueState.projectId}
               />
             </section>
 
@@ -1232,15 +1240,17 @@ export function IssueDetailFullPageScreen({
                   New comment
                 </label>
                 <MarkdownEditor
+                  issueId={issueState.id}
                   value={commentDraft}
                   onChange={setCommentDraft}
                   placeholder="댓글을 입력하세요..."
                   minHeight="96px"
                   className="mt-2"
+                  projectId={issueState.projectId}
                 />
                 <div className="mt-3 flex justify-end">
                   <Button
-                    disabled={isSaving || commentDraft.trim().length === 0}
+                    disabled={isSaving || !hasCommentContent}
                     onClick={submitComment}
                     size="sm"
                     variant="secondary"
@@ -1291,10 +1301,12 @@ export function IssueDetailFullPageScreen({
                       {editingCommentId === comment.id ? (
                         <div className="mt-3 flex flex-col gap-3">
                           <MarkdownEditor
+                            issueId={issueState.id}
                             value={editingCommentBody}
                             onChange={setEditingCommentBody}
                             placeholder="Edit your comment..."
                             minHeight="96px"
+                            projectId={issueState.projectId}
                           />
                           <div className="flex justify-end gap-2">
                             <Button
@@ -1306,10 +1318,7 @@ export function IssueDetailFullPageScreen({
                               Cancel
                             </Button>
                             <Button
-                              disabled={
-                                isSaving ||
-                                editingCommentBody.trim().length === 0
-                              }
+                              disabled={isSaving || !hasEditingCommentContent}
                               onClick={() => saveCommentEdit(comment.id)}
                               size="sm"
                             >

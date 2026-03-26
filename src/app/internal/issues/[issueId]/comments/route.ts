@@ -5,6 +5,7 @@ import {
 } from "@/features/issues/lib/mutation-error-messages";
 import { getServerIssuesRepository } from "@/features/issues/repositories/server-issues-repository";
 import { triggerCommentAddedNotification } from "@/lib/notifications/triggers";
+import { hasMeaningfulRichTextContent } from "@/lib/rich-text";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
 
 interface RouteContext {
@@ -25,7 +26,7 @@ function parseCommentBody(body: unknown): string | null {
   }
 
   const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
+  return hasMeaningfulRichTextContent(trimmed) ? trimmed : null;
 }
 
 export async function GET(_request: Request, context: RouteContext) {
