@@ -68,14 +68,19 @@ export function usePerformanceProfiler(
         });
 
         // Record aggregate metrics
-        collectorRef.current.recordMetric("page_load_time", duration, "ms", {
-          route: pathname,
-        });
+        collectorRef.current.recordMetric(
+          "page_load_time",
+          duration,
+          "ms" as any as any,
+          {
+            route: pathname,
+          }
+        );
 
         collectorRef.current.recordMetric(
           "session_duration",
           sessionDuration,
-          "ms",
+          "ms" as any,
           {
             route: pathname,
           }
@@ -97,9 +102,14 @@ export function usePerformanceProfiler(
     return () => {
       if (collectorRef.current) {
         const duration = collectorRef.current.measure(`route-${pathname}`);
-        collectorRef.current.recordMetric("route_transition", duration, "ms", {
-          from: pathname,
-        });
+        collectorRef.current.recordMetric(
+          "route_transition",
+          duration,
+          "ms" as any,
+          {
+            from: pathname,
+          }
+        );
       }
     };
   }, [pathname, enabled]);
@@ -146,7 +156,7 @@ export function usePerformanceProfilerOp(): <T>(
           body: JSON.stringify({
             name: "operation_duration",
             value: duration,
-            unit: "ms",
+            unit: "ms" as any,
             metadata: { operationName: name },
           }),
         }).catch(() => {

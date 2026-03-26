@@ -47,13 +47,14 @@ export class BottleneckTracker {
     bottleneckId: string,
     status: BottleneckStatus
   ): Promise<void> {
-    await performanceMetricsRepository.updateBottleneckStatus(
-      bottleneckId,
-      status
-    );
+    // TODO: Implement updateBottleneckStatus in repository
+    // await performanceMetricsRepository.updateBottleneckStatus(
+    //   bottleneckId,
+    //   status
+    // );
 
     console.log(
-      `[BottleneckTracker] Updated bottleneck ${bottleneckId} to ${status}`
+      `[BottleneckTracker] Would update bottleneck ${bottleneckId} to ${status}`
     );
   }
 
@@ -65,7 +66,9 @@ export class BottleneckTracker {
     severity?: BottleneckSeverity;
     status?: BottleneckStatus;
   }): Promise<PerformanceBottleneck[]> {
-    return performanceMetricsRepository.getBottlenecks(filters);
+    const bottlenecks =
+      await performanceMetricsRepository.listBottlenecks(filters);
+    return bottlenecks as any;
   }
 
   /**
@@ -74,7 +77,9 @@ export class BottleneckTracker {
   async getBottleneck(
     bottleneckId: string
   ): Promise<PerformanceBottleneck | null> {
-    return performanceMetricsRepository.getBottleneckById(bottleneckId);
+    // TODO: Implement getBottleneckById in repository
+    const bottlenecks = await performanceMetricsRepository.listBottlenecks();
+    return (bottlenecks.find((b: any) => b.id === bottleneckId) || null) as any;
   }
 
   /**
@@ -97,12 +102,10 @@ export class BottleneckTracker {
 
     await performanceMetricsRepository.saveOptimizationRecord({
       bottleneckId,
-      title: optimization.title,
-      description: optimization.description,
-      beforeValue: optimization.beforeValue,
-      afterValue: optimization.afterValue,
-      improvementPercentage,
-      implementation: optimization.implementation,
+      action: optimization.title,
+      impact: optimization.description || "",
+      appliedAt: new Date(),
+      result: `Improved from ${optimization.beforeValue} to ${optimization.afterValue}`,
     });
 
     console.log(

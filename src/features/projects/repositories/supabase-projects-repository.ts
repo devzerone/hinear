@@ -601,3 +601,10 @@ export class SupabaseProjectsRepository implements ProjectsRepository {
     return data !== null;
   }
 }
+
+// Factory function
+export function createProjectsRepository(
+  client: AppSupabaseServerClient
+): ProjectsRepository {
+  return new SupabaseProjectsRepository(client);
+}

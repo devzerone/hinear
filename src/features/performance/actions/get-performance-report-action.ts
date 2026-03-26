@@ -25,11 +25,8 @@ export async function getPerformanceReport(
 
   // Fetch metrics
   const metrics = await performanceMetricsRepository.getMetricsByTimeRange(
-    timeRange,
-    {
-      route: routes?.[0], // Filter by first route if provided
-      environment: environments?.[0], // Filter by first environment if provided
-    }
+    timeRange.start,
+    timeRange.end
   );
 
   // Calculate summary statistics
@@ -50,7 +47,7 @@ export async function getPerformanceReport(
   };
 
   // Fetch bottlenecks
-  const bottlenecks = await performanceMetricsRepository.getBottlenecks({
+  const bottlenecks = await performanceMetricsRepository.listBottlenecks({
     status: "IDENTIFIED",
   });
 

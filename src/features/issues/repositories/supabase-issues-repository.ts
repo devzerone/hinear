@@ -51,7 +51,7 @@ function assertDataPresent<T>(context: string, data: T | null): T {
   return data;
 }
 
-function mapIssue(row: TableRow<"issues">): Issue {
+function mapIssue(row: any): Issue {
   return {
     id: row.id,
     projectId: row.project_id,
@@ -76,7 +76,7 @@ function mapIssue(row: TableRow<"issues">): Issue {
   };
 }
 
-function mapLabel(row: TableRow<"labels">): Label {
+function mapLabel(row: any): Label {
   return {
     id: row.id,
     name: row.name,
@@ -84,7 +84,7 @@ function mapLabel(row: TableRow<"labels">): Label {
   };
 }
 
-function mapComment(row: TableRow<"comments">): Comment {
+function mapComment(row: any): Comment {
   return {
     id: row.id,
     issueId: row.issue_id,
@@ -95,13 +95,13 @@ function mapComment(row: TableRow<"comments">): Comment {
   };
 }
 
-function mapActivityLogEntry(row: TableRow<"activity_logs">): ActivityLogEntry {
+function mapActivityLogEntry(row: any): ActivityLogEntry {
   return {
     id: row.id,
     issueId: row.issue_id,
     projectId: row.project_id,
     actorId: row.actor_id,
-    type: row.type,
+    type: row.type as ActivityLogEntry["type"],
     field: row.field,
     from: row.from_value,
     to: row.to_value,
@@ -165,32 +165,6 @@ export class SupabaseIssuesRepository implements IssuesRepository {
       .catch((error) => {
         console.error("Background GitHub update failed:", error);
       });
-  }
-
-  async listCommentsByIssueId(issueId: string): Promise<Comment[]> {
-    const { data, error } = await this.client
-      .from("comments")
-      .select("id, issue_id, project_id, author_id, body, created_at")
-      .eq("issue_id", issueId)
-      .order("created_at", { ascending: false });
-
-    assertQuerySucceeded("Failed to load issue comments", error);
-
-    return (data ?? []).map(mapComment);
-  }
-
-  async listActivityLogByIssueId(issueId: string): Promise<ActivityLogEntry[]> {
-    const { data, error } = await this.client
-      .from("activity_logs")
-      .select(
-        "id, issue_id, project_id, actor_id, type, field, from_value, to_value, summary, created_at"
-      )
-      .eq("issue_id", issueId)
-      .order("created_at", { ascending: false });
-
-    assertQuerySucceeded("Failed to load issue activity log", error);
-
-    return (data ?? []).map(mapActivityLogEntry);
   }
 
   private async listLabelsByIssueIds(
@@ -388,33 +362,6 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     });
   }
 
-  async listIssuesByProject(projectId: string): Promise<Issue[]> {
-    const { data, error } = await this.client
-      .from("issues")
-      .select(
-        "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
-      )
-      .eq("project_id", projectId)
-      .order("issue_number", { ascending: true });
-
-    assertQuerySucceeded("Failed to load project issues", error);
-
-    const issues = (data ?? []).map(mapIssue);
-
-    // 병렬로 관련 데이터 페칭
-    const [labelsByIssueId] = await Promise.all([
-      this.listLabelsByIssueIds(
-        issues.map((issue) => issue.id),
-        projectId
-      ),
-    ]);
-
-    return issues.map((issue) => ({
-      ...issue,
-      labels: labelsByIssueId.get(issue.id) ?? [],
-    }));
-  }
-
   async createComment(input: CreateCommentInput): Promise<Comment> {
     const { data, error } = await this.client
       .from("comments")
@@ -442,6 +389,18 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     assertQuerySucceeded("Failed to get comment", error);
 
     return mapComment(assertDataPresent("Failed to get comment", data));
+  }
+
+  async listCommentsByIssueId(issueId: string): Promise<Comment[]> {
+    const { data, error } = await this.client
+      .from("comments")
+      .select("id, issue_id, project_id, author_id, body, created_at")
+      .eq("issue_id", issueId)
+      .order("created_at", { ascending: true });
+
+    assertQuerySucceeded("Failed to list comments", error);
+
+    return data ? data.map(mapComment) : [];
   }
 
   async updateComment(
@@ -501,6 +460,18 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     return mapActivityLogEntry(
       assertDataPresent("Failed to append activity log", data)
     );
+  }
+
+  async listActivityLogByIssueId(issueId: string): Promise<ActivityLogEntry[]> {
+    const { data, error } = await this.client
+      .from("activity_logs")
+      .select("*")
+      .eq("issue_id", issueId)
+      .order("created_at", { ascending: false });
+
+    assertQuerySucceeded("Failed to list activity log", error);
+
+    return data ? data.map(mapActivityLogEntry) : [];
   }
 
   async updateIssue(issueId: string, input: UpdateIssueInput): Promise<Issue> {
@@ -701,6 +672,28 @@ export class SupabaseIssuesRepository implements IssuesRepository {
         labels,
       };
     });
+  }
+
+  async listIssuesByProject(projectId: string): Promise<Issue[]> {
+    const { data, error } = await this.client
+      .from("issues")
+      .select(
+        "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
+      )
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false });
+
+    assertQuerySucceeded("Failed to list issues by project", error);
+
+    if (!data) {
+      return [];
+    }
+
+    // 병렬로 라벨 로드
+    const issues = data.map(mapIssue);
+    const issuesWithLabels = await this.attachLabelsToIssues(issues);
+
+    return issuesWithLabels;
   }
 
   async listIssuesByStatus(input: {
@@ -1091,4 +1084,11 @@ export class SupabaseIssuesRepository implements IssuesRepository {
 
     return issuesWithLabels;
   }
+}
+
+// Factory function
+export function createIssuesRepository(
+  client: AppSupabaseServerClient
+): IssuesRepository {
+  return new SupabaseIssuesRepository(client);
 }

@@ -27,8 +27,10 @@ export async function identifyBottlenecks(): Promise<void> {
       end: new Date(),
     };
 
-    const metrics =
-      await performanceMetricsRepository.getMetricsByTimeRange(timeRange);
+    const metrics = await performanceMetricsRepository.getMetricsByTimeRange(
+      timeRange.start,
+      timeRange.end
+    );
 
     // Analyze metrics for bottlenecks
     const bottlenecks = analyzeMetricsForBottlenecks(metrics);
@@ -36,7 +38,12 @@ export async function identifyBottlenecks(): Promise<void> {
     // Save identified bottlenecks
     for (const bottleneck of bottlenecks) {
       try {
-        await performanceMetricsRepository.saveBottleneck(bottleneck);
+        await performanceMetricsRepository.saveBottleneck({
+          ...bottleneck,
+          status: "IDENTIFIED",
+          identifiedAt: new Date(),
+          resolvedAt: null,
+        });
       } catch (error) {
         console.error(
           "[identifyBottlenecks] Failed to save bottleneck:",
@@ -205,12 +212,15 @@ export async function recordOptimization(
       ((input.beforeValue - input.afterValue) / input.beforeValue) * 100;
 
     await performanceMetricsRepository.saveOptimizationRecord({
-      ...input,
-      improvementPercentage,
+      bottleneckId: input.bottleneckId,
+      action: input.title,
+      impact: input.description,
+      appliedAt: new Date(),
+      result: `Improved from ${input.beforeValue} to ${input.afterValue}`,
     });
 
     // Update bottleneck status to RESOLVED
-    const bottlenecks = await performanceMetricsRepository.getBottlenecks();
+    const bottlenecks = await performanceMetricsRepository.listBottlenecks();
     const bottleneck = bottlenecks.find((b) => b.id === input.bottleneckId);
 
     if (bottleneck) {
@@ -236,7 +246,7 @@ export async function recordOptimization(
  */
 export async function getAllBottlenecks() {
   try {
-    return await performanceMetricsRepository.getBottlenecks();
+    return await performanceMetricsRepository.listBottlenecks();
   } catch (error) {
     console.error("[getAllBottlenecks] Failed to get bottlenecks:", error);
     throw error;
@@ -253,7 +263,7 @@ export async function getAllBottlenecks() {
  */
 export async function getBottlenecksByStatus(status: BottleneckStatus) {
   try {
-    return await performanceMetricsRepository.getBottlenecksByStatus(status);
+    return await performanceMetricsRepository.listBottlenecks({ status });
   } catch (error) {
     console.error("[getBottlenecksByStatus] Failed to get bottlenecks:", error);
     throw error;

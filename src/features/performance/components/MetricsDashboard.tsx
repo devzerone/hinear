@@ -190,7 +190,7 @@ export function MetricsDashboard({ timeRange }: MetricsDashboardProps) {
         <section>
           <h2 className="text-lg font-semibold mb-4">Recommendations</h2>
           <div className="space-y-2">
-            {recommendations.map((recommendation, index) => (
+            {recommendations.map((recommendation: string, index: number) => (
               <div
                 key={index}
                 className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800"
@@ -276,12 +276,15 @@ function WebVitalCard({
  * Bottleneck card component
  */
 function BottleneckCard({ bottleneck }: { bottleneck: PerformanceBottleneck }) {
-  const { color } = getSeverityIcon(bottleneck.severity);
+  const severityInfo = getSeverityIcon(bottleneck.severity);
+  const color = severityInfo?.color || "bg-gray-100";
 
   return (
     <div className={`p-4 border rounded-lg ${color} border-opacity-30`}>
       <div className="flex items-start gap-3">
-        <icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
+        {severityInfo?.icon && (
+          <severityInfo.icon className="w-5 h-5 flex-shrink-0 mt-0.5" />
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <h3 className="font-semibold text-sm truncate">

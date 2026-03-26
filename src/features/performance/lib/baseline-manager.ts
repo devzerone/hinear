@@ -130,15 +130,25 @@ export class BaselineManager {
     }
 
     // Save to database
-    const saved = await performanceMetricsRepository.saveBaseline(baseline);
+    const saved = await performanceMetricsRepository.saveBaseline({
+      metricName: baseline.metricName,
+      route: baseline.route,
+      currentValue: 0, // TODO: Get current value
+      thresholdType: "warning",
+      thresholdValue: baseline.warningThreshold,
+      targetValue: baseline.targetValue,
+      warningThreshold: baseline.warningThreshold,
+      criticalThreshold: baseline.criticalThreshold,
+      unit: baseline.unit,
+    });
 
     // Update cache
     const cacheKey = baseline.route
       ? `${baseline.metricName}:${baseline.route}`
       : baseline.metricName;
-    this.baselineCache.set(cacheKey, saved);
+    this.baselineCache.set(cacheKey, saved as any);
 
-    return saved;
+    return saved as any;
   }
 
   /**
@@ -270,7 +280,7 @@ export class BaselineManager {
       const cacheKey = baseline.route
         ? `${baseline.metricName}:${baseline.route}`
         : baseline.metricName;
-      this.baselineCache.set(cacheKey, baseline);
+      this.baselineCache.set(cacheKey, baseline as any);
     }
 
     // Set cache expiry

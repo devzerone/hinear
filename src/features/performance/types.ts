@@ -9,6 +9,15 @@ import type {
   MetricUnit,
 } from "./contracts";
 
+// Re-export commonly used types
+export type {
+  BottleneckCategory,
+  BottleneckSeverity,
+  BottleneckStatus,
+  Environment,
+  MetricUnit,
+};
+
 // ============================================================================
 // Domain Entity Types
 // ============================================================================

@@ -75,13 +75,14 @@ export class AlertManager {
       if (
         this.shouldSendAlert(
           alertKey,
-          violation.thresholdType === "critical" ? "CRITICAL" : "HIGH"
+          (violation.thresholdType === "critical" ? "CRITICAL" : "HIGH") as any
         )
       ) {
         alerts.push({
           id: this.generateAlertId(),
-          severity:
-            violation.thresholdType === "critical" ? "CRITICAL" : "HIGH",
+          severity: (violation.thresholdType === "critical"
+            ? "CRITICAL"
+            : "HIGH") as any,
           title: `${violation.metricName} threshold exceeded`,
           message: `Current: ${violation.currentValue}${violation.baseline.unit}, ${violation.thresholdType} threshold: ${violation.thresholdValue}${violation.baseline.unit}`,
           timestamp: new Date(),

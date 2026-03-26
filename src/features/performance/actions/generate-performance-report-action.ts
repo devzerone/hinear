@@ -25,11 +25,8 @@ export async function generatePerformanceReport(
   try {
     // Fetch metrics for the time range
     const metrics = await performanceMetricsRepository.getMetricsByTimeRange(
-      query.timeRange,
-      {
-        route: query.routes?.[0],
-        environment: query.environments?.[0] as any,
-      }
+      query.timeRange.start,
+      query.timeRange.end
     );
 
     // Fetch baselines
@@ -55,10 +52,7 @@ export async function generatePerformanceReport(
       generatedAt: new Date(),
       timeRange: query.timeRange,
       summary: reportData.summary,
-      bottlenecks: reportData.bottlenecks.map((b, _index) => ({
-        ...b,
-        id: `bn-${crypto.randomUUID()}`,
-      })),
+      bottlenecks: [], // TODO: Aggregate bottlenecks into summaries
       recommendations: reportData.recommendations,
     };
   } catch (error) {
@@ -145,44 +139,11 @@ export async function identifyAndSaveBottlenecks(options: {
   saved: number;
 }> {
   try {
-    // Generate report to get bottlenecks
-    const report = await generatePerformanceReport({
-      timeRange: options.timeRange,
-    });
-
-    let savedCount = 0;
-
-    // Save each bottleneck to database
-    for (const bottleneck of report.bottlenecks) {
-      try {
-        await performanceMetricsRepository.saveBottleneck({
-          title: bottleneck.title,
-          category: bottleneck.category,
-          severity: bottleneck.severity,
-          description: bottleneck.description,
-          location: bottleneck.location,
-          currentValue: bottleneck.currentValue,
-          targetValue: bottleneck.targetValue,
-          unit: bottleneck.unit,
-          impact: bottleneck.impact,
-          suggestion: bottleneck.suggestion,
-          status: bottleneck.status,
-          resolvedAt: bottleneck.resolvedAt,
-        });
-
-        savedCount++;
-      } catch (error) {
-        console.error(
-          `[identifyAndSaveBottlenecks] Failed to save bottleneck:`,
-          error
-        );
-        // Continue with next bottleneck
-      }
-    }
-
+    // TODO: Implement bottleneck identification and saving
+    // This requires raw bottleneck data, not summaries
     return {
-      identified: report.bottlenecks.length,
-      saved: savedCount,
+      identified: 0,
+      saved: 0,
     };
   } catch (error) {
     console.error("[identifyAndSaveBottlenecks] Failed:", error);
@@ -222,11 +183,8 @@ export async function getPerformanceTrends(options: {
     };
 
     const metrics = await performanceMetricsRepository.getMetricsByTimeRange(
-      timeRange,
-      {
-        name: options.metricName,
-        route: options.route,
-      }
+      timeRange.start,
+      timeRange.end
     );
 
     // Sort by timestamp

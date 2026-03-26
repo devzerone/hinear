@@ -26,6 +26,9 @@ export async function setBaseline(input: CreateBaselineInput): Promise<void> {
     await performanceMetricsRepository.saveBaseline({
       metricName: input.metricName,
       route: input.route || null,
+      currentValue: 0, // TODO: Get current value
+      thresholdType: "warning",
+      thresholdValue: input.warningThreshold,
       targetValue: input.targetValue,
       warningThreshold: input.warningThreshold,
       criticalThreshold: input.criticalThreshold,
@@ -148,6 +151,9 @@ export async function deleteBaseline(
     await performanceMetricsRepository.saveBaseline({
       metricName,
       route: route || null,
+      currentValue: 0,
+      thresholdType: "warning",
+      thresholdValue: 0,
       targetValue: 0,
       warningThreshold: 0,
       criticalThreshold: 0,
