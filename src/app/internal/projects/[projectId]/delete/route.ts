@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { deleteProjectAction } from "@/features/projects/actions/delete-project-action";
+import { isRepositoryError } from "@/features/issues/lib/repository-errors";
+import { getServerProjectsRepository } from "@/features/projects/repositories/server-projects-repository";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
 
 interface RouteContext {
@@ -22,12 +23,48 @@ export async function POST(_request: Request, context: RouteContext) {
   }
 
   const { projectId } = await context.params;
+  const repository = await getServerProjectsRepository();
 
   try {
-    await deleteProjectAction({ projectId });
+    const project = await repository.getProjectById(projectId);
+
+    if (!project) {
+      return NextResponse.json(
+        {
+          code: "PROJECT_NOT_FOUND",
+          error: "Project not found.",
+        },
+        { status: 404 }
+      );
+    }
+
+    if (project.createdBy !== actorId) {
+      return NextResponse.json(
+        {
+          code: "FORBIDDEN",
+          error: "Only project owners can delete projects.",
+        },
+        { status: 403 }
+      );
+    }
+
+    await repository.deleteProject({
+      projectId,
+      deletedBy: actorId,
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if (isRepositoryError(error)) {
+      return NextResponse.json(
+        {
+          code: error.code,
+          error: error.message,
+        },
+        { status: error.status }
+      );
+    }
+
     return NextResponse.json(
       {
         code: "DELETE_FAILED",

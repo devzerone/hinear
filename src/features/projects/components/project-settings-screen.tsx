@@ -86,7 +86,7 @@ export function ProjectSettingsScreen({
 
         // Redirect to projects list after a short delay
         setTimeout(() => {
-          window.location.href = "/projects";
+          window.location.href = "/projects/overview";
         }, 500);
       } catch (error) {
         toast.error(

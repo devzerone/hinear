@@ -10,6 +10,16 @@ export interface DeleteProjectInput {
   projectId: string;
 }
 
+function isNextRedirectError(error: unknown): error is { digest: string } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "digest" in error &&
+    typeof error.digest === "string" &&
+    error.digest.startsWith("NEXT_REDIRECT;")
+  );
+}
+
 export async function deleteProjectAction(input: DeleteProjectInput) {
   const actorId = await getAuthenticatedActorIdOrNull();
 
@@ -42,8 +52,12 @@ export async function deleteProjectAction(input: DeleteProjectInput) {
     });
 
     // 삭제 후 프로젝트 목록 페이지로 리다이렉트
-    return redirect("/projects");
+    return redirect("/projects/overview");
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
+
     return redirect(
       `/projects/${input.projectId}/settings?projectError=${
         error instanceof Error
