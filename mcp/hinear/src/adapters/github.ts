@@ -57,7 +57,7 @@ export async function createGitHubBranch(
   }
 
   // Store in database
-  const { data: integration, error: dbError } = await supabase
+  const { error: dbError } = await supabase
     .from("github_integrations")
     .insert({
       project_id: issue.project_id,

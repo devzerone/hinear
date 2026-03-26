@@ -155,7 +155,7 @@ export async function updateMemberRole(input: UpdateMemberRoleInput): Promise<{
   const member = {
     id: data.id,
     role: data.role,
-    profile: (data.profiles && data.profiles[0]) || {
+    profile: data.profiles?.[0] || {
       id: "",
       display_name: null,
       email: null,

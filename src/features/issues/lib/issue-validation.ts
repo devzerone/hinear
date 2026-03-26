@@ -3,7 +3,7 @@
  */
 
 import type { CreateIssueInput, UpdateIssueInput } from "../contracts";
-import type { IssuePriority, IssueStatus } from "../types";
+import type { IssueStatus } from "../types";
 import { ISSUE_PRIORITIES, ISSUE_STATUSES } from "../types";
 import { isValidStatusTransition } from "./issue-state-machine";
 import { createRepositoryError } from "./repository-errors";
@@ -105,7 +105,7 @@ export function validateUpdateIssueInput(
 
   if (input.dueDate !== undefined && input.dueDate !== null) {
     const dueDate = new Date(input.dueDate);
-    if (isNaN(dueDate.getTime())) {
+    if (Number.isNaN(dueDate.getTime())) {
       errors.push({
         field: "dueDate",
         message: "유효하지 않은 날짜 형식입니다.",

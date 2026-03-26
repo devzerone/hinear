@@ -1,5 +1,6 @@
 import { SidebarDesktop } from "@/components/organisms/SidebarDesktop";
 import { KanbanBoardView } from "@/features/issues/components/KanbanBoardView";
+import { usePerformanceProfiler } from "@/features/performance/hooks/usePerformanceProfiler";
 import {
   getProjectOverviewPath,
   getProjectPath,
@@ -41,6 +42,9 @@ export function ProjectWorkspaceScreen({
   projects,
   workspaceNoticeMessage,
 }: ProjectWorkspaceScreenProps) {
+  // Enable performance profiling in production (1% sampling)
+  usePerformanceProfiler(process.env.NODE_ENV === "production");
+
   const projectSubtitle =
     project.type === "team" ? "Team Project" : "Personal Project";
   const assigneeOptions = [

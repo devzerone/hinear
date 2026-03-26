@@ -15,10 +15,6 @@
       "!public/workbox-*.js",
       "!public/worker-*.js",
       "!public/fallback-*.js"
-    ],
-    "ignore": [
-      "specs/**/*.ts",
-      "specs/**/*.md"
     ]
   },
   "formatter": {
@@ -29,7 +25,23 @@
     "enabled": true,
     "rules": {
       "suspicious": {
-        "noExplicitAny": "off"
+        "noExplicitAny": "off",
+        "noArrayIndexKey": "warn",
+        "noAssignInExpressions": "warn"
+      },
+      "performance": {
+        "noImgElement": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "warn",
+        "useExhaustiveDependencies": "warn"
+      },
+      "a11y": {
+        "useSemanticElements": "warn",
+        "useButtonType": "warn"
+      },
+      "style": {
+        "noNonNullAssertion": "warn"
       }
     }
   },

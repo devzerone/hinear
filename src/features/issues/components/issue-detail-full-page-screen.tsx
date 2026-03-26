@@ -8,6 +8,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -19,7 +20,6 @@ import { Select } from "@/components/atoms/Select";
 import { ConflictDialog } from "@/components/molecules/ConflictDialog";
 import { DueDateField } from "@/components/molecules/DueDateField";
 import { LabelSelector } from "@/components/molecules/LabelSelector";
-import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
 import { createLabelAction } from "@/features/issues/actions/create-label-action";
 import { updateIssueLabelsAction } from "@/features/issues/actions/update-issue-labels-action";
 import { IssueActivityItem } from "@/features/issues/components/IssueActivityItem";
@@ -48,6 +48,24 @@ import type {
   Label,
 } from "@/features/issues/types";
 import { ISSUE_PRIORITIES, ISSUE_STATUSES } from "@/features/issues/types";
+import { usePerformanceProfiler } from "@/features/performance/hooks/usePerformanceProfiler";
+
+// Dynamic import for MarkdownEditor (optimizes bundle size)
+const MarkdownEditor = dynamic(
+  () =>
+    import("@/components/molecules/MarkdownEditor").then((m) => ({
+      default: m.MarkdownEditor,
+    })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center p-8 bg-gray-100 rounded-lg">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
 import { getIssueBranchNamePreview } from "@/lib/github/branching";
 import { hasMeaningfulRichTextContent } from "@/lib/rich-text";
 
@@ -137,6 +155,9 @@ export function IssueDetailFullPageScreen({
   issue,
   memberNamesById = {},
 }: IssueDetailFullPageScreenProps) {
+  // Enable performance profiling for issue detail pages (1% sampling in production)
+  usePerformanceProfiler(process.env.NODE_ENV === "production");
+
   const [issueState, setIssueState] = useState(issue);
   const [commentsState, setCommentsState] = useState(comments);
   const [activityState, setActivityState] = useState(activityLog);

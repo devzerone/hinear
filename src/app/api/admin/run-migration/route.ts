@@ -2,10 +2,10 @@ import { type NextRequest, NextResponse } from "next/server";
 import { requireAuthenticatedActorId } from "@/lib/supabase/server-auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server-client";
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Simple admin check (you should enhance this in production)
-    const actorId = await requireAuthenticatedActorId();
+    const _actorId = await requireAuthenticatedActorId();
 
     const migration = `
 -- Add GitHub integration fields to issues table
@@ -44,26 +44,26 @@ COMMENT ON COLUMN public.issues.github_sync_status IS 'Current sync status: pend
 
     for (const statement of statements) {
       try {
-        const { data, error } = await (supabase as any).rpc("exec_sql", {
+        const { error } = await (supabase as any).rpc("exec_sql", {
           sql: statement,
         });
 
         if (error) {
           // Try alternative method using direct SQL execution
           results.push({
-            statement: statement.substring(0, 50) + "...",
+            statement: `${statement.substring(0, 50)}...`,
             status: "skipped",
             error: error.message,
           });
         } else {
           results.push({
-            statement: statement.substring(0, 50) + "...",
+            statement: `${statement.substring(0, 50)}...`,
             status: "success",
           });
         }
       } catch (e) {
         results.push({
-          statement: statement.substring(0, 50) + "...",
+          statement: `${statement.substring(0, 50)}...`,
           status: "error",
           error: String(e),
         });

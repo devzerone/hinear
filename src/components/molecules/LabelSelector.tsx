@@ -21,7 +21,7 @@ interface LabelSelectorProps {
   className?: string;
 }
 
-export function LabelSelector({
+export const LabelSelector = React.memo(function LabelSelector({
   availableLabels,
   selectedLabelIds,
   onLabelToggle,
@@ -36,25 +36,72 @@ export function LabelSelector({
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const searchInputRef = React.useRef<HTMLInputElement>(null);
 
-  const selectedLabels = availableLabels.filter((label) =>
-    selectedLabelIds.includes(label.id)
+  const selectedLabels = React.useMemo(
+    () =>
+      availableLabels.filter((label) => selectedLabelIds.includes(label.id)),
+    [availableLabels, selectedLabelIds]
   );
 
-  // 필터링된 라벨 목록
-  const filteredLabels = availableLabels.filter((label) => {
-    const search = searchValue.toLowerCase().trim();
-    if (!search) return true;
-    return label.name.toLowerCase().includes(search);
-  });
-
-  // 새 라벨 생성 가능 여부
-  const existingLabel = availableLabels.find(
-    (label) => createLabelKey(label.name) === createLabelKey(searchValue)
+  const filteredLabels = React.useMemo(
+    () =>
+      availableLabels.filter((label) => {
+        const search = searchValue.toLowerCase().trim();
+        if (!search) return true;
+        return label.name.toLowerCase().includes(search);
+      }),
+    [availableLabels, searchValue]
   );
-  const canCreateLabel =
-    onCreateLabel && searchValue.trim().length > 0 && !existingLabel;
 
-  // 드롭다운 외부 클릭 처리
+  const canCreateLabel = React.useMemo(() => {
+    const existingLabel = availableLabels.find(
+      (label) => createLabelKey(label.name) === createLabelKey(searchValue)
+    );
+    return onCreateLabel && searchValue.trim().length > 0 && !existingLabel;
+  }, [availableLabels, searchValue, onCreateLabel]);
+
+  const handleLabelToggle = React.useCallback(
+    (labelId: string) => {
+      onLabelToggle(labelId);
+    },
+    [onLabelToggle]
+  );
+
+  const handleCreateLabel = React.useCallback(async () => {
+    if (!onCreateLabel || !searchValue.trim()) return;
+
+    setIsCreating(true);
+    try {
+      await onCreateLabel(searchValue.trim());
+      setSearchValue("");
+    } finally {
+      setIsCreating(false);
+    }
+  }, [onCreateLabel, searchValue]);
+
+  const handleRemoveLabel = React.useCallback(
+    (e: React.MouseEvent, labelId: string) => {
+      e.stopPropagation();
+      onLabelToggle(labelId);
+    },
+    [onLabelToggle]
+  );
+
+  const handleTriggerClick = React.useCallback(() => {
+    if (!disabled) {
+      setIsOpen(!isOpen);
+    }
+  }, [disabled, isOpen]);
+
+  const handleTriggerKeyDown = React.useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleTriggerClick();
+      }
+    },
+    [handleTriggerClick]
+  );
+
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -73,51 +120,14 @@ export function LabelSelector({
     }
   }, [isOpen]);
 
-  // 드롭다운 열릴 때 검색창 포커스
   React.useEffect(() => {
     if (isOpen && searchInputRef.current) {
       searchInputRef.current.focus();
     }
   }, [isOpen]);
 
-  const handleLabelToggle = (labelId: string) => {
-    onLabelToggle(labelId);
-  };
-
-  const handleCreateLabel = async () => {
-    if (!onCreateLabel || !searchValue.trim()) return;
-
-    setIsCreating(true);
-    try {
-      await onCreateLabel(searchValue.trim());
-      setSearchValue("");
-    } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const handleRemoveLabel = (e: React.MouseEvent, labelId: string) => {
-    e.stopPropagation();
-    onLabelToggle(labelId);
-  };
-
-  const handleTriggerClick = () => {
-    if (!disabled) {
-      setIsOpen(!isOpen);
-    }
-  };
-
-  const handleTriggerKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleTriggerClick();
-    }
-  };
-
   return (
     <div className={cn("relative", className)} ref={dropdownRef}>
-      {/* 선택된 라벨 표시 영역 */}
-      {/* biome-ignore lint/a11y/useSemanticElements: Using div with role=button to avoid nested button HTML error */}
       <div
         role="button"
         tabIndex={disabled ? -1 : 0}
@@ -168,10 +178,8 @@ export function LabelSelector({
         />
       </div>
 
-      {/* 드롭다운 메뉴 */}
       {isOpen && (
         <div className="absolute top-full z-50 mt-1 w-full overflow-hidden rounded-[14px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-white)] p-2 shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
-          {/* 검색 입력창 */}
           <div className="relative mb-2">
             <input
               ref={searchInputRef}
@@ -189,7 +197,6 @@ export function LabelSelector({
             />
           </div>
 
-          {/* 라벨 목록 */}
           <div className="max-h-64 overflow-y-auto">
             {filteredLabels.length > 0 ? (
               <div className="flex flex-col gap-1">
@@ -229,7 +236,6 @@ export function LabelSelector({
             )}
           </div>
 
-          {/* 새 라벨 생성 버튼 또는 중복 메시지 */}
           {searchValue.trim().length > 0 &&
             !filteredLabels.some(
               (label) =>
@@ -267,4 +273,4 @@ export function LabelSelector({
       )}
     </div>
   );
-}
+});

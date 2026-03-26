@@ -138,7 +138,7 @@ function readProjectId(formData: FormData): string {
   return String(formData.get("projectId") ?? "");
 }
 
-function appendGitHubRepoSelectionFlag(next: string): string {
+function _appendGitHubRepoSelectionFlag(next: string): string {
   const url = new URL(next, "http://localhost");
   url.searchParams.set("github", "select-repo");
 

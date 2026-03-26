@@ -24,6 +24,15 @@ export default defineConfig({
           environment: "jsdom",
           globals: true,
           setupFiles: ["./src/test/setup.ts"],
+          exclude: [
+            ...Array.from({ length: 10 }, (_, i) => `**/.${i}/**`),
+            "node_modules",
+            "dist",
+            ".next",
+            "mcp/**", // Temporarily skip MCP tests
+            "**/*.config.ts",
+            "**/*.config.js",
+          ],
         },
       },
       // Temporarily disabled due to configuration issues

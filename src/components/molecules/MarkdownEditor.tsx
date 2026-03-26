@@ -128,7 +128,7 @@ export function MarkdownEditor({
           "text-[13px] leading-[1.55] text-[#111318]"
         ),
       },
-      handlePaste: (view, event) => {
+      handlePaste: (_view, event) => {
         const items = event.clipboardData?.items;
         if (!items) return false;
 
@@ -143,7 +143,7 @@ export function MarkdownEditor({
                 })
                 .catch((error) => {
                   console.error("Image upload failed:", error);
-                  alert("이미지 업로드에 실패했습니다: " + error.message);
+                  alert(`이미지 업로드에 실패했습니다: ${error.message}`);
                 });
             }
             return true;

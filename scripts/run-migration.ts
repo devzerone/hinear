@@ -1,5 +1,5 @@
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 // Load environment variables from .env.local
 function loadEnvFile() {
@@ -21,8 +21,8 @@ function loadEnvFile() {
 
 loadEnvFile();
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.error("Missing environment variables:");
@@ -33,7 +33,7 @@ if (!supabaseUrl || !supabaseKey) {
 
 // Extract database connection info from Supabase URL
 // Format: https://[project-ref].supabase.co
-const dbUrl = supabaseUrl.replace(
+const _dbUrl = supabaseUrl.replace(
   "https://",
   "postgresql://postgres:[YOUR-PASSWORD]@"
 );
@@ -51,7 +51,7 @@ async function runMigration() {
   // We'll need to run this manually through the Supabase dashboard or CLI
   console.log("Migration SQL prepared:");
   console.log(migration);
-  console.log("\n" + "=".repeat(60));
+  console.log(`\n${"=".repeat(60)}`);
   console.log("To run this migration, use one of these methods:");
   console.log("=".repeat(60));
   console.log("\n1. Supabase Dashboard SQL Editor:");

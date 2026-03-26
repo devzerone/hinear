@@ -13,6 +13,7 @@ import { createLabelAction } from "@/features/issues/actions/create-label-action
 import { getLabelsAction } from "@/features/issues/actions/get-labels-action";
 import { createLabelKey, getLabelColor } from "@/features/issues/lib/labels";
 import type { Label } from "@/features/issues/types";
+import { usePerformanceProfiler } from "@/features/performance/hooks/usePerformanceProfiler";
 import { cn } from "@/lib/utils";
 
 interface SelectOption {
@@ -133,6 +134,9 @@ export function MobileIssueCreateScreen({
   projectId,
   statusOptions = DEFAULT_STATUS_OPTIONS,
 }: MobileIssueCreateScreenProps) {
+  // Enable performance profiling for issue creation (1% sampling in production)
+  usePerformanceProfiler(process.env.NODE_ENV === "production");
+
   const formId = React.useId();
   const [description, setDescription] = React.useState(defaultDescription);
   const parsedDefaultLabels = React.useMemo(

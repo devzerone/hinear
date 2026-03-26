@@ -46,7 +46,7 @@ export function createIssueDraft(input: CreateIssueInput): CreateIssueInput {
     createdBy: assertNonEmptyValue(input.createdBy, "Issue creator"),
     description: input.description?.trim() ?? "",
     dueDate: input.dueDate ?? null,
-    labels: parseLabelInput(input.labels?.join(", ")),
+    labels: parseLabelInput(input.labels?.join(", ")) ?? [],
     priority: assertIssuePriority(input.priority),
     projectId: assertNonEmptyValue(input.projectId, "Project id"),
     status: assertIssueStatus(input.status),

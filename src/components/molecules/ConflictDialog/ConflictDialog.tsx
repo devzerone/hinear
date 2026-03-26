@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Button } from "@/components/atoms/Button";
 
 export interface ConflictDialogProps {
@@ -48,7 +49,7 @@ function VersionRow({
   );
 }
 
-export function ConflictDialog({
+export const ConflictDialog = memo(function ConflictDialog({
   currentVersion,
   requestedVersion,
   onDismiss,
@@ -134,4 +135,4 @@ export function ConflictDialog({
       </div>
     </section>
   );
-}
+});

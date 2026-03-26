@@ -11,11 +11,6 @@ import {
   canRead,
   canWrite,
 } from "./permission-checker";
-import {
-  canDemoteFromOwner,
-  canPromoteToOwner,
-  isValidRoleTransition,
-} from "./role-manager";
 
 /**
  * Access control decision
