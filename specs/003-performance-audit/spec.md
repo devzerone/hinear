@@ -77,7 +77,7 @@ Implement ongoing performance monitoring to catch regressions early and maintain
 - **FR-002**: System MUST measure and report database query execution times for all queries
 - **FR-003**: System MUST identify and report JavaScript bundle sizes and loading times for each route
 - **FR-004**: System MUST measure API response times for all server actions and API routes
-- **FR-005**: System MUST detect and report memory leaks or excessive memory usage patterns
+- **FR-005**: [POST-MVP] System MUST detect and report memory leaks or excessive memory usage patterns (deferred to post-MVP - requires specialized profiling tooling; focus on other performance metrics for MVP)
 - **FR-006**: System MUST identify unnecessary re-renders in React components
 - **FR-007**: System MUST measure and report Time to First Byte (TTFB), First Contentful Paint (FCP), and Largest Contentful Paint (LCP) for all pages
 - **FR-008**: System MUST generate a prioritized list of performance bottlenecks with severity ratings
@@ -88,10 +88,10 @@ Implement ongoing performance monitoring to catch regressions early and maintain
 
 ### Key Entities
 
-- **Performance Metric**: Represents a measurable aspect of system performance (load time, response time, memory usage, bundle size)
-- **Performance Bottleneck**: Represents a specific issue causing performance degradation, including severity rating and impact assessment
-- **Performance Baseline**: Represents the target or expected performance values for different application functions
-- **Optimization Record**: Represents a performance improvement made, including before/after metrics and implementation details
+- **PerformanceMetric**: Represents a measurable aspect of system performance (load time, response time, memory usage, bundle size)
+- **PerformanceBottleneck**: Represents a specific issue causing performance degradation, including severity rating and impact assessment
+- **PerformanceBaseline**: Represents the target or expected performance values for different application functions
+- **OptimizationRecord**: Represents a performance improvement made, including before/after metrics and implementation details
 
 ## Success Criteria *(mandatory)*
 
@@ -101,9 +101,9 @@ Implement ongoing performance monitoring to catch regressions early and maintain
 - **SC-002**: 95% of database queries execute in under 200ms
 - **SC-003**: Initial JavaScript bundle for any page is under 200KB gzipped
 - **SC-004**: API response times (excluding database) are under 100ms for 95% of requests
-- **SC-005**: No memory leaks detected during 30-minute typical usage sessions
+- **SC-005**: [POST-MVP OUTCOME] No memory leaks detected during 30-minute typical usage sessions (this is a post-launch monitoring outcome, not a buildable requirement for MVP)
 - **SC-006**: Performance monitoring alerts are generated within 1 hour of any regression exceeding 20% degradation
-- **SC-007**: All critical bottlenecks from initial investigation are resolved within 2 weeks
+- **SC-007**: All critical bottlenecks from initial investigation are resolved within 2 weeks of focused engineering effort (assuming no higher-priority blockers; timeline is for dedicated performance work, not calendar time)
 - **SC-008**: Application maintains responsiveness (UI updates within 100ms) during typical user interactions
 
 ## Assumptions

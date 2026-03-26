@@ -44,7 +44,7 @@ This is a Next.js App Router application with domain-driven architecture:
 
 ### Database Schema
 
-- [ ] T007 Create Supabase migration file: mcp/hinear/migrations/003_performance_tables.sql
+- [ ] T007 Create Supabase migration file: supabase/migrations/003_performance_tables.sql (main application, not MCP server)
 - [ ] T008 Define performance_metrics table with indexes (id, name, value, unit, timestamp, route, environment, metadata)
 - [ ] T009 Define performance_bottlenecks table with constraints (category, severity, status transitions)
 - [ ] T010 Define performance_baselines table with threshold validation
@@ -175,7 +175,7 @@ This is a Next.js App Router application with domain-driven architecture:
 
 #### Database Query Optimization
 
-- [ ] T072 [P] [US2] Create Supabase migration for indexes: mcp/hinear/migrations/003_query_indexes.sql
+- [ ] T072 [P] [US2] Create Supabase migration for indexes: supabase/migrations/003_query_indexes.sql (main application, not MCP server)
 - [ ] T073 [P] [US2] Add index on issues(project_id, status) for project list queries
 - [ ] T074 [P] [US2] Add index on issues(assignee_id) for assignee filter queries
 - [ ] T075 [P] [US2] Add index on issues(created_at DESC) for chronological ordering
@@ -316,8 +316,18 @@ This is a Next.js App Router application with domain-driven architecture:
 - [ ] T156 Validate quickstart.md checklist items are complete
 - [ ] T157 Run bundle analysis one final time: ANALYZE=true pnpm build
 - [ ] T158 Verify bundle size targets are met (<200KB initial, <100KB per route chunk)
-- [ ] T159 Run Lighthouse CI and verify performance budgets pass
-- [ ] T160 Document any remaining performance debt for future iterations
+- [ ] T159 [P] Verify PWA installability after bundle optimizations (test PWA manifest loads, service worker activates, app is installable)
+- [ ] T160 Run Lighthouse CI and verify performance budgets pass
+- [ ] T161 Document any remaining performance debt for future iterations
+- [ ] T162 Verify biome.json configuration correctly ignores specs directory from linting (T006 verification - confirm configuration is correct)
+
+### Edge Cases Validation
+
+- [ ] T161 [P] Verify profiling overhead doesn't significantly impact performance (acceptance: profiling adds <5% overhead for sampled sessions)
+- [ ] T162 [P] Document handling strategy for third-party service performance issues (Supabase, external APIs) - add fallback/degradation behavior to quickstart.md
+- [ ] T163 [P] Verify concurrent user load scenarios are handled (acceptance: database indexes support expected concurrent users; add load testing to validation)
+- [ ] T164 [P] Add environment-specific profiling configuration (development: verbose profiling, production: 1-5% sampling only)
+- [ ] T165 [P] Create validation checklist for breaking changes from optimizations (verify no functionality regressions after performance changes)
 
 ---
 
@@ -477,13 +487,13 @@ With multiple developers:
 
 ## Task Summary
 
-- **Total Tasks**: 160
+- **Total Tasks**: 165 (updated from 160)
 - **Setup Phase**: 6 tasks (T001-T006)
 - **Foundational Phase**: 32 tasks (T007-T038)
 - **User Story 1 (Profiling)**: 30 tasks (T039-T068)
 - **User Story 2 (Optimization)**: 37 tasks (T069-T105)
 - **User Story 3 (Monitoring)**: 41 tasks (T106-T146)
-- **Polish Phase**: 14 tasks (T147-T160)
+- **Polish Phase**: 19 tasks (T147-T165, includes edge cases validation and verification tasks)
 
 **Parallel Opportunities**: 80+ tasks marked with [P] can be executed in parallel with appropriate team size
 
