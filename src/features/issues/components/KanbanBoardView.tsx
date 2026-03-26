@@ -19,6 +19,7 @@ import {
   type IssuePriority,
   type IssueStatus,
 } from "@/specs/issue-detail.contract";
+import { useIssueSelection } from "../hooks/useIssueSelection";
 import { useIssues } from "../hooks/useIssues";
 import { KanbanBoard } from "./KanbanBoard";
 
@@ -323,6 +324,7 @@ export function KanbanBoardView({
     React.useState<IssueStatus | null>(null);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = React.useState(false);
   const [isNavigatingFilters, startFilterTransition] = React.useTransition();
+  const [selectionMode, setSelectionMode] = React.useState(false);
   const [searchInput, setSearchInput] = React.useState(
     getSingleQueryValue(searchParams, "search")
   );
@@ -331,6 +333,13 @@ export function KanbanBoardView({
   const assigneeFilter = getSingleQueryValue(searchParams, "assigneeIds");
   const labelFilter = getSingleQueryValue(searchParams, "labelIds");
   const deferredSearchInput = React.useDeferredValue(searchInput);
+  const {
+    clearSelection,
+    selectIssue,
+    selectedCount,
+    selectedIssueIds,
+    toggleIssue,
+  } = useIssueSelection();
   const { issues, loading, error, mutationError, updateIssue } = useIssues(
     projectId,
     {
@@ -358,6 +367,24 @@ export function KanbanBoardView({
     filters.labelId,
   ].filter(Boolean).length;
   const shouldShowFilters = isFilterPanelOpen || activeFilterCount > 0;
+
+  const handleSelectionModeToggle = React.useCallback(() => {
+    setSelectionMode((current) => {
+      if (current) {
+        clearSelection();
+      }
+
+      return !current;
+    });
+  }, [clearSelection]);
+
+  const handleMobileEnterSelectionMode = React.useCallback(
+    (issueId: string) => {
+      setSelectionMode(true);
+      selectIssue(issueId);
+    },
+    [selectIssue]
+  );
 
   // Show toast on mutation error
   React.useEffect(() => {
@@ -512,6 +539,25 @@ export function KanbanBoardView({
             projectOptions={projectOptions}
           />
           <MobileIssueFilterChips />
+          {selectionMode ? (
+            <div className="flex items-center justify-between rounded-[14px] border border-[#C7D2FE] bg-[#EEF2FF] px-4 py-3">
+              <div className="flex flex-col gap-1">
+                <p className="text-[12px] font-[var(--app-font-weight-600)] text-[#4338CA]">
+                  Selection mode
+                </p>
+                <p className="text-[12px] text-[#4F46E5]">
+                  {selectedCount} issue{selectedCount === 1 ? "" : "s"} selected
+                </p>
+              </div>
+              <button
+                className="rounded-[10px] border border-[#A5B4FC] bg-white px-3 py-2 text-[12px] font-[var(--app-font-weight-600)] text-[#4338CA]"
+                onClick={handleSelectionModeToggle}
+                type="button"
+              >
+                Done
+              </button>
+            </div>
+          ) : null}
           {shouldShowFilters ? (
             <BoardFilters
               activeFilterCount={activeFilterCount}
@@ -537,7 +583,11 @@ export function KanbanBoardView({
           ) : null}
           <MobileIssueSections
             issues={filteredIssues}
+            onEnterSelectionMode={handleMobileEnterSelectionMode}
+            onToggleSelect={toggleIssue}
             projectId={projectId}
+            selectedIssueIds={selectedIssueIds}
+            selectionMode={selectionMode}
             statuses={[
               "Triage",
               "In Progress",
@@ -560,7 +610,10 @@ export function KanbanBoardView({
           onCreateClick={() => setCreateModalStatus("Triage")}
           onFilterClick={() => setIsFilterPanelOpen((open) => !open)}
           onSearchValueChange={(event) => setSearchInput(event.target.value)}
+          onSelectionModeToggle={handleSelectionModeToggle}
           searchValue={searchInput}
+          selectedCount={selectedCount}
+          selectionMode={selectionMode}
           subtitle="Focused view of triage, build, and shipped work."
           title="Issue board"
         />
@@ -592,9 +645,17 @@ export function KanbanBoardView({
             assigneeOptions={assigneeOptions ?? []}
             issues={filteredIssues}
             onAddCard={setCreateModalStatus}
+            onClearSelection={() => {
+              clearSelection();
+              setSelectionMode(false);
+            }}
             onNavigate={(href) => router.push(href)}
             onIssueUpdate={updateIssue}
+            onToggleSelect={toggleIssue}
             projectId={projectId}
+            selectedCount={selectedCount}
+            selectedIssueIds={selectedIssueIds}
+            selectionMode={selectionMode}
           />
         </div>
       </div>

@@ -113,6 +113,9 @@ const meta = {
   },
   args: {
     issues,
+    onClearSelection: () => {
+      console.log("[Storybook] Clear selection");
+    },
     projectId: "test-project",
     onNavigate: (href: string) => {
       console.log(`[Storybook] Navigate to: ${href}`);
@@ -133,6 +136,12 @@ const meta = {
     onAddCard: (status) => {
       console.log(`[Storybook] Add card to status:`, status);
     },
+    onToggleSelect: (issueId: string) => {
+      console.log("[Storybook] Toggle selection:", issueId);
+    },
+    selectedCount: 0,
+    selectedIssueIds: [],
+    selectionMode: false,
   },
 } satisfies Meta<typeof KanbanBoard>;
 

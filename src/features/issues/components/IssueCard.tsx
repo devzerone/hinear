@@ -2,7 +2,6 @@
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check } from "lucide-react";
 import { BoardIssueCard } from "@/components/organisms/BoardIssueCard";
 import { getIssuePath } from "@/features/projects/lib/project-routes";
 import { cn } from "@/lib/utils";
@@ -15,6 +14,7 @@ interface IssueCardProps {
   preview?: boolean;
   onNavigate?: (href: string) => void;
   isSelected?: boolean;
+  selectionMode?: boolean;
   onToggleSelect?: (issueId: string) => void;
 }
 
@@ -25,6 +25,7 @@ export function IssueCard({
   preview = false,
   onNavigate,
   isSelected = false,
+  selectionMode = false,
   onToggleSelect,
 }: IssueCardProps) {
   const {
@@ -36,7 +37,7 @@ export function IssueCard({
     transition,
   } = useSortable({
     id: issue.id,
-    disabled: preview,
+    disabled: preview || selectionMode,
     data: {
       type: "issue",
       issue,
@@ -51,8 +52,7 @@ export function IssueCard({
     }
   };
 
-  const handleCheckboxClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleSelectToggle = () => {
     onToggleSelect?.(issue.id);
   };
 
@@ -63,31 +63,18 @@ export function IssueCard({
           "relative transition-[transform,opacity,box-shadow] duration-200 ease-out",
           preview
             ? "pointer-events-none rotate-[1.5deg] scale-[1.02] cursor-grabbing shadow-[0_24px_48px_rgba(15,23,42,0.18)]"
-            : "cursor-grab active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]",
+            : selectionMode
+              ? "cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]"
+              : "cursor-grab active:cursor-grabbing hover:-translate-y-0.5 hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]",
           isDragging ? "scale-[0.985] opacity-20 shadow-none" : "opacity-100",
-          isSelected && "ring-2 ring-[#6366F1] ring-offset-2"
+          isSelected &&
+            "rounded-[12px] border border-[#6366F1] shadow-[0_0_0_1px_#6366F1]"
         )}
         style={{
           transform: CSS.Transform.toString(transform),
           transition,
         }}
       >
-        {/* Checkbox */}
-        {!preview && onToggleSelect && (
-          <button
-            className="absolute left-2 top-2 z-10 flex h-5 w-5 items-center justify-center rounded border border-[var(--app-color-border-soft)] bg-white transition-colors hover:border-[#6366F1]"
-            onClick={handleCheckboxClick}
-            type="button"
-            aria-label={isSelected ? "Deselect issue" : "Select issue"}
-          >
-            {isSelected && (
-              <div className="flex h-3.5 w-3.5 items-center justify-center rounded bg-[#6366F1]">
-                <Check className="h-2.5 w-2.5 text-white" />
-              </div>
-            )}
-          </button>
-        )}
-
         <BoardIssueCard
           assignee={issue.assignee}
           className={cn("touch-none", className)}
@@ -98,22 +85,37 @@ export function IssueCard({
           issueTitle={issue.title}
           labels={issue.labels}
           onClick={
-            !preview && detailHref && onNavigate ? handleNavigate : undefined
+            preview
+              ? undefined
+              : selectionMode
+                ? handleSelectToggle
+                : detailHref && onNavigate
+                  ? handleNavigate
+                  : undefined
           }
           onKeyDown={
-            !preview && detailHref && onNavigate
-              ? (event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    handleNavigate();
+            preview
+              ? undefined
+              : selectionMode
+                ? (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      handleSelectToggle();
+                    }
                   }
-                }
-              : undefined
+                : detailHref && onNavigate
+                  ? (event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        handleNavigate();
+                      }
+                    }
+                  : undefined
           }
           priority={issue.priority}
           ref={setNodeRef}
-          {...attributes}
-          {...listeners}
+          {...(!selectionMode ? attributes : {})}
+          {...(!selectionMode ? listeners : {})}
         />
       </div>
     </div>

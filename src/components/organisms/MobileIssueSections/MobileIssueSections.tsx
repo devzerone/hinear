@@ -1,4 +1,6 @@
 import Link from "next/link";
+import type { MouseEvent, PointerEvent } from "react";
+import { useRef } from "react";
 
 import { IssueIdentifierBadge } from "@/features/issues/components/IssueIdentifierBadge";
 import { IssueLabelChip } from "@/features/issues/components/IssueLabelChip";
@@ -11,21 +13,81 @@ const MOBILE_SECTION_ORDER: IssueStatus[] = ["Triage", "In Progress", "Done"];
 
 export interface MobileIssueSectionsProps {
   issues: Issue[];
+  onEnterSelectionMode?: (issueId: string) => void;
+  onToggleSelect?: (issueId: string) => void;
   projectId: string;
+  selectedIssueIds?: string[];
+  selectionMode?: boolean;
   statuses?: IssueStatus[];
 }
 
 function MobileIssueCard({
   issue,
+  isSelected = false,
+  onEnterSelectionMode,
+  onToggleSelect,
   projectId,
+  selectionMode = false,
 }: {
   issue: Issue;
+  isSelected?: boolean;
+  onEnterSelectionMode?: (issueId: string) => void;
+  onToggleSelect?: (issueId: string) => void;
   projectId: string;
+  selectionMode?: boolean;
 }) {
+  const longPressTimeoutRef = useRef<number | null>(null);
+  const longPressTriggeredRef = useRef(false);
+
+  const clearLongPress = () => {
+    if (longPressTimeoutRef.current !== null) {
+      window.clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+  };
+
+  const handlePointerDown = (event: PointerEvent<HTMLAnchorElement>) => {
+    if (selectionMode || event.pointerType === "mouse") {
+      return;
+    }
+
+    longPressTriggeredRef.current = false;
+    longPressTimeoutRef.current = window.setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      onEnterSelectionMode?.(issue.id);
+    }, 360);
+  };
+
+  const handlePointerUp = () => {
+    clearLongPress();
+  };
+
+  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (selectionMode) {
+      event.preventDefault();
+      onToggleSelect?.(issue.id);
+      return;
+    }
+
+    if (longPressTriggeredRef.current) {
+      event.preventDefault();
+      longPressTriggeredRef.current = false;
+    }
+  };
+
   return (
     <Link
-      className="flex w-full flex-col gap-[10px] rounded-[14px] border border-[var(--app-color-border-soft)] bg-[var(--app-color-white)] p-3 transition-colors hover:bg-[#F7F8FA]"
+      className={`flex w-full flex-col gap-[10px] rounded-[14px] border bg-[var(--app-color-white)] p-3 transition-colors hover:bg-[#F7F8FA] ${
+        isSelected
+          ? "border-[#6366F1] shadow-[0_0_0_1px_#6366F1]"
+          : "border-[var(--app-color-border-soft)]"
+      }`}
       href={getIssuePath(projectId, issue.id, { view: "full" })}
+      onClick={handleClick}
+      onPointerCancel={handlePointerUp}
+      onPointerDown={handlePointerDown}
+      onPointerLeave={handlePointerUp}
+      onPointerUp={handlePointerUp}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -52,7 +114,11 @@ function MobileIssueCard({
 
 export function MobileIssueSections({
   issues,
+  onEnterSelectionMode,
+  onToggleSelect,
   projectId,
+  selectedIssueIds = [],
+  selectionMode = false,
   statuses = MOBILE_SECTION_ORDER,
 }: MobileIssueSectionsProps) {
   const sections = statuses
@@ -85,8 +151,12 @@ export function MobileIssueSections({
             {section.issues.map((issue) => (
               <MobileIssueCard
                 issue={issue}
+                isSelected={selectedIssueIds.includes(issue.id)}
                 key={issue.id}
+                onEnterSelectionMode={onEnterSelectionMode}
+                onToggleSelect={onToggleSelect}
                 projectId={projectId}
+                selectionMode={selectionMode}
               />
             ))}
           </div>

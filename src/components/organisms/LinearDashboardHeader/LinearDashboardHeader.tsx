@@ -27,7 +27,10 @@ export interface LinearDashboardHeaderProps
   onFilterClick?: React.ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
   onCreateClick?: React.ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
   onSearchValueChange?: React.ChangeEventHandler<HTMLInputElement>;
+  onSelectionModeToggle?: React.ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
   searchValue?: string;
+  selectedCount?: number;
+  selectionMode?: boolean;
   subtitle?: string;
   title?: string;
 }
@@ -43,7 +46,10 @@ export function LinearDashboardHeader({
   onFilterClick,
   onCreateClick,
   onSearchValueChange,
+  onSelectionModeToggle,
   searchValue = "",
+  selectedCount = 0,
+  selectionMode = false,
   subtitle = "Focused view of triage, build, and shipped work.",
   title = "Issue Board",
   ...props
@@ -89,6 +95,17 @@ export function LinearDashboardHeader({
               activeFilterCount > 0 ? `Filter ${activeFilterCount}` : "Filter"
             }
             onClick={onFilterClick}
+            variant="filter"
+          />
+          <HeaderAction
+            label={
+              selectionMode
+                ? selectedCount > 0
+                  ? `Done (${selectedCount})`
+                  : "Done"
+                : "Select"
+            }
+            onClick={onSelectionModeToggle}
             variant="filter"
           />
           <HeaderAction

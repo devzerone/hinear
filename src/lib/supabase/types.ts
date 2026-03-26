@@ -158,6 +158,7 @@ export interface Database {
           role: Database["public"]["Enums"]["project_member_role"];
           status: Database["public"]["Enums"]["invitation_status"];
           token: string;
+          updated_at: string;
         };
         Insert: {
           accepted_by?: string | null;
@@ -170,6 +171,7 @@ export interface Database {
           role?: Database["public"]["Enums"]["project_member_role"];
           status?: Database["public"]["Enums"]["invitation_status"];
           token: string;
+          updated_at?: string;
         };
         Update: Partial<
           Database["public"]["Tables"]["project_invitations"]["Insert"]

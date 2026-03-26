@@ -16,7 +16,6 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 import { useEffect, useMemo, useState } from "react";
 import type { Issue, IssueStatus } from "@/specs/issue-detail.contract";
-import { useIssueSelection } from "../hooks/useIssueSelection";
 import { BatchActionBar } from "./BatchActionBar";
 import { IssueCard } from "./IssueCard";
 import { KanbanColumn } from "./KanbanColumn";
@@ -47,6 +46,11 @@ interface KanbanBoardProps {
     label: string;
     value: string;
   }>;
+  onClearSelection: () => void;
+  onToggleSelect: (issueId: string) => void;
+  selectedCount: number;
+  selectedIssueIds: string[];
+  selectionMode: boolean;
 }
 
 function mergeIssuesPreservingOrder(previous: Issue[], next: Issue[]): Issue[] {
@@ -87,18 +91,15 @@ export function KanbanBoard({
   projectId,
   onNavigate,
   assigneeOptions = [],
+  onClearSelection,
+  onToggleSelect,
+  selectedCount,
+  selectedIssueIds,
+  selectionMode,
 }: KanbanBoardProps) {
   const [activeIssue, setActiveIssue] = useState<Issue | null>(null);
   const [mounted, setMounted] = useState(false);
   const [orderedIssues, setOrderedIssues] = useState(issues);
-
-  const {
-    isSelected,
-    selectedCount,
-    selectedIssueIds,
-    toggleIssue,
-    clearSelection,
-  } = useIssueSelection();
 
   useEffect(() => {
     setOrderedIssues((current) => mergeIssuesPreservingOrder(current, issues));
@@ -165,6 +166,9 @@ export function KanbanBoard({
   };
 
   const handleDragStart = (event: DragStartEvent) => {
+    if (selectionMode) {
+      return;
+    }
     const issue = findIssueById(event.active.id as string);
     if (issue) {
       setActiveIssue(issue);
@@ -271,6 +275,7 @@ export function KanbanBoard({
               status={status}
               issues={getIssuesByStatus(status)}
               onNavigate={onNavigate}
+              selectionMode={selectionMode}
             />
           ))}
         </div>
@@ -287,7 +292,7 @@ export function KanbanBoard({
           projectId={projectId}
           selectedCount={selectedCount}
           selectedIssueIds={selectedIssueIds}
-          onClearSelection={clearSelection}
+          onClearSelection={onClearSelection}
         />
       )}
 
@@ -309,8 +314,9 @@ export function KanbanBoard({
               status={status}
               issues={getIssuesByStatus(status)}
               onNavigate={onNavigate}
+              selectionMode={selectionMode}
               selectedIssueIds={selectedIssueIds}
-              onToggleSelect={toggleIssue}
+              onToggleSelect={onToggleSelect}
             />
           ))}
         </div>

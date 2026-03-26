@@ -20,6 +20,7 @@ interface KanbanColumnProps {
   issues: Issue[];
   onNavigate?: (href: string) => void;
   selectedIssueIds?: string[];
+  selectionMode?: boolean;
   onToggleSelect?: (issueId: string) => void;
 }
 
@@ -41,6 +42,7 @@ export function KanbanColumn({
   issues,
   onNavigate,
   selectedIssueIds = [],
+  selectionMode = false,
   onToggleSelect,
 }: KanbanColumnProps) {
   const { isOver, setNodeRef } = useDroppable({
@@ -83,6 +85,7 @@ export function KanbanColumn({
                 isSelected={selectedIssueIds.includes(issue.id)}
                 key={issue.id}
                 onToggleSelect={onToggleSelect}
+                selectionMode={selectionMode}
                 projectId={projectId}
                 onNavigate={onNavigate}
               />
