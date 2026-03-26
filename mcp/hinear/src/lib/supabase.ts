@@ -1,7 +1,12 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { McpSession } from "./auth.js";
 import { readEnv } from "./env.js";
 
-export function createMcpSupabaseClient(accessToken?: string): SupabaseClient {
+export type McpSupabaseClient = SupabaseClient;
+
+export function createMcpSupabaseClient(
+  accessToken?: string
+): McpSupabaseClient {
   const env = readEnv();
 
   if (!env.supabaseUrl || !env.supabaseAnonKey) {
@@ -25,7 +30,7 @@ export function createMcpSupabaseClient(accessToken?: string): SupabaseClient {
   });
 }
 
-export function createMcpServiceRoleSupabaseClient(): SupabaseClient {
+export function createMcpServiceRoleSupabaseClient(): McpSupabaseClient {
   const env = readEnv();
 
   if (!env.supabaseUrl || !env.supabaseServiceRoleKey) {
@@ -40,4 +45,18 @@ export function createMcpServiceRoleSupabaseClient(): SupabaseClient {
       persistSession: false,
     },
   });
+}
+
+export function createMcpActorSupabaseClient(
+  session: McpSession
+): McpSupabaseClient {
+  if (session.accessToken) {
+    return createMcpSupabaseClient(session.accessToken);
+  }
+
+  if (session.userId) {
+    return createMcpServiceRoleSupabaseClient();
+  }
+
+  return createMcpSupabaseClient();
 }

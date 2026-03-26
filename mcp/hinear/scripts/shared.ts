@@ -6,6 +6,11 @@ export const MCP_ENV_FILE = path.resolve(
   "mcp/hinear/.env.local"
 );
 
+export const ROOT_ENV_FILE = path.resolve(
+  "/home/choiho/zerone/hinear",
+  ".env.local"
+);
+
 export function readEnvFile(filePath: string) {
   if (!fs.existsSync(filePath)) {
     return new Map<string, string>();

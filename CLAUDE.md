@@ -66,3 +66,11 @@ Copy `.env.example` to `.env.local` and configure:
 ## Design System
 
 UI design is based on `pen/Hinear.pen` file created with Pen design tool. This file contains Issue Create Page, Sidebar, and overall layout structure. Extract design tokens (colors, fonts, spacing, component structure) from this file when implementing React components. See `docs/issue-detail/overview.md` and `specs/issue-detail.md` for design integration details.
+
+## Active Technologies
+- TypeScript 5.x (002-mcp-phase2-features)
+- Supabase PostgreSQL (already configured) (002-mcp-phase2-features)
+- TypeScript 5.x + Next.js 16.2.0 (App Router), React 19.2.4, Supabase (PostgreSQL), @tanstack/react-query 5.95.2 (003-performance-audit)
+
+## Recent Changes
+- 002-mcp-phase2-features: Added TypeScript 5.x

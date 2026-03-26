@@ -15,6 +15,10 @@
       "!public/workbox-*.js",
       "!public/worker-*.js",
       "!public/fallback-*.js"
+    ],
+    "ignore": [
+      "specs/**/*.ts",
+      "specs/**/*.md"
     ]
   },
   "formatter": {
@@ -22,7 +26,12 @@
     "indentStyle": "space"
   },
   "linter": {
-    "enabled": true
+    "enabled": true,
+    "rules": {
+      "suspicious": {
+        "noExplicitAny": "off"
+      }
+    }
   },
   "javascript": {
     "formatter": {
