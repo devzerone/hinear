@@ -1,5 +1,5 @@
 import { resolveSession } from "../lib/auth.js";
-import { createMcpSupabaseClient } from "../lib/supabase.js";
+import { createMcpActorSupabaseClient } from "../lib/supabase.js";
 import type { AddCommentInput } from "../schemas/comment.js";
 
 function sanitizeCommentBody(body: string) {
@@ -11,7 +11,7 @@ function sanitizeCommentBody(body: string) {
 
 async function requireActor() {
   const session = resolveSession();
-  const supabase = createMcpSupabaseClient(session.accessToken ?? undefined);
+  const supabase = createMcpActorSupabaseClient(session);
 
   if (session.userId) {
     return {

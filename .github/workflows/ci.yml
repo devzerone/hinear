@@ -45,3 +45,51 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  mcp-smoke:
+    name: MCP Smoke
+    runs-on: ubuntu-latest
+    if: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' && secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY != '' && secrets.SUPABASE_SERVICE_ROLE_KEY != '' && secrets.HINEAR_MCP_EMAIL != '' }}
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      APP_ORIGIN: ${{ vars.APP_ORIGIN || 'http://localhost:3000' }}
+      HINEAR_MCP_EMAIL: ${{ secrets.HINEAR_MCP_EMAIL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Configure Hinear MCP login
+        run: pnpm mcp:hinear:login --email "$HINEAR_MCP_EMAIL" --non-interactive
+
+      - name: MCP Typecheck
+        run: pnpm mcp:hinear:typecheck
+
+      - name: MCP Read Smoke
+        run: pnpm mcp:hinear:smoke
+
+      - name: Debug MCP config keys
+        if: failure()
+        run: |
+          echo "mcp/hinear/.env.local keys:"
+          if [ -f mcp/hinear/.env.local ]; then
+            cut -d= -f1 mcp/hinear/.env.local
+          else
+            echo "missing"
+          fi

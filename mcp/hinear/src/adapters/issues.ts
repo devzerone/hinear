@@ -1,5 +1,4 @@
 import { resolveSession } from "../lib/auth.js";
-import { notImplemented } from "../lib/errors.js";
 import {
   mapHinearPriorityToMcpPriority,
   mapHinearStatusToMcpStatus,
@@ -7,8 +6,9 @@ import {
   mapMcpStatusToHinearStatus,
 } from "../lib/hinear-mappers.js";
 import {
+  createMcpActorSupabaseClient,
   createMcpServiceRoleSupabaseClient,
-  createMcpSupabaseClient,
+  type McpSupabaseClient,
 } from "../lib/supabase.js";
 import type {
   CreateIssueInput,
@@ -75,7 +75,7 @@ type ActivityLogRow = {
 
 async function requireActor() {
   const session = resolveSession();
-  const supabase = createMcpSupabaseClient(session.accessToken ?? undefined);
+  const supabase = createMcpActorSupabaseClient(session);
 
   if (session.userId) {
     return {
@@ -104,7 +104,7 @@ async function requireActor() {
 async function assertProjectAccess(
   projectId: string,
   actorId: string,
-  supabase: ReturnType<typeof createMcpSupabaseClient>
+  supabase: McpSupabaseClient
 ) {
   const { data, error } = await supabase
     .from("project_members")
@@ -123,7 +123,7 @@ async function assertProjectAccess(
 }
 
 async function listLabelsByIssueIds(
-  supabase: ReturnType<typeof createMcpSupabaseClient>,
+  supabase: McpSupabaseClient,
   projectId: string,
   issueIds: string[]
 ) {
@@ -178,7 +178,7 @@ async function listLabelsByIssueIds(
 }
 
 async function listProfilesByIds(
-  supabase: ReturnType<typeof createMcpSupabaseClient>,
+  supabase: McpSupabaseClient,
   userIds: string[]
 ) {
   const uniqueIds = [...new Set(userIds.filter(Boolean))];

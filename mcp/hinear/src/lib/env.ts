@@ -1,6 +1,7 @@
 export type HinearMcpEnv = {
   accessToken: string | null;
   appOrigin: string | null;
+  githubToken: string | null;
   supabaseAnonKey: string | null;
   supabaseServiceRoleKey: string | null;
   supabaseUrl: string | null;
@@ -16,6 +17,7 @@ export function readEnv(): HinearMcpEnv {
       process.env.APP_ORIGIN?.trim() ||
       process.env.NEXT_PUBLIC_APP_ORIGIN?.trim() ||
       null,
+    githubToken: process.env.GITHUB_TOKEN?.trim() || null,
     supabaseAnonKey:
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
       process.env.SUPABASE_ANON_KEY?.trim() ||

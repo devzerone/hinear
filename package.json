@@ -10,6 +10,7 @@
     "mcp:hinear:build": "pnpm --filter @hinear/mcp build",
     "mcp:hinear:typecheck": "pnpm --filter @hinear/mcp typecheck",
     "mcp:hinear:login": "tsx mcp/hinear/scripts/login.ts",
+    "mcp:hinear:smoke": "pnpm --filter @hinear/mcp smoke",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",

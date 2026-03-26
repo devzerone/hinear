@@ -1,11 +1,19 @@
 import { resolveSession } from "../lib/auth.js";
-import { createMcpSupabaseClient } from "../lib/supabase.js";
+import { createMcpActorSupabaseClient } from "../lib/supabase.js";
 import type { ListProjectsInput } from "../schemas/project.js";
 
 type ProjectMembershipRow = {
   project_id: string;
   role: string;
   projects:
+    | {
+        id: string;
+        key: string;
+        name: string;
+        type: string;
+        created_at: string;
+        updated_at: string;
+      }
     | {
         id: string;
         key: string;
@@ -25,12 +33,16 @@ function getFirstProject(projects: ProjectMembershipRow["projects"]): {
   created_at: string;
   updated_at: string;
 } | null {
-  return Array.isArray(projects) ? (projects[0] ?? null) : null;
+  if (Array.isArray(projects)) {
+    return projects[0] ?? null;
+  }
+
+  return projects ?? null;
 }
 
 export async function listProjects(input: ListProjectsInput) {
   const session = resolveSession();
-  const supabase = createMcpSupabaseClient(session.accessToken ?? undefined);
+  const supabase = createMcpActorSupabaseClient(session);
 
   let actorId = session.userId;
 

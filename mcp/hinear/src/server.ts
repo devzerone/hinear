@@ -3,11 +3,23 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { resolveSession } from "./lib/auth.js";
 import { readEnv } from "./lib/env.js";
 import { registerAddCommentTool } from "./tools/add-comment.js";
+import { registerBatchUpdateIssuesTool } from "./tools/batch-update-issues.js";
+import { registerCreateGitHubBranchTool } from "./tools/create-github-branch.js";
 import { registerCreateIssueTool } from "./tools/create-issue.js";
+import { registerCreateLabelTool } from "./tools/create-label.js";
+import { registerDeleteLabelTool } from "./tools/delete-label.js";
 import { registerGetIssueDetailTool } from "./tools/get-issue-detail.js";
+import { registerInviteMemberTool } from "./tools/invite-member.js";
+import { registerLinkGitHubIssueTool } from "./tools/link-github-issue.js";
+import { registerLinkGitHubPRTool } from "./tools/link-github-pr.js";
+import { registerListLabelsTool } from "./tools/list-labels.js";
+import { registerListMembersTool } from "./tools/list-members.js";
 import { registerListProjectsTool } from "./tools/list-projects.js";
+import { registerRemoveMemberTool } from "./tools/remove-member.js";
 import { registerSearchIssuesTool } from "./tools/search-issues.js";
 import { registerUpdateIssueStatusTool } from "./tools/update-issue-status.js";
+import { registerUpdateLabelTool } from "./tools/update-label.js";
+import { registerUpdateMemberRoleTool } from "./tools/update-member-role.js";
 
 export function createServer() {
   const env = readEnv();
@@ -15,7 +27,7 @@ export function createServer() {
 
   const server = new McpServer({
     name: "hinear",
-    version: "0.1.0",
+    version: "0.2.0",
   });
 
   registerListProjectsTool(server);
@@ -24,6 +36,18 @@ export function createServer() {
   registerCreateIssueTool(server);
   registerUpdateIssueStatusTool(server);
   registerAddCommentTool(server);
+  registerListLabelsTool(server);
+  registerCreateLabelTool(server);
+  registerUpdateLabelTool(server);
+  registerDeleteLabelTool(server);
+  registerBatchUpdateIssuesTool(server);
+  registerListMembersTool(server);
+  registerInviteMemberTool(server);
+  registerUpdateMemberRoleTool(server);
+  registerRemoveMemberTool(server);
+  registerCreateGitHubBranchTool(server);
+  registerLinkGitHubIssueTool(server);
+  registerLinkGitHubPRTool(server);
 
   server.tool(
     "hinear_mcp_status",
@@ -49,6 +73,18 @@ export function createServer() {
                 "create_issue",
                 "update_issue_status",
                 "add_comment",
+                "list_labels",
+                "create_label",
+                "update_label",
+                "delete_label",
+                "batch_update_issues",
+                "list_members",
+                "invite_member",
+                "update_member_role",
+                "remove_member",
+                "create_github_branch",
+                "link_github_issue",
+                "link_github_pr",
               ],
               scaffoldedTools: [],
               note: "The Hinear MCP MVP is connected and ready for local use once auth and Supabase env are configured.",

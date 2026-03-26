@@ -57,3 +57,9 @@ storybook-static
 *:Zone.Identifier
 react-query-test-final.png
 public/src/
+
+# MCP specific
+mcp/hinear/.env.local
+mcp/hinear/dist/
+mcp/hinear/*.tsbuildinfo
+
