@@ -92,3 +92,25 @@ Research findings are captured in [research.md](/home/choiho/zerone/hinear/specs
 ## Complexity Tracking
 
 No constitutional violations or exceptional complexity justifications are required at planning time.
+
+## Implementation Summary (2026-03-27)
+
+- Kept `ci.yml` as canonical PR baseline and preserved stable `Verify` check naming.
+- Added lightweight guardrail jobs in `ci.yml`:
+  - `Workflow Governance` for workflow hygiene and placeholder detection.
+  - `Dependency Risk` for manifest/lockfile consistency and version-pin hygiene.
+- Preserved `MCP Smoke` as an optional secrets-gated job with predictable skip behavior.
+- Replaced placeholder-heavy `performance.yml` with truthful optional diagnostics (`workflow_dispatch` + weekly schedule).
+- Updated repository and feature documentation to clarify required vs optional checks, ownership, and failure response.
+
+## Decision Trace
+
+1. Required baseline remains in one canonical workflow (`ci.yml`) to minimize required-check drift.
+2. Placeholder performance automation was retired in favor of real diagnostics.
+3. Guardrails were intentionally lightweight to improve signal without over-expanding CI scope.
+4. Secret-dependent checks remain non-required to preserve fork/external contribution flow.
+
+## Next-Step Notes
+
+- After one green cycle, optionally promote `Workflow Governance` and `Dependency Risk` to explicit branch-protection required checks if not already configured.
+- Keep performance diagnostics optional until a stricter, team-owned performance budget policy is adopted.

@@ -56,3 +56,26 @@
 - `decision` must be one of the allowed values
 - `impact_on_branch_protection` is required for any subject that currently participates in PR checks
 - `validation_needed` must reference at least one verification activity before `status` becomes `verified`
+
+## Implemented Instances (2026-03-27)
+
+### Workflow Inventory Items
+
+| name | file_path | required_for_merge | execution_mode | current_signal_quality | owner |
+|---|---|---|---|---|---|
+| Verify | `.github/workflows/ci.yml` | true | always-run | high-signal | Maintainers |
+| Workflow Governance | `.github/workflows/ci.yml` | true (recommended) | always-run | high-signal | Maintainers |
+| Dependency Risk | `.github/workflows/ci.yml` | true (recommended) | always-run | high-signal | Maintainers |
+| MCP Smoke | `.github/workflows/ci.yml` | false | conditional (secrets-gated) | high-signal | Maintainers |
+| Performance Diagnostics | `.github/workflows/performance.yml` | false | manual + scheduled | high-signal | Maintainers |
+
+### Guardrail Policy (Final)
+
+- `required_checks`: `Verify`, `Workflow Governance`, `Dependency Risk`
+- `optional_checks`: `MCP Smoke`, `Performance Diagnostics`
+- `skip_conditions`:
+  - `MCP Smoke`: any required secret missing
+  - `Performance Diagnostics`: none (no secrets required)
+- `failure_handling`:
+  - required checks: merge-blocking, fix before merge
+  - optional checks: investigate and track follow-up without branch-protection blocking

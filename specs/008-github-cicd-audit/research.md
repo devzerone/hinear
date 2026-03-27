@@ -64,3 +64,51 @@
 **Alternatives considered**:
 - Rely only on inline YAML comments: rejected because required-check policy spans multiple workflows and branch-protection intent is easier to review in a single artifact.
 - Store the policy only in a pull request description: rejected because it would not persist as repository knowledge.
+
+## Baseline Inventory (Recorded 2026-03-27)
+
+### Workflows Under Audit
+
+| Subject | File | Trigger | Classification | Branch Protection Position |
+|---|---|---|---|---|
+| CI / Verify | `.github/workflows/ci.yml` | `pull_request`, `push` | Keep (required baseline) | Required |
+| CI / Workflow Governance | `.github/workflows/ci.yml` | `pull_request`, `push` | Add (guardrail) | Recommended required |
+| CI / Dependency Risk | `.github/workflows/ci.yml` | `pull_request`, `push` | Add (guardrail) | Recommended required |
+| CI / MCP Smoke | `.github/workflows/ci.yml` | `pull_request`, `push` + secrets gate | Keep (conditional) | Optional |
+| Performance Diagnostics | `.github/workflows/performance.yml` | `workflow_dispatch`, weekly schedule | Replace prior placeholder workflow | Optional |
+
+### Baseline Validation Commands
+
+- `pnpm lint`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`
+
+## Final Decision Records (Implemented)
+
+### `.github/workflows/ci.yml`
+
+- **Decision**: Keep and refine
+- **Reason**: Maintains canonical verification path and now includes lightweight governance/dependency guardrails.
+- **Impact on branch protection**: `Verify` remains stable required baseline. `Workflow Governance` and `Dependency Risk` can be promoted to required checks safely.
+- **Status**: Implemented
+
+### `.github/workflows/performance.yml`
+
+- **Decision**: Replace
+- **Reason**: Placeholder logic removed; replaced with truthful optional diagnostics.
+- **Impact on branch protection**: No required check dependency. Safe for optional/manual and scheduled monitoring use.
+- **Status**: Implemented
+
+## Branch-Protection Implications (Reviewed 2026-03-27)
+
+- Stable required-check candidate names: `Verify`, `Workflow Governance`, `Dependency Risk`
+- Optional checks: `MCP Smoke`, `Performance Diagnostics`
+- Secret-dependent behavior:
+  - `MCP Smoke` skips when required secrets are absent
+  - no secret dependency for `Performance Diagnostics`
+
+## Follow-up Notes
+
+- If branch protection currently requires only `Verify`, maintainers may optionally add `Workflow Governance` and `Dependency Risk` as required after one green cycle.
+- Keep `MCP Smoke` non-required to avoid blocking forks and secretless contributor contexts.

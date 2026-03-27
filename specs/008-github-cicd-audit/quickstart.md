@@ -31,7 +31,7 @@ Use the audit outputs in `research.md` and `github-workflow-governance.md` to:
 
 Before opening a pull request, verify:
 
-- required workflow and job names are stable
+- required workflow and job names are stable (`Verify`, `Workflow Governance`, `Dependency Risk`)
 - optional secret-dependent jobs are not treated as universally required
 - no workflow reports placeholder success as if it were a real guardrail
 
@@ -48,6 +48,20 @@ pnpm build
 
 If the implementation introduces additional workflow validation tooling, run it here as part of the final verification step.
 
+## 5.1 Workflow Guardrail Review Checklist
+
+Run a quick structural review:
+
+```bash
+sed -n '1,260p' .github/workflows/ci.yml
+sed -n '1,260p' .github/workflows/performance.yml
+```
+
+Confirm:
+
+- `ci.yml` contains `Verify`, `Workflow Governance`, `Dependency Risk`, and optional `MCP Smoke`
+- `performance.yml` is optional (`workflow_dispatch` + schedule) and contains no placeholder success logic
+
 ## 5. Document the final policy
 
 Update repository documentation so reviewers can answer these questions quickly:
@@ -56,3 +70,11 @@ Update repository documentation so reviewers can answer these questions quickly:
 - Which checks are optional or secrets-gated?
 - What replaced or removed any prior placeholder workflow?
 - What should a maintainer do when a workflow fails?
+
+## 6. Validation Outcomes (2026-03-27)
+
+- `pnpm lint`: PASS
+- `pnpm typecheck`: PASS
+- `pnpm test`: PASS
+- `pnpm build`: PASS
+- Workflow review (`ci.yml`, `performance.yml`): PASS (stable required-check names and branch-protection-safe trigger design confirmed)

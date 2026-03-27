@@ -63,3 +63,30 @@ Any workflow governance change must verify:
 - Repository validation commands still pass locally where applicable
 - Secret-dependent jobs skip or run as designed
 - Documentation reflects the final required vs optional workflow set
+
+## Maintainer Ownership and Check Policy (2026-03-27)
+
+### Owners
+
+- Primary owner: repository maintainers for `.github/workflows/*`
+- Secondary owner: feature maintainers touching `README.md` and `docs/*` CI/CD sections
+
+### Required Check Names
+
+- `Verify`
+- `Workflow Governance`
+- `Dependency Risk`
+
+### Optional Check Names
+
+- `MCP Smoke` (secrets-gated)
+- `Performance Diagnostics` (manual/scheduled diagnostics)
+
+## Failure Response Guide
+
+- `Verify`: treat as merge-blocking; fix lint/typecheck/test/build failures before merge.
+- `Workflow Governance`: remove placeholder workflow logic, restore stable required check naming, and rerun CI.
+- `Dependency Risk`: update lockfiles with manifest changes and avoid wildcard/latest pins.
+- `MCP Smoke` skipped: expected when secrets are unavailable; no action required.
+- `MCP Smoke` failed with secrets present: investigate MCP auth/env setup and rerun.
+- `Performance Diagnostics` failed: investigate as performance debt; track follow-up in docs/issues without blocking merge by default.

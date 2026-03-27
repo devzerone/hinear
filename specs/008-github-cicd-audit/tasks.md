@@ -17,10 +17,10 @@
 
 **Purpose**: Capture the current repository CI/CD baseline and prepare feature artifacts for implementation
 
-- [ ] T001 Record the current GitHub Actions inventory and baseline commands in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/research.md`
-- [ ] T002 [P] Review the current required/optional workflow descriptions in `/home/choiho/zerone/hinear/README.md`
-- [ ] T003 [P] Review MCP smoke job setup notes in `/home/choiho/zerone/hinear/docs/hinear-mcp-implementation.md`
-- [ ] T004 [P] Review performance workflow documentation references in `/home/choiho/zerone/hinear/docs/performance-optimizations.md`
+- [X] T001 Record the current GitHub Actions inventory and baseline commands in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/research.md`
+- [X] T002 [P] Review the current required/optional workflow descriptions in `/home/choiho/zerone/hinear/README.md`
+- [X] T003 [P] Review MCP smoke job setup notes in `/home/choiho/zerone/hinear/docs/hinear-mcp-implementation.md`
+- [X] T004 [P] Review performance workflow documentation references in `/home/choiho/zerone/hinear/docs/performance-optimizations.md`
 
 ---
 
@@ -30,9 +30,9 @@
 
 **⚠️ CRITICAL**: No user story work should begin until this phase is complete
 
-- [ ] T005 Consolidate the workflow inventory, guardrail policy, and decision record definitions in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/data-model.md`
-- [ ] T006 Define required-vs-optional workflow governance and retirement rules in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/contracts/github-workflow-governance.md`
-- [ ] T007 Map branch-protection expectations, validation commands, and rollout checkpoints in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/quickstart.md`
+- [X] T005 Consolidate the workflow inventory, guardrail policy, and decision record definitions in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/data-model.md`
+- [X] T006 Define required-vs-optional workflow governance and retirement rules in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/contracts/github-workflow-governance.md`
+- [X] T007 Map branch-protection expectations, validation commands, and rollout checkpoints in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/quickstart.md`
 
 **Checkpoint**: Governance baseline is fixed and user story work can proceed safely
 
@@ -46,12 +46,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] Audit `.github/workflows/ci.yml` and capture its keep/adjust decision in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/research.md`
-- [ ] T009 [P] [US1] Audit `.github/workflows/performance.yml` and capture its remove/replace decision in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/research.md`
-- [ ] T010 [US1] Refine the required baseline verification workflow in `/home/choiho/zerone/hinear/.github/workflows/ci.yml` so it remains the canonical PR guardrail
-- [ ] T011 [US1] Remove placeholder-only steps or retire the obsolete workflow in `/home/choiho/zerone/hinear/.github/workflows/performance.yml`
-- [ ] T012 [US1] Align CI/CD overview text with the final kept workflow set in `/home/choiho/zerone/hinear/README.md`
-- [ ] T013 [US1] Update the implementation and rationale notes for the retired or replaced performance automation in `/home/choiho/zerone/hinear/docs/performance-optimizations.md`
+- [X] T008 [P] [US1] Audit `.github/workflows/ci.yml` and capture its keep/adjust decision in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/research.md`
+- [X] T009 [P] [US1] Audit `.github/workflows/performance.yml` and capture its remove/replace decision in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/research.md`
+- [X] T010 [US1] Refine the required baseline verification workflow in `/home/choiho/zerone/hinear/.github/workflows/ci.yml` so it remains the canonical PR guardrail
+- [X] T011 [US1] Remove placeholder-only steps or retire the obsolete workflow in `/home/choiho/zerone/hinear/.github/workflows/performance.yml`
+- [X] T012 [US1] Align CI/CD overview text with the final kept workflow set in `/home/choiho/zerone/hinear/README.md`
+- [X] T013 [US1] Update the implementation and rationale notes for the retired or replaced performance automation in `/home/choiho/zerone/hinear/docs/performance-optimizations.md`
 
 **Checkpoint**: Low-value workflow logic is gone or replaced, and the repository keeps a truthful MVP CI baseline
 
@@ -65,12 +65,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T014 [P] [US2] Add or refine workflow-governance validation for GitHub Actions definitions in `/home/choiho/zerone/hinear/.github/workflows/ci.yml`
-- [ ] T015 [P] [US2] Add or refine dependency-risk review coverage in `/home/choiho/zerone/hinear/.github/workflows/ci.yml`
-- [ ] T016 [US2] Normalize Node.js and pnpm setup, cache behavior, and check naming across `/home/choiho/zerone/hinear/.github/workflows/ci.yml` and `/home/choiho/zerone/hinear/.github/workflows/performance.yml`
-- [ ] T017 [US2] Preserve predictable skip behavior and non-required positioning for secret-gated MCP smoke checks in `/home/choiho/zerone/hinear/.github/workflows/ci.yml`
-- [ ] T018 [US2] Record the final required and optional guardrail policy in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/contracts/github-workflow-governance.md`
-- [ ] T019 [US2] Update quick verification steps for the added guardrails in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/quickstart.md`
+- [X] T014 [P] [US2] Add or refine workflow-governance validation for GitHub Actions definitions in `/home/choiho/zerone/hinear/.github/workflows/ci.yml`
+- [X] T015 [P] [US2] Add or refine dependency-risk review coverage in `/home/choiho/zerone/hinear/.github/workflows/ci.yml`
+- [X] T016 [US2] Normalize Node.js and pnpm setup, cache behavior, and check naming across `/home/choiho/zerone/hinear/.github/workflows/ci.yml` and `/home/choiho/zerone/hinear/.github/workflows/performance.yml`
+- [X] T017 [US2] Preserve predictable skip behavior and non-required positioning for secret-gated MCP smoke checks in `/home/choiho/zerone/hinear/.github/workflows/ci.yml`
+- [X] T018 [US2] Record the final required and optional guardrail policy in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/contracts/github-workflow-governance.md`
+- [X] T019 [US2] Update quick verification steps for the added guardrails in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/quickstart.md`
 
 **Checkpoint**: Required and optional guardrails are explicit, lightweight, and branch-protection safe
 
@@ -84,11 +84,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T020 [P] [US3] Update the main CI/CD explanation and workflow intent in `/home/choiho/zerone/hinear/README.md`
-- [ ] T021 [P] [US3] Update MCP CI documentation to reflect final secret-gated behavior in `/home/choiho/zerone/hinear/docs/hinear-mcp-implementation.md`
-- [ ] T022 [P] [US3] Update performance documentation to reflect the final monitoring workflow state in `/home/choiho/zerone/hinear/docs/performance-optimizations.md`
-- [ ] T023 [US3] Add maintainer-facing ownership, required-check, and failure-response notes to `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/contracts/github-workflow-governance.md`
-- [ ] T024 [US3] Capture final workflow decisions, branch-protection implications, and follow-up notes in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/research.md`
+- [X] T020 [P] [US3] Update the main CI/CD explanation and workflow intent in `/home/choiho/zerone/hinear/README.md`
+- [X] T021 [P] [US3] Update MCP CI documentation to reflect final secret-gated behavior in `/home/choiho/zerone/hinear/docs/hinear-mcp-implementation.md`
+- [X] T022 [P] [US3] Update performance documentation to reflect the final monitoring workflow state in `/home/choiho/zerone/hinear/docs/performance-optimizations.md`
+- [X] T023 [US3] Add maintainer-facing ownership, required-check, and failure-response notes to `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/contracts/github-workflow-governance.md`
+- [X] T024 [US3] Capture final workflow decisions, branch-protection implications, and follow-up notes in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/research.md`
 
 **Checkpoint**: CI/CD intent and operating guidance are understandable from repository artifacts alone
 
@@ -98,9 +98,9 @@
 
 **Purpose**: Final verification and cleanup across all stories
 
-- [ ] T025 [P] Run repository validation commands and capture outcomes for this feature in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/quickstart.md`
-- [ ] T026 [P] Review `.github/workflows/ci.yml` and `.github/workflows/performance.yml` for stable required-check names and branch-protection-safe triggers in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/research.md`
-- [ ] T027 Finalize the implementation summary, decision trace, and next-step notes in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/plan.md`
+- [X] T025 [P] Run repository validation commands and capture outcomes for this feature in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/quickstart.md`
+- [X] T026 [P] Review `.github/workflows/ci.yml` and `.github/workflows/performance.yml` for stable required-check names and branch-protection-safe triggers in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/research.md`
+- [X] T027 Finalize the implementation summary, decision trace, and next-step notes in `/home/choiho/zerone/hinear/specs/008-github-cicd-audit/plan.md`
 
 ---
 
