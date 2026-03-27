@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useFormStatus } from "react-dom";
 
 import { Avatar } from "@/components/atoms/Avatar";
 import { Button } from "@/components/atoms/Button";
@@ -33,6 +34,7 @@ interface ProjectAccessCardProps {
   invitations?: ProjectInvitationSummary[];
   members?: ProjectMemberSummary[];
   projectType?: ProjectType;
+  sectionId?: string;
 }
 
 interface InvitationAcceptCardProps {
@@ -87,6 +89,60 @@ function formatInvitationStatus(status: ProjectInvitationStatus) {
   if (status === "revoked") return "Revoked";
   if (status === "expired") return "Expired";
   return "Pending";
+}
+
+function InviteMemberSubmitButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      className="w-full justify-center md:w-auto"
+      disabled={disabled || pending}
+      type="submit"
+    >
+      {pending ? "Sending invite..." : "Send invite"}
+    </Button>
+  );
+}
+
+function InvitationActionButton({
+  disabled,
+  pendingLabel,
+  readyLabel,
+  variant,
+}: {
+  disabled: boolean;
+  pendingLabel: string;
+  readyLabel: string;
+  variant: "ghost" | "secondary";
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      disabled={disabled || pending}
+      size="sm"
+      type="submit"
+      variant={variant}
+    >
+      {pending ? pendingLabel : readyLabel}
+    </Button>
+  );
+}
+
+function MemberActionButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      disabled={disabled || pending}
+      size="sm"
+      type="submit"
+      variant="ghost"
+    >
+      {pending ? "Removing..." : "Remove"}
+    </Button>
+  );
 }
 
 function ProjectTypeOption({
@@ -266,6 +322,7 @@ export function ProjectAccessCard({
   noticeMessage,
   members = defaultMembers,
   projectType = "team",
+  sectionId = "project-settings-access",
 }: ProjectAccessCardProps) {
   const [memberQuery, setMemberQuery] = useState("");
   const currentMember = members.find((member) => member.isCurrentUser);
@@ -292,7 +349,10 @@ export function ProjectAccessCard({
   });
 
   return (
-    <section className="rounded-[18px] border border-[#E6E8EC] bg-white p-6">
+    <section
+      className="scroll-mt-24 rounded-[18px] border border-[#E6E8EC] bg-white p-6"
+      id={sectionId}
+    >
       <div className="flex flex-col gap-[18px]">
         <div className="flex flex-col gap-2">
           <h2 className="text-[18px] font-bold text-[#111318]">Access</h2>
@@ -339,13 +399,7 @@ export function ProjectAccessCard({
               >
                 View pending invitations
               </Link>
-              <Button
-                className="w-full justify-center md:w-auto"
-                disabled={!canInviteMembers}
-                type="submit"
-              >
-                Send invite
-              </Button>
+              <InviteMemberSubmitButton disabled={!canInviteMembers} />
             </div>
           </form>
         </div>
@@ -413,9 +467,12 @@ export function ProjectAccessCard({
                       type="hidden"
                       value="resend"
                     />
-                    <Button size="sm" type="submit" variant="secondary">
-                      Resend
-                    </Button>
+                    <InvitationActionButton
+                      disabled={!invitationAction}
+                      pendingLabel="Resending..."
+                      readyLabel="Resend"
+                      variant="secondary"
+                    />
                   </form>
                   <form action={invitationAction}>
                     <input
@@ -436,9 +493,12 @@ export function ProjectAccessCard({
                       type="hidden"
                       value="revoke"
                     />
-                    <Button size="sm" type="submit" variant="ghost">
-                      Revoke
-                    </Button>
+                    <InvitationActionButton
+                      disabled={!invitationAction}
+                      pendingLabel="Revoking..."
+                      readyLabel="Revoke"
+                      variant="ghost"
+                    />
                   </form>
                 </div>
               </div>
@@ -454,7 +514,10 @@ export function ProjectAccessCard({
           )}
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div
+          className="scroll-mt-24 flex flex-col gap-3"
+          id="project-settings-members"
+        >
           <h3 className="text-[16px] font-bold text-[#111318]">
             Current team ({members.length})
           </h3>
@@ -518,9 +581,7 @@ export function ProjectAccessCard({
                         type="hidden"
                         value={member.name}
                       />
-                      <Button size="sm" type="submit" variant="ghost">
-                        Remove
-                      </Button>
+                      <MemberActionButton disabled={!memberAction} />
                     </form>
                   ) : member.canRemove ? (
                     <span className="inline-flex min-h-10 items-center justify-center rounded-[10px] border border-[#E5E7EB] bg-white px-3 text-[12px] font-semibold text-[#9CA3AF]">

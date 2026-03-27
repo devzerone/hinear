@@ -11,6 +11,7 @@ import type { GitHubIntegrationSettings } from "@/features/projects/contracts";
 interface GitHubIntegrationSettingsCardProps {
   projectId: string;
   initialSettings?: GitHubIntegrationSettings;
+  sectionId?: string;
 }
 
 interface Repository {
@@ -29,6 +30,7 @@ interface ConnectRepositoryErrorResponse {
 export function GitHubIntegrationSettingsCard({
   projectId,
   initialSettings,
+  sectionId = "project-settings-danger-zone",
 }: GitHubIntegrationSettingsCardProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -219,7 +221,10 @@ export function GitHubIntegrationSettingsCard({
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-[16px] border border-[#E6E8EC] bg-white p-5">
+    <div
+      className="scroll-mt-24 flex flex-col gap-4 rounded-[16px] border border-[#E6E8EC] bg-white p-5"
+      id={sectionId}
+    >
       <div className="flex flex-col gap-1">
         <h2 className="text-[16px] font-semibold text-[#111318]">
           GitHub Integration
@@ -257,6 +262,11 @@ export function GitHubIntegrationSettingsCard({
           >
             {saving ? "Disconnecting..." : "Disconnect Repository"}
           </button>
+          <p className="text-xs leading-5 text-[#6B7280]">
+            {saving
+              ? "GitHub integration is updating. Duplicate disconnect requests stay blocked until this request finishes."
+              : "Disconnect only if you want to stop branch and pull request automation for this project."}
+          </p>
         </div>
       ) : readOnlyMessage ? (
         <div className="rounded-lg border border-[#E6E8EC] bg-[#FCFCFD] p-4">
@@ -301,12 +311,20 @@ export function GitHubIntegrationSettingsCard({
             </Button>
             <Button
               onClick={() => setShowRepoSelector(false)}
+              disabled={saving}
               size="sm"
               variant="secondary"
             >
               Cancel
             </Button>
           </div>
+          <p className="text-xs leading-5 text-[#6B7280]">
+            {saving
+              ? "Repository connection is in progress. Wait for the result before retrying."
+              : !selectedRepo
+                ? "Select a repository before enabling the connect action. If nothing appears, reconnect GitHub first."
+                : "Connecting this repository enables issue branch and pull request helpers for the current project."}
+          </p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">

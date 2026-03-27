@@ -1,3 +1,5 @@
+import { useFormStatus } from "react-dom";
+
 import { Button } from "@/components/atoms/Button";
 import { Field } from "@/components/atoms/Field";
 import type { Project } from "@/features/projects/types";
@@ -8,7 +10,18 @@ interface ProjectMetadataFormProps {
   noticeMessage?: string;
   pendingInvitationCount?: number;
   project: Project;
+  sectionId?: string;
   teamMemberCount?: number;
+}
+
+function ProjectDetailsSubmitButton({ disabled }: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button disabled={disabled || pending} type="submit">
+      {pending ? "Saving project details..." : "Save project details"}
+    </Button>
+  );
 }
 
 export function ProjectMetadataForm({
@@ -17,6 +30,7 @@ export function ProjectMetadataForm({
   noticeMessage,
   pendingInvitationCount = 0,
   project,
+  sectionId = "project-settings-general",
   teamMemberCount = 0,
 }: ProjectMetadataFormProps) {
   const hasTeamRestrictions =
@@ -24,7 +38,10 @@ export function ProjectMetadataForm({
     (teamMemberCount > 1 || pendingInvitationCount > 0);
 
   return (
-    <section className="rounded-[20px] border border-[var(--app-color-border-muted)] bg-white p-6">
+    <section
+      className="scroll-mt-24 rounded-[20px] border border-[var(--app-color-border-muted)] bg-white p-6"
+      id={sectionId}
+    >
       <div className="flex flex-col gap-5">
         <div className="space-y-2">
           <h2 className="text-[18px] leading-[1.1] font-[var(--app-font-weight-700)] text-[var(--app-color-ink-900)]">
@@ -133,10 +150,18 @@ export function ProjectMetadataForm({
 
           <div className="flex items-center justify-between gap-3 border-t border-[#E6E8EC] pt-4 lg:col-span-2">
             <p className="text-[12px] leading-5 font-medium text-[#6B7280]">
-              Project key changes affect future issue identifiers.
+              {!action
+                ? "Connect the settings save action before enabling project detail updates."
+                : "Project key changes affect future issue identifiers."}
             </p>
-            <Button type="submit">Save project details</Button>
+            <ProjectDetailsSubmitButton disabled={!action} />
           </div>
+          {action ? (
+            <p className="text-right text-[12px] leading-5 font-medium text-[#6B7280] lg:col-span-2">
+              Saving keeps the current screen in place and refreshes the general
+              settings result message here.
+            </p>
+          ) : null}
         </form>
 
         <section className="rounded-[20px] border border-[#FECACA] bg-[#FFF7F7] p-5">

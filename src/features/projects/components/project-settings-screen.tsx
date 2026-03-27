@@ -2,15 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { getButtonClassName } from "@/components/atoms/Button";
+import { Button, getButtonClassName } from "@/components/atoms/Button";
 import { SidebarDesktop } from "@/components/organisms/SidebarDesktop";
 import { GitHubIntegrationSettingsCard } from "@/features/projects/components/github-integration-settings-card";
 import { ProjectMetadataForm } from "@/features/projects/components/project-metadata-form";
 import { ProjectAccessCard } from "@/features/projects/components/project-operation-cards";
 import {
+  getProjectFilteredPath,
   getProjectOverviewPath,
   getProjectPath,
   getProjectSettingsPath,
@@ -37,6 +38,17 @@ interface ProjectSettingsScreenProps {
   projects?: Project[];
 }
 
+const SETTINGS_SECTION_ITEMS = [
+  { href: "#project-settings-general", key: "general", label: "General" },
+  { href: "#project-settings-access", key: "access", label: "Access" },
+  { href: "#project-settings-members", key: "members", label: "Members" },
+  {
+    href: "#project-settings-danger-zone",
+    key: "danger-zone",
+    label: "Danger zone",
+  },
+] as const;
+
 export function ProjectSettingsScreen({
   detailsAction,
   inviteAction,
@@ -54,9 +66,28 @@ export function ProjectSettingsScreen({
 }: ProjectSettingsScreenProps) {
   const router = useRouter();
   const [isDeleting, startDeletingTransition] = useTransition();
+  const [activeSection, setActiveSection] = useState("general");
 
   const projectSubtitle =
     project.type === "team" ? "Team Project" : "Personal Project";
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const updateActiveSection = () => {
+      const hash = window.location.hash.replace(/^#/, "");
+      const nextItem = SETTINGS_SECTION_ITEMS.find(
+        (item) => item.href === `#${hash}`
+      );
+      setActiveSection(nextItem?.key ?? "general");
+    };
+
+    updateActiveSection();
+    window.addEventListener("hashchange", updateActiveSection);
+    return () => window.removeEventListener("hashchange", updateActiveSection);
+  }, []);
 
   const handleDeleteProject = () => {
     if (
@@ -110,7 +141,16 @@ export function ProjectSettingsScreen({
           dashboardHref={getProjectOverviewPath(project.id)}
           dashboardLabel="Overview"
           navigationHrefs={{
+            active: getProjectFilteredPath(project.id, {
+              statuses: ["In Progress"],
+            }),
+            backlog: getProjectFilteredPath(project.id, {
+              statuses: ["Backlog"],
+            }),
             issues: getProjectPath(project.id),
+            triage: getProjectFilteredPath(project.id, {
+              statuses: ["Triage"],
+            }),
           }}
           projectSubtitle={projectSubtitle}
           projectTitle={project.name}
@@ -150,22 +190,24 @@ export function ProjectSettingsScreen({
             <div className="flex flex-col gap-6 xl:flex-row">
               <aside className="w-full shrink-0 rounded-[20px] border border-[#E6E8EC] bg-white p-4 xl:w-[240px]">
                 <div className="flex flex-col gap-1">
-                  {["General", "Access", "Members", "Danger zone"].map(
-                    (item) => (
-                      <button
-                        className={[
-                          "rounded-[12px] px-3 py-[10px] text-left text-[13px] font-[var(--app-font-weight-500)]",
-                          item === "General"
-                            ? "bg-[#F5F7FF] text-[#111318]"
-                            : "text-[#6B7280]",
-                        ].join(" ")}
-                        key={item}
-                        type="button"
-                      >
-                        {item}
-                      </button>
-                    )
-                  )}
+                  {SETTINGS_SECTION_ITEMS.map((item) => (
+                    <Link
+                      aria-current={
+                        activeSection === item.key ? "location" : undefined
+                      }
+                      className={[
+                        "rounded-[12px] px-3 py-[10px] text-left text-[13px] font-[var(--app-font-weight-500)]",
+                        activeSection === item.key
+                          ? "bg-[#F5F7FF] text-[#111318]"
+                          : "text-[#6B7280]",
+                      ].join(" ")}
+                      href={item.href}
+                      key={item.key}
+                      onClick={() => setActiveSection(item.key)}
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
                 </div>
               </aside>
 
@@ -176,6 +218,7 @@ export function ProjectSettingsScreen({
                   noticeMessage={projectNoticeMessage}
                   pendingInvitationCount={invitations?.length ?? 0}
                   project={project}
+                  sectionId="project-settings-general"
                   teamMemberCount={members?.length ?? 0}
                 />
 
@@ -189,10 +232,17 @@ export function ProjectSettingsScreen({
                   members={members}
                   noticeMessage={inviteNoticeMessage}
                   projectType={project.type}
+                  sectionId="project-settings-access"
                 />
-                <GitHubIntegrationSettingsCard projectId={project.id} />
+                <GitHubIntegrationSettingsCard
+                  projectId={project.id}
+                  sectionId="project-settings-danger-zone"
+                />
 
-                <div className="rounded-[20px] border border-red-200 bg-red-50 p-6">
+                <div
+                  className="scroll-mt-24 rounded-[20px] border border-red-200 bg-red-50 p-6"
+                  id="project-settings-danger-zone-panel"
+                >
                   <h2 className="text-[18px] font-bold text-red-900">
                     Danger Zone
                   </h2>
@@ -200,14 +250,20 @@ export function ProjectSettingsScreen({
                     Once you delete a project, there is no going back. Please be
                     certain.
                   </p>
-                  <button
-                    className="mt-4 rounded-[10px] bg-red-600 px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  <Button
+                    className="mt-4 bg-red-600 font-semibold text-white hover:bg-red-700"
                     disabled={isDeleting}
+                    loading={isDeleting}
                     onClick={handleDeleteProject}
-                    type="button"
+                    variant="primary"
                   >
-                    {isDeleting ? "Deleting..." : "Delete this project"}
-                  </button>
+                    Delete this project
+                  </Button>
+                  <p className="mt-3 text-[12px] font-medium text-red-700">
+                    {isDeleting
+                      ? "Deleting blocks duplicate requests until the project result is known."
+                      : "Deletion results appear as a toast so you can keep working without extra banners."}
+                  </p>
                 </div>
 
                 <div className="flex justify-end">
