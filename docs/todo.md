@@ -60,6 +60,14 @@
   - project hook import/query cache surface
   - standalone typecheck route graph handling
 - 현재 남은 위험은 release-blocking build 오류가 아니라 webpack asset size warning 쪽이다.
+- 로그인된 `overview` 실측 기준 Performance API 평균:
+  - `responseEnd 1213.6ms`
+  - `domInteractive 1231.2ms`
+  - `DOMContentLoaded 1231.9ms`
+  - `load 1233.6ms`
+  - `FCP 554.7ms`
+  - `LCP 1296ms`
+  - best/worst 편차가 있어 `LCP` 스파이크 원인 확인 여지는 남아 있다.
 
 - 원격 Supabase 프로젝트 URL: `https://pmyrrckkiomjwjqntymr.supabase.co`
 - `codex mcp login supabase`는 완료됐지만, 현재 세션의 MCP tool은 여전히 `Auth required`를 반환했다
