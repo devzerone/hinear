@@ -2,9 +2,9 @@ import { inviteProjectMemberAction } from "@/features/projects/actions/invite-pr
 import { manageProjectInvitationAction } from "@/features/projects/actions/manage-project-invitation-action";
 import { manageProjectMemberAction } from "@/features/projects/actions/manage-project-member-action";
 import { updateProjectAction } from "@/features/projects/actions/update-project-action";
-import { ProjectSettingsScreen } from "@/features/projects/components/project-settings-screen";
 import { loadProjectWorkspace } from "@/features/projects/lib/load-project-workspace";
 import { getProjectSettingsPath } from "@/features/projects/lib/project-routes";
+import { ProjectSettingsScreen } from "@/features/projects/settings/screens/project-settings-screen";
 
 interface ProjectSettingsPageProps {
   params: Promise<{

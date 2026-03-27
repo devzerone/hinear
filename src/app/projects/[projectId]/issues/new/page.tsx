@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getButtonClassName } from "@/components/atoms/Button";
 import { CreateIssueTabletModal } from "@/components/organisms/CreateIssueTabletModal";
 import { createIssueAction } from "@/features/issues/actions/create-issue-action";
-import { MobileIssueCreateScreen } from "@/features/issues/components/mobile-issue-create-screen";
+import { MobileIssueCreateScreen } from "@/features/issues/create/screens/mobile-issue-create-screen";
 import { loadProjectWorkspace } from "@/features/projects/lib/load-project-workspace";
 import {
   getProjectIssueCreatePath,

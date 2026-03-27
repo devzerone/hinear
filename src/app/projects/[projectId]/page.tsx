@@ -3,9 +3,9 @@ import { createIssueAction } from "@/features/issues/actions/create-issue-action
 import { inviteProjectMemberAction } from "@/features/projects/actions/invite-project-member-action";
 import { manageProjectInvitationAction } from "@/features/projects/actions/manage-project-invitation-action";
 import { manageProjectMemberAction } from "@/features/projects/actions/manage-project-member-action";
-import { ProjectWorkspaceScreen } from "@/features/projects/components/project-workspace-screen";
 import { loadProjectWorkspace } from "@/features/projects/lib/load-project-workspace";
 import { getProjectPath } from "@/features/projects/lib/project-routes";
+import { ProjectWorkspaceScreen } from "@/features/projects/workspace/screens/project-workspace-screen";
 
 interface ProjectPageProps {
   params: Promise<{

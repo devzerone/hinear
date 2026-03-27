@@ -2,10 +2,10 @@ import Link from "next/link";
 import type { MouseEvent, PointerEvent } from "react";
 import { useRef } from "react";
 
-import { IssueIdentifierBadge } from "@/features/issues/components/IssueIdentifierBadge";
-import { IssueLabelChip } from "@/features/issues/components/IssueLabelChip";
-import { IssuePriorityBadge } from "@/features/issues/components/IssuePriorityBadge";
-import { IssueStatusBadge } from "@/features/issues/components/IssueStatusBadge";
+import { IssueIdentifierBadge } from "@/features/issues/detail/components/IssueIdentifierBadge";
+import { IssuePriorityBadge } from "@/features/issues/detail/components/IssuePriorityBadge";
+import { IssueStatusBadge } from "@/features/issues/detail/components/IssueStatusBadge";
+import { IssueLabelChip } from "@/features/issues/shared/components/IssueLabelChip";
 import { getIssuePath } from "@/features/projects/lib/project-routes";
 import type { Issue, IssueStatus } from "@/specs/issue-detail.contract";
 

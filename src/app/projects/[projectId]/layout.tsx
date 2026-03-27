@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { buildAuthPath } from "@/features/auth/lib/next-path";
-import { ProjectModalProvider } from "@/features/projects/components/project-modal-provider";
+import { ProjectModalProvider } from "@/features/projects/shared/providers/project-modal-provider";
 import { QueryClientProvider } from "@/lib/react-query/query-provider";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
 
