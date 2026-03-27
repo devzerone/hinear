@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -31,7 +31,6 @@ export function GitHubIntegrationSettingsCard({
   initialSettings,
 }: GitHubIntegrationSettingsCardProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [settings, setSettings] = useState<GitHubIntegrationSettings>(
     initialSettings ?? { enabled: false }
@@ -169,6 +168,17 @@ export function GitHubIntegrationSettingsCard({
     }
   }, [projectId]);
 
+  const clearGithubQueryState = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams.toString());
+    nextSearchParams.delete("github");
+    const nextUrl = `${pathname}${nextSearchParams.toString() ? `?${nextSearchParams.toString()}` : ""}`;
+    window.history.replaceState(null, "", nextUrl);
+  }, [pathname, searchParams]);
+
   useEffect(() => {
     const githubState = searchParams.get("github");
 
@@ -177,10 +187,7 @@ export function GitHubIntegrationSettingsCard({
         "GitHub OAuth completed, but no provider token was issued. Check Supabase GitHub provider settings and try again."
       );
 
-      const nextSearchParams = new URLSearchParams(searchParams.toString());
-      nextSearchParams.delete("github");
-      const nextUrl = `${pathname}${nextSearchParams.toString() ? `?${nextSearchParams.toString()}` : ""}`;
-      router.replace(nextUrl);
+      clearGithubQueryState();
       return;
     }
 
@@ -191,11 +198,8 @@ export function GitHubIntegrationSettingsCard({
     setShowRepoSelector(true);
     loadRepositories();
 
-    const nextSearchParams = new URLSearchParams(searchParams.toString());
-    nextSearchParams.delete("github");
-    const nextUrl = `${pathname}${nextSearchParams.toString() ? `?${nextSearchParams.toString()}` : ""}`;
-    router.replace(nextUrl);
-  }, [loadRepositories, pathname, router, searchParams]);
+    clearGithubQueryState();
+  }, [clearGithubQueryState, loadRepositories, searchParams]);
 
   useEffect(() => {
     if (!initialSettings) {

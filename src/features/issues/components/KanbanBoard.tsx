@@ -41,7 +41,8 @@ interface KanbanBoardProps {
     }
   ) => Promise<Issue | undefined> | Issue | undefined;
   projectId?: string;
-  onNavigate?: (href: string) => void;
+  onNavigate?: (issue: Issue) => void;
+  onPrefetch?: (issue: Issue) => void;
   assigneeOptions?: Array<{
     label: string;
     value: string;
@@ -90,6 +91,7 @@ export function KanbanBoard({
   onIssueUpdate,
   projectId,
   onNavigate,
+  onPrefetch,
   assigneeOptions = [],
   onClearSelection,
   onToggleSelect,
@@ -271,6 +273,7 @@ export function KanbanBoard({
             <KanbanColumn
               key={status}
               onAddCard={onAddCard}
+              onPrefetch={onPrefetch}
               projectId={projectId}
               status={status}
               issues={getIssuesByStatus(status)}
@@ -310,6 +313,7 @@ export function KanbanBoard({
               isDragging={activeIssue !== null}
               key={status}
               onAddCard={onAddCard}
+              onPrefetch={onPrefetch}
               projectId={projectId}
               status={status}
               issues={getIssuesByStatus(status)}

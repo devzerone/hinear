@@ -1,8 +1,13 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import {
+  fetchIssueDetail,
+  getCachedIssueDetail,
+} from "@/features/issues/lib/issue-detail-client-cache";
+import { updateIssueDrawerUrl } from "@/features/issues/lib/issue-drawer-url";
 import type { ActivityLogEntry, Issue, Label } from "@/features/issues/types";
 
 const IssueDetailDrawerWithRouter = dynamic(
@@ -29,11 +34,14 @@ interface ModalData {
 }
 
 export function ProjectModalProvider({ projectId }: { projectId: string }) {
-  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const issueId = searchParams.get("issueId");
   const [modalData, setModalData] = useState<ModalData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const closeDrawer = useCallback(() => {
+    updateIssueDrawerUrl(pathname, searchParams, null, "replace");
+  }, [pathname, searchParams]);
 
   // Fetch issue data when issueId changes
   useEffect(() => {
@@ -43,20 +51,26 @@ export function ProjectModalProvider({ projectId }: { projectId: string }) {
     }
 
     const currentIssueId = issueId;
+    const cached = getCachedIssueDetail(projectId, currentIssueId);
+
+    if (cached) {
+      setModalData({
+        activityLog: cached.activityLog,
+        availableLabels: cached.availableLabels,
+        assigneeOptions: [
+          { label: "Unassigned", value: "" },
+          ...cached.assigneeOptions,
+        ],
+        issue: cached.issue,
+        memberNamesById: cached.memberNamesById,
+        projectId,
+        issueId: currentIssueId,
+      });
+    }
 
     async function loadModalData() {
-      setIsLoading(true);
       try {
-        // Use existing API route
-        const response = await fetch(
-          `/api/issues/${currentIssueId}?projectId=${projectId}`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to load issue");
-        }
-
-        const data = await response.json();
+        const data = await fetchIssueDetail(projectId, currentIssueId);
 
         setModalData({
           activityLog: data.activityLog || [],
@@ -72,19 +86,15 @@ export function ProjectModalProvider({ projectId }: { projectId: string }) {
         });
       } catch (error) {
         console.error("Failed to load issue:", error);
-        // Close modal on error
-        router.push(`/projects/${projectId}`);
-      } finally {
-        setIsLoading(false);
+        closeDrawer();
       }
     }
 
     loadModalData();
-  }, [issueId, projectId, router]);
+  }, [closeDrawer, issueId, projectId]);
 
   return (
-    modalData &&
-    !isLoading && (
+    modalData && (
       <IssueDetailDrawerWithRouter
         key={modalData.issueId}
         availableLabels={modalData.availableLabels}
@@ -94,6 +104,7 @@ export function ProjectModalProvider({ projectId }: { projectId: string }) {
         assigneeOptions={modalData.assigneeOptions}
         issue={modalData.issue}
         memberNamesById={modalData.memberNamesById}
+        onClose={closeDrawer}
       />
     )
   );

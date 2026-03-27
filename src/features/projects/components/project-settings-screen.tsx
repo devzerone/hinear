@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 
@@ -51,6 +52,7 @@ export function ProjectSettingsScreen({
   project,
   projects,
 }: ProjectSettingsScreenProps) {
+  const router = useRouter();
   const [isDeleting, startDeletingTransition] = useTransition();
 
   const projectSubtitle =
@@ -86,7 +88,7 @@ export function ProjectSettingsScreen({
 
         // Redirect to projects list after a short delay
         setTimeout(() => {
-          window.location.href = "/projects/overview";
+          router.push("/projects/overview");
         }, 500);
       } catch (error) {
         toast.error(

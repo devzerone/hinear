@@ -118,7 +118,6 @@ export function IssueDetailDrawerScreen({
   const [availableLabels, setAvailableLabels] =
     useState<Label[]>(availableLabelsProp);
   const [now] = useState(() => Date.now());
-  const [isDescriptionEditorOpen, setIsDescriptionEditorOpen] = useState(false);
   const [conflictInfo, setConflictInfo] = useState<{
     currentVersion: number;
     requestedVersion: number;
@@ -423,25 +422,14 @@ export function IssueDetailDrawerScreen({
             </span>
           </div>
 
-          {isDescriptionEditorOpen ||
-          descriptionDraft !== issueState.description ? (
-            <MarkdownEditor
-              issueId={issueState.id}
-              value={descriptionDraft}
-              onChange={setDescriptionDraft}
-              placeholder="이슈에 대한 자세한 설명을 작성해주세요..."
-              minHeight="160px"
-              projectId={issueState.projectId}
-            />
-          ) : (
-            <button
-              className="flex min-h-[120px] w-full items-center justify-center rounded-[12px] border border-dashed border-[#D7DCE5] bg-[#FCFCFD] px-4 py-6 text-[13px] font-medium text-[#6B7280] transition hover:border-[#C7D2FE] hover:text-[#3730A3]"
-              onClick={() => setIsDescriptionEditorOpen(true)}
-              type="button"
-            >
-              Edit description
-            </button>
-          )}
+          <MarkdownEditor
+            issueId={issueState.id}
+            value={descriptionDraft}
+            onChange={setDescriptionDraft}
+            placeholder="이슈에 대한 자세한 설명을 작성해주세요..."
+            minHeight="160px"
+            projectId={issueState.projectId}
+          />
         </section>
 
         <section className="flex flex-col gap-3 rounded-[16px] border border-[#E6E8EC] bg-white p-4">

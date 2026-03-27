@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import { IssueDetailDrawerScreen } from "@/features/issues/components/issue-drawer-screen";
 import type { ActivityLogEntry, Issue, Label } from "@/features/issues/types";
 
@@ -16,6 +15,7 @@ interface IssueDetailDrawerWithRouterProps {
   fullPageHref: string;
   issue: Issue;
   memberNamesById?: Record<string, string>;
+  onClose?: () => void;
 }
 
 export function IssueDetailDrawerWithRouter({
@@ -26,11 +26,10 @@ export function IssueDetailDrawerWithRouter({
   fullPageHref,
   issue,
   memberNamesById,
+  onClose,
 }: IssueDetailDrawerWithRouterProps) {
-  const router = useRouter();
-
   const handleClose = () => {
-    router.push(boardHref);
+    onClose?.();
   };
 
   return (

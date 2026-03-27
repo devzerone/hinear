@@ -3,13 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const navigationMocks = vi.hoisted(() => ({
   pathname: "/projects/project-1/settings",
-  replace: vi.fn(),
   searchParams: new URLSearchParams(),
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => navigationMocks.pathname,
-  useRouter: () => ({ replace: navigationMocks.replace }),
   useSearchParams: () => navigationMocks.searchParams,
 }));
 
@@ -30,8 +28,8 @@ import { GitHubIntegrationSettingsCard } from "@/features/projects/components/gi
 describe("GitHubIntegrationSettingsCard", () => {
   beforeEach(() => {
     navigationMocks.searchParams = new URLSearchParams();
-    navigationMocks.replace.mockReset();
     vi.restoreAllMocks();
+    vi.spyOn(window.history, "replaceState").mockImplementation(() => {});
   });
 
   it("opens repo selector when returned from OAuth with github=select-repo", async () => {
@@ -73,7 +71,9 @@ describe("GitHubIntegrationSettingsCard", () => {
 
     await screen.findByText("Select Repository");
     expect(screen.getByText("zerone/hinear")).toBeInTheDocument();
-    expect(navigationMocks.replace).toHaveBeenCalledWith(
+    expect(window.history.replaceState).toHaveBeenCalledWith(
+      null,
+      "",
       "/projects/project-1/settings?from=oauth"
     );
   });

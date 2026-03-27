@@ -120,8 +120,8 @@ const meta = {
       console.log("[Storybook] Clear selection");
     },
     projectId: "test-project",
-    onNavigate: (href: string) => {
-      console.log(`[Storybook] Navigate to: ${href}`);
+    onNavigate: (issue) => {
+      console.log("[Storybook] Open issue drawer:", issue.id);
     },
     onIssueUpdate: (issueId, updates) => {
       console.log(`[Storybook] Issue update:`, { issueId, updates });
