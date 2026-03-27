@@ -32,6 +32,23 @@
 - issue detail privileged read-path 단순화
 - 오래된 003 문서와 recovered baseline의 전면 동기화
 
+실측 성능 메모 (2026-03-27):
+
+- 측정 대상: `/projects/1a8fb81a-b200-44dc-9099-823a13923f92/overview`
+- 측정 방식: 로그인된 브라우저 세션 기준 Playwright + Performance API 3회 측정
+- 평균:
+  - `responseEnd`: `1213.6ms`
+  - `domInteractive`: `1231.2ms`
+  - `DOMContentLoaded`: `1231.9ms`
+  - `load`: `1233.6ms`
+  - `FCP`: `554.7ms`
+  - `LCP`: `1296ms`
+- 개별 편차:
+  - best: `FCP 456ms`, `LCP 648ms`, `load 592.1ms`
+  - worst: `FCP 628ms`, `LCP 2340ms`, `load 2256.9ms`
+- 해석:
+  - 평소 첫 렌더는 빠른 편이지만, 간헐적으로 `LCP`가 `2s+`까지 튀는 스파이크가 남아 있다.
+
 ## 2026-03-26 Update
 
 이 문서의 오래된 GitHub integration / Supabase MCP 메모는 아래 최신 사실로 덮어쓴다.

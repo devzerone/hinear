@@ -11,6 +11,8 @@ import { Select } from "@/components/atoms/Select/Select";
 import { MobileIssueListAppBar } from "@/components/molecules/MobileIssueListAppBar";
 import { LinearDashboardHeader } from "@/components/organisms/LinearDashboardHeader";
 import { MobileIssueSections } from "@/components/organisms/MobileIssueSections";
+import { prefetchIssueDetail } from "@/features/issues/lib/issue-detail-client-cache";
+import { updateIssueDrawerUrl } from "@/features/issues/lib/issue-drawer-url";
 import { getProjectIssueCreatePath } from "@/features/projects/lib/project-routes";
 import {
   ISSUE_PRIORITIES,
@@ -155,11 +157,67 @@ interface BoardFiltersProps {
   totalCount: number;
 }
 
+function getBoardFilterState(
+  searchParams: ReturnType<typeof useSearchParams>
+): BoardFilterState {
+  return {
+    assigneeId: getSingleQueryValue(searchParams, "assigneeIds"),
+    labelId: getSingleQueryValue(searchParams, "labelIds"),
+    priority: getSingleQueryValue(searchParams, "priorities"),
+    search: getSingleQueryValue(searchParams, "search"),
+    status: getSingleQueryValue(searchParams, "statuses"),
+  };
+}
+
 function getSingleQueryValue(
   searchParams: ReturnType<typeof useSearchParams>,
   key: string
 ) {
   return searchParams.get(key)?.split(",")[0] ?? "";
+}
+
+function setBoardFilterQuery(
+  pathname: string,
+  searchParams: ReturnType<typeof useSearchParams>,
+  filters: BoardFilterState
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const nextParams = new URLSearchParams(searchParams.toString());
+  const entries: Array<[keyof BoardFilterState, string]> = [
+    ["search", filters.search.trim()],
+    ["status", filters.status],
+    ["priority", filters.priority],
+    ["assigneeId", filters.assigneeId],
+    ["labelId", filters.labelId],
+  ];
+
+  const queryKeyMap: Record<keyof BoardFilterState, string> = {
+    assigneeId: "assigneeIds",
+    labelId: "labelIds",
+    priority: "priorities",
+    search: "search",
+    status: "statuses",
+  };
+
+  for (const [key, value] of entries) {
+    if (value) {
+      nextParams.set(queryKeyMap[key], value);
+    } else {
+      nextParams.delete(queryKeyMap[key]);
+    }
+  }
+
+  const nextQuery = nextParams.toString();
+  const nextUrl = nextQuery ? `${pathname}?${nextQuery}` : pathname;
+
+  if (window.location.pathname + window.location.search === nextUrl) {
+    return;
+  }
+
+  window.history.replaceState(null, "", nextUrl);
 }
 
 function getAvailableLabels(issues: Issue[]) {
@@ -336,18 +394,29 @@ export function KanbanBoardView({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const initialFilterState = React.useMemo(
+    () => getBoardFilterState(searchParams),
+    [searchParams]
+  );
   const [createModalStatus, setCreateModalStatus] =
     React.useState<IssueStatus | null>(null);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = React.useState(false);
-  const [isNavigatingFilters, startFilterTransition] = React.useTransition();
   const [selectionMode, setSelectionMode] = React.useState(false);
   const [searchInput, setSearchInput] = React.useState(
-    getSingleQueryValue(searchParams, "search")
+    initialFilterState.search
   );
-  const statusFilter = getSingleQueryValue(searchParams, "statuses");
-  const priorityFilter = getSingleQueryValue(searchParams, "priorities");
-  const assigneeFilter = getSingleQueryValue(searchParams, "assigneeIds");
-  const labelFilter = getSingleQueryValue(searchParams, "labelIds");
+  const [statusFilter, setStatusFilter] = React.useState(
+    initialFilterState.status
+  );
+  const [priorityFilter, setPriorityFilter] = React.useState(
+    initialFilterState.priority
+  );
+  const [assigneeFilter, setAssigneeFilter] = React.useState(
+    initialFilterState.assigneeId
+  );
+  const [labelFilter, setLabelFilter] = React.useState(
+    initialFilterState.labelId
+  );
   const deferredSearchInput = React.useDeferredValue(searchInput);
   const {
     clearSelection,
@@ -356,16 +425,20 @@ export function KanbanBoardView({
     selectedIssueIds,
     toggleIssue,
   } = useIssueSelection();
-  const { issues, loading, error, mutationError, updateIssue } = useIssues(
-    projectId,
-    {
-      assigneeIds: assigneeFilter ? [assigneeFilter] : [],
-      labelIds: labelFilter ? [labelFilter] : [],
-      priorities: priorityFilter ? [priorityFilter as IssuePriority] : [],
-      searchQuery: deferredSearchInput,
-      statuses: statusFilter ? [statusFilter as IssueStatus] : [],
-    }
-  );
+  const {
+    issues,
+    loading,
+    error,
+    isUpdatingIssues,
+    mutationError,
+    updateIssue,
+  } = useIssues(projectId, {
+    assigneeIds: assigneeFilter ? [assigneeFilter] : [],
+    labelIds: labelFilter ? [labelFilter] : [],
+    priorities: priorityFilter ? [priorityFilter as IssuePriority] : [],
+    searchQuery: deferredSearchInput,
+    statuses: statusFilter ? [statusFilter as IssueStatus] : [],
+  });
   const availableLabels = getAvailableLabels(issues);
   const filters: BoardFilterState = {
     assigneeId: assigneeFilter,
@@ -383,6 +456,30 @@ export function KanbanBoardView({
     filters.labelId,
   ].filter(Boolean).length;
   const shouldShowFilters = isFilterPanelOpen || activeFilterCount > 0;
+
+  const openIssueCreateFlow = React.useCallback(() => {
+    if (createIssueAction) {
+      setCreateModalStatus("Triage");
+      return;
+    }
+
+    router.push(getProjectIssueCreatePath(projectId));
+  }, [createIssueAction, projectId, router]);
+
+  const openIssueDrawer = React.useCallback(
+    (issue: Issue) => {
+      prefetchIssueDetail(projectId, issue.id);
+      updateIssueDrawerUrl(pathname, searchParams, issue.id, "push");
+    },
+    [pathname, projectId, searchParams]
+  );
+
+  const prefetchIssueDrawer = React.useCallback(
+    (issue: Issue) => {
+      prefetchIssueDetail(projectId, issue.id);
+    },
+    [projectId]
+  );
 
   const handleSelectionModeToggle = React.useCallback(() => {
     setSelectionMode((current) => {
@@ -410,11 +507,31 @@ export function KanbanBoardView({
   }, [mutationError]);
 
   React.useEffect(() => {
-    const nextSearch = getSingleQueryValue(searchParams, "search");
-    if (nextSearch !== searchInput) {
-      setSearchInput(nextSearch);
+    const nextFilters = getBoardFilterState(searchParams);
+
+    if (nextFilters.search !== searchInput) {
+      setSearchInput(nextFilters.search);
     }
-  }, [searchInput, searchParams]);
+    if (nextFilters.status !== statusFilter) {
+      setStatusFilter(nextFilters.status);
+    }
+    if (nextFilters.priority !== priorityFilter) {
+      setPriorityFilter(nextFilters.priority);
+    }
+    if (nextFilters.assigneeId !== assigneeFilter) {
+      setAssigneeFilter(nextFilters.assigneeId);
+    }
+    if (nextFilters.labelId !== labelFilter) {
+      setLabelFilter(nextFilters.labelId);
+    }
+  }, [
+    assigneeFilter,
+    labelFilter,
+    priorityFilter,
+    searchInput,
+    searchParams,
+    statusFilter,
+  ]);
 
   React.useEffect(() => {
     if (!createModalStatus) {
@@ -432,74 +549,48 @@ export function KanbanBoardView({
   }, [createModalStatus]);
 
   React.useEffect(() => {
-    const nextParams = new URLSearchParams(searchParams.toString());
-    const nextSearch = deferredSearchInput.trim();
-
-    if (nextSearch) {
-      nextParams.set("search", nextSearch);
-    } else {
-      nextParams.delete("search");
-    }
-
-    const currentQuery = searchParams.toString();
-    const nextQuery = nextParams.toString();
-
-    if (currentQuery === nextQuery) {
-      return;
-    }
-
-    startFilterTransition(() => {
-      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
-        scroll: false,
-      });
+    setBoardFilterQuery(pathname, searchParams, {
+      assigneeId: assigneeFilter,
+      labelId: labelFilter,
+      priority: priorityFilter,
+      search: deferredSearchInput,
+      status: statusFilter,
     });
-  }, [deferredSearchInput, pathname, router, searchParams]);
+  }, [
+    assigneeFilter,
+    deferredSearchInput,
+    labelFilter,
+    pathname,
+    priorityFilter,
+    searchParams,
+    statusFilter,
+  ]);
 
   function updateFilterQuery(key: string, value: string) {
-    const nextParams = new URLSearchParams(searchParams.toString());
-
-    if (value) {
-      nextParams.set(key, value);
-    } else {
-      nextParams.delete(key);
+    switch (key) {
+      case "statuses":
+        setStatusFilter(value);
+        break;
+      case "priorities":
+        setPriorityFilter(value);
+        break;
+      case "assigneeIds":
+        setAssigneeFilter(value);
+        break;
+      case "labelIds":
+        setLabelFilter(value);
+        break;
+      default:
+        break;
     }
-
-    const currentQuery = searchParams.toString();
-    const nextQuery = nextParams.toString();
-
-    if (currentQuery === nextQuery) {
-      return;
-    }
-
-    startFilterTransition(() => {
-      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
-        scroll: false,
-      });
-    });
   }
 
   function clearFilters() {
     setSearchInput("");
-
-    const nextParams = new URLSearchParams(searchParams.toString());
-    nextParams.delete("search");
-    nextParams.delete("statuses");
-    nextParams.delete("priorities");
-    nextParams.delete("assigneeIds");
-    nextParams.delete("labelIds");
-
-    const currentQuery = searchParams.toString();
-    const nextQuery = nextParams.toString();
-
-    if (currentQuery === nextQuery) {
-      return;
-    }
-
-    startFilterTransition(() => {
-      router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, {
-        scroll: false,
-      });
-    });
+    setStatusFilter("");
+    setPriorityFilter("");
+    setAssigneeFilter("");
+    setLabelFilter("");
   }
 
   if (loading) {
@@ -544,9 +635,7 @@ export function KanbanBoardView({
       <div className="md:hidden">
         <div className="flex flex-col gap-4">
           <MobileIssueListAppBar
-            onCreateClick={() =>
-              router.push(getProjectIssueCreatePath(projectId))
-            }
+            onCreateClick={openIssueCreateFlow}
             onSearchClick={() => setIsFilterPanelOpen((open) => !open)}
             title={projectName}
           />
@@ -597,6 +686,12 @@ export function KanbanBoardView({
               totalCount={issues.length}
             />
           ) : null}
+          {!shouldShowFilters ? (
+            <p className="text-[12px] leading-[1.45] text-[#6B7280]">
+              Use search or filters to narrow the board, or open the issue
+              create flow to capture new work.
+            </p>
+          ) : null}
           <MobileIssueSections
             issues={filteredIssues}
             onEnterSelectionMode={handleMobileEnterSelectionMode}
@@ -621,9 +716,9 @@ export function KanbanBoardView({
           boardHref={boardHref}
           dashboardHref={dashboardHref}
           eyebrow={`${projectName} / ${projectKey ?? "PRJ"}`}
-          filterActive={shouldShowFilters || isNavigatingFilters}
+          filterActive={shouldShowFilters}
           issues={filteredIssues}
-          onCreateClick={() => setCreateModalStatus("Triage")}
+          onCreateClick={openIssueCreateFlow}
           onFilterClick={() => setIsFilterPanelOpen((open) => !open)}
           onSearchValueChange={(event) => setSearchInput(event.target.value)}
           onSelectionModeToggle={handleSelectionModeToggle}
@@ -655,6 +750,18 @@ export function KanbanBoardView({
             totalCount={issues.length}
           />
         ) : null}
+        {!shouldShowFilters ? (
+          <p className="text-[12px] leading-[1.45] text-[#6B7280]">
+            Search, filter, or open the issue create flow to keep work moving
+            from the board.
+          </p>
+        ) : null}
+        {isUpdatingIssues ? (
+          <p className="text-[12px] leading-[1.45] text-[#4338CA]">
+            Updating the board. Duplicate status changes are temporarily blocked
+            until the current request finishes.
+          </p>
+        ) : null}
 
         <div className="min-h-0 flex-1 overflow-hidden">
           <KanbanBoard
@@ -665,8 +772,9 @@ export function KanbanBoardView({
               clearSelection();
               setSelectionMode(false);
             }}
-            onNavigate={(href) => router.push(href)}
+            onNavigate={openIssueDrawer}
             onIssueUpdate={updateIssue}
+            onPrefetch={prefetchIssueDrawer}
             onToggleSelect={toggleIssue}
             projectId={projectId}
             selectedCount={selectedCount}

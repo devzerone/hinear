@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import {
   getMutationErrorMessage,
   getMutationErrorStatus,
@@ -46,9 +45,9 @@ export async function deleteIssueAction(input: DeleteIssueInput) {
 
     // Revalidate the project page
     revalidatePath(`/projects/${input.projectId}`);
-
-    // 프로젝트 페이지로 리다이렉트
-    redirect(`/projects/${input.projectId}`);
+    return {
+      success: true,
+    };
   } catch (error) {
     const code = inferMutationErrorCode(error);
     return {

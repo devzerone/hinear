@@ -3,13 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const navigationMocks = vi.hoisted(() => ({
   pathname: "/projects/project-1/settings",
-  replace: vi.fn(),
   searchParams: new URLSearchParams(),
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => navigationMocks.pathname,
-  useRouter: () => ({ replace: navigationMocks.replace }),
   useSearchParams: () => navigationMocks.searchParams,
 }));
 
@@ -30,8 +28,8 @@ import { GitHubIntegrationSettingsCard } from "@/features/projects/components/gi
 describe("GitHubIntegrationSettingsCard", () => {
   beforeEach(() => {
     navigationMocks.searchParams = new URLSearchParams();
-    navigationMocks.replace.mockReset();
     vi.restoreAllMocks();
+    vi.spyOn(window.history, "replaceState").mockImplementation(() => {});
   });
 
   it("opens repo selector when returned from OAuth with github=select-repo", async () => {
@@ -73,7 +71,9 @@ describe("GitHubIntegrationSettingsCard", () => {
 
     await screen.findByText("Select Repository");
     expect(screen.getByText("zerone/hinear")).toBeInTheDocument();
-    expect(navigationMocks.replace).toHaveBeenCalledWith(
+    expect(window.history.replaceState).toHaveBeenCalledWith(
+      null,
+      "",
       "/projects/project-1/settings?from=oauth"
     );
   });
@@ -140,6 +140,51 @@ describe("GitHubIntegrationSettingsCard", () => {
         })
       );
     });
+  });
+
+  it("shows explicit blocked guidance before a repository is selected", async () => {
+    navigationMocks.searchParams = new URLSearchParams("github=select-repo");
+
+    vi.spyOn(global, "fetch").mockImplementation((input) => {
+      if (String(input).includes("/api/github/repositories")) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              success: true,
+              repositories: [
+                {
+                  name: "hinear",
+                  fullName: "zerone/hinear",
+                  private: false,
+                  description: null,
+                },
+              ],
+            }),
+            { status: 200 }
+          )
+        );
+      }
+
+      return Promise.resolve(
+        new Response(JSON.stringify({ success: true }), { status: 200 })
+      );
+    });
+
+    render(
+      <GitHubIntegrationSettingsCard
+        initialSettings={{ enabled: false }}
+        projectId="project-1"
+      />
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "Connect Repository" })
+    ).toBeDisabled();
+    expect(
+      screen.getByText(
+        "Select a repository before enabling the connect action. If nothing appears, reconnect GitHub first."
+      )
+    ).toBeInTheDocument();
   });
 
   it("shows a read-only message instead of error toast for non-owners", async () => {

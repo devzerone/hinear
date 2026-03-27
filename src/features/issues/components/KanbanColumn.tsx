@@ -18,7 +18,8 @@ interface KanbanColumnProps {
   projectId?: string;
   status: IssueStatus;
   issues: Issue[];
-  onNavigate?: (href: string) => void;
+  onNavigate?: (issue: Issue) => void;
+  onPrefetch?: (issue: Issue) => void;
   selectedIssueIds?: string[];
   selectionMode?: boolean;
   onToggleSelect?: (issueId: string) => void;
@@ -41,6 +42,7 @@ export function KanbanColumn({
   status,
   issues,
   onNavigate,
+  onPrefetch,
   selectedIssueIds = [],
   selectionMode = false,
   onToggleSelect,
@@ -84,6 +86,7 @@ export function KanbanColumn({
                 issue={issue}
                 isSelected={selectedIssueIds.includes(issue.id)}
                 key={issue.id}
+                onPrefetch={onPrefetch}
                 onToggleSelect={onToggleSelect}
                 selectionMode={selectionMode}
                 projectId={projectId}

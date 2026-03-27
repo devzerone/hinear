@@ -12,7 +12,8 @@ interface IssueCardProps {
   issue: Issue;
   projectId?: string;
   preview?: boolean;
-  onNavigate?: (href: string) => void;
+  onNavigate?: (issue: Issue) => void;
+  onPrefetch?: (issue: Issue) => void;
   isSelected?: boolean;
   selectionMode?: boolean;
   onToggleSelect?: (issueId: string) => void;
@@ -24,6 +25,7 @@ export function IssueCard({
   projectId,
   preview = false,
   onNavigate,
+  onPrefetch,
   isSelected = false,
   selectionMode = false,
   onToggleSelect,
@@ -48,7 +50,7 @@ export function IssueCard({
 
   const handleNavigate = () => {
     if (detailHref && onNavigate) {
-      onNavigate(detailHref);
+      onNavigate(issue);
     }
   };
 
@@ -84,6 +86,8 @@ export function IssueCard({
           issueStatus={issue.status}
           issueTitle={issue.title}
           labels={issue.labels}
+          onFocus={preview ? undefined : () => onPrefetch?.(issue)}
+          onMouseEnter={preview ? undefined : () => onPrefetch?.(issue)}
           onClick={
             preview
               ? undefined

@@ -36,9 +36,7 @@ describe("IssueCard", () => {
 
     await user.click(screen.getByText("Selection behavior"));
 
-    expect(onNavigate).toHaveBeenCalledWith(
-      "/projects/project-1?issueId=issue-1"
-    );
+    expect(onNavigate).toHaveBeenCalledWith(issue);
     expect(
       screen.queryByRole("button", { name: /select issue/i })
     ).not.toBeInTheDocument();
