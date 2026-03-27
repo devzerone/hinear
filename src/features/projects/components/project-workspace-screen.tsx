@@ -1,5 +1,6 @@
 import { SidebarDesktop } from "@/components/organisms/SidebarDesktop";
 import { KanbanBoardView } from "@/features/issues/components/KanbanBoardView";
+import { PerformanceProfilerMount } from "@/features/performance/components/PerformanceProfilerMount";
 import {
   getProjectOverviewPath,
   getProjectPath,
@@ -53,6 +54,7 @@ export function ProjectWorkspaceScreen({
 
   return (
     <main className="min-h-screen bg-[var(--app-color-surface-0)] md:flex">
+      <PerformanceProfilerMount />
       <div className="hidden md:flex md:self-stretch">
         <SidebarDesktop
           defaultProjects={(projects ?? []).map((entry) => ({

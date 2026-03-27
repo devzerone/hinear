@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Toaster } from "sonner";
 import { PWA_PRIMARY_COLOR, PWA_STARTUP_IMAGES } from "@/app/pwa-metadata";
-import { ServiceWorkerRegister } from "@/components/organisms/ServiceWorkerRegister";
+import { AppShellExtras } from "@/components/AppShellExtras";
 import "./globals.css";
 
 function getMetadataBase() {
@@ -88,8 +87,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        <ServiceWorkerRegister />
-        <Toaster />
+        <AppShellExtras />
         {children}
       </body>
     </html>

@@ -8,6 +8,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -19,7 +20,6 @@ import { Select } from "@/components/atoms/Select";
 import { ConflictDialog } from "@/components/molecules/ConflictDialog";
 import { DueDateField } from "@/components/molecules/DueDateField";
 import { LabelSelector } from "@/components/molecules/LabelSelector";
-import { MarkdownEditor } from "@/components/molecules/MarkdownEditor";
 import { createLabelAction } from "@/features/issues/actions/create-label-action";
 import { updateIssueLabelsAction } from "@/features/issues/actions/update-issue-labels-action";
 import { IssueActivityItem } from "@/features/issues/components/IssueActivityItem";
@@ -48,6 +48,24 @@ import type {
   Label,
 } from "@/features/issues/types";
 import { ISSUE_PRIORITIES, ISSUE_STATUSES } from "@/features/issues/types";
+import { usePerformanceProfiler } from "@/features/performance/hooks/usePerformanceProfiler";
+
+// Dynamic import for MarkdownEditor (optimizes bundle size)
+const MarkdownEditor = dynamic(
+  () =>
+    import("@/components/molecules/MarkdownEditor").then((m) => ({
+      default: m.MarkdownEditor,
+    })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center p-8 bg-gray-100 rounded-lg">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-transparent" />
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
 import { getIssueBranchNamePreview } from "@/lib/github/branching";
 import { hasMeaningfulRichTextContent } from "@/lib/rich-text";
 
@@ -137,6 +155,9 @@ export function IssueDetailFullPageScreen({
   issue,
   memberNamesById = {},
 }: IssueDetailFullPageScreenProps) {
+  // Enable performance profiling for issue detail pages (1% sampling in production)
+  usePerformanceProfiler(process.env.NODE_ENV === "production");
+
   const [issueState, setIssueState] = useState(issue);
   const [commentsState, setCommentsState] = useState(comments);
   const [activityState, setActivityState] = useState(activityLog);
@@ -152,6 +173,8 @@ export function IssueDetailFullPageScreen({
   const [availableLabels, setAvailableLabels] =
     useState<Label[]>(availableLabelsProp);
   const [commentDraft, setCommentDraft] = useState("");
+  const [isDescriptionEditorOpen, setIsDescriptionEditorOpen] = useState(false);
+  const [isCommentComposerOpen, setIsCommentComposerOpen] = useState(false);
   const [now, setNow] = useState(() =>
     Number.isFinite(initialNow) ? initialNow : Date.now()
   );
@@ -969,24 +992,36 @@ export function IssueDetailFullPageScreen({
             />
           )}
 
-          <MarkdownEditor
-            issueId={issueState.id}
-            value={commentDraft}
-            onChange={setCommentDraft}
-            placeholder="댓글을 입력하세요..."
-            minHeight="44px"
-            projectId={issueState.projectId}
-          />
-          <div className="flex justify-end">
-            <Button
-              disabled={isSaving || !hasCommentContent}
-              onClick={submitComment}
-              size="sm"
-              variant="secondary"
+          {isCommentComposerOpen || commentDraft.length > 0 ? (
+            <>
+              <MarkdownEditor
+                issueId={issueState.id}
+                value={commentDraft}
+                onChange={setCommentDraft}
+                placeholder="댓글을 입력하세요..."
+                minHeight="44px"
+                projectId={issueState.projectId}
+              />
+              <div className="flex justify-end">
+                <Button
+                  disabled={isSaving || !hasCommentContent}
+                  onClick={submitComment}
+                  size="sm"
+                  variant="secondary"
+                >
+                  Post
+                </Button>
+              </div>
+            </>
+          ) : (
+            <button
+              className="flex min-h-[72px] w-full items-center justify-center rounded-[12px] border border-dashed border-[#D7DCE5] bg-[#FCFCFD] px-4 py-5 text-[13px] font-medium text-[#6B7280] transition hover:border-[#C7D2FE] hover:text-[#3730A3]"
+              onClick={() => setIsCommentComposerOpen(true)}
+              type="button"
             >
-              Post
-            </Button>
-          </div>
+              Write a comment
+            </button>
+          )}
         </section>
 
         <section className="flex flex-col gap-2 rounded-[16px] border border-[#E6E8EC] bg-white p-[14px]">
@@ -1210,15 +1245,26 @@ export function IssueDetailFullPageScreen({
                 Description
               </h2>
 
-              <MarkdownEditor
-                issueId={issueState.id}
-                value={descriptionDraft}
-                onChange={setDescriptionDraft}
-                placeholder="이슈에 대한 자세한 설명을 작성해주세요..."
-                minHeight="240px"
-                className="mt-4"
-                projectId={issueState.projectId}
-              />
+              {isDescriptionEditorOpen ||
+              descriptionDraft !== issueState.description ? (
+                <MarkdownEditor
+                  issueId={issueState.id}
+                  value={descriptionDraft}
+                  onChange={setDescriptionDraft}
+                  placeholder="이슈에 대한 자세한 설명을 작성해주세요..."
+                  minHeight="240px"
+                  className="mt-4"
+                  projectId={issueState.projectId}
+                />
+              ) : (
+                <button
+                  className="mt-4 flex min-h-[180px] w-full items-center justify-center rounded-[16px] border border-dashed border-[#D7DCE5] bg-[#FCFCFD] px-6 py-8 text-[14px] font-medium text-[#6B7280] transition hover:border-[#C7D2FE] hover:text-[#3730A3]"
+                  onClick={() => setIsDescriptionEditorOpen(true)}
+                  type="button"
+                >
+                  Edit description
+                </button>
+              )}
             </section>
 
             <section className="rounded-[16px] border border-[#E6E8EC] bg-white p-4">
@@ -1239,25 +1285,37 @@ export function IssueDetailFullPageScreen({
                 >
                   New comment
                 </label>
-                <MarkdownEditor
-                  issueId={issueState.id}
-                  value={commentDraft}
-                  onChange={setCommentDraft}
-                  placeholder="댓글을 입력하세요..."
-                  minHeight="96px"
-                  className="mt-2"
-                  projectId={issueState.projectId}
-                />
-                <div className="mt-3 flex justify-end">
-                  <Button
-                    disabled={isSaving || !hasCommentContent}
-                    onClick={submitComment}
-                    size="sm"
-                    variant="secondary"
+                {isCommentComposerOpen || commentDraft.length > 0 ? (
+                  <>
+                    <MarkdownEditor
+                      issueId={issueState.id}
+                      value={commentDraft}
+                      onChange={setCommentDraft}
+                      placeholder="댓글을 입력하세요..."
+                      minHeight="96px"
+                      className="mt-2"
+                      projectId={issueState.projectId}
+                    />
+                    <div className="mt-3 flex justify-end">
+                      <Button
+                        disabled={isSaving || !hasCommentContent}
+                        onClick={submitComment}
+                        size="sm"
+                        variant="secondary"
+                      >
+                        Post comment
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    className="mt-2 flex min-h-[96px] w-full items-center justify-center rounded-[12px] border border-dashed border-[#D7DCE5] bg-white px-4 py-6 text-[13px] font-medium text-[#6B7280] transition hover:border-[#C7D2FE] hover:text-[#3730A3]"
+                    onClick={() => setIsCommentComposerOpen(true)}
+                    type="button"
                   >
-                    Post comment
-                  </Button>
-                </div>
+                    Write a comment
+                  </button>
+                )}
               </div>
 
               <div className="mt-4 flex flex-col gap-3">

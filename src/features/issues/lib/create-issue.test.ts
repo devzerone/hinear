@@ -18,6 +18,7 @@ describe("createIssueDraft", () => {
       assigneeId: null,
       createdBy: "user-1",
       description: "Accept token and create member row",
+      dueDate: null,
       labels: [],
       priority: "No Priority",
       projectId: "project-1",

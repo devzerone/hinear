@@ -11,7 +11,7 @@ import { requireAuthenticatedActorId } from "@/lib/supabase/server-auth";
 import { createRequestSupabaseServerClient } from "@/lib/supabase/server-client";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   const actorId = await requireAuthenticatedActorId();
@@ -174,7 +174,7 @@ export async function POST(
 }
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ projectId: string }> }
 ) {
   const actorId = await requireAuthenticatedActorId();

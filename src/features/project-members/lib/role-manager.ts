@@ -33,7 +33,7 @@ export function isValidRoleTransition(
  * Only allowed if there's no current owner
  */
 export function canPromoteToOwner(
-  isCurrentOwner: boolean,
+  _isCurrentOwner: boolean,
   isLastOwner: boolean
 ): boolean {
   // Can only promote if there's no owner yet

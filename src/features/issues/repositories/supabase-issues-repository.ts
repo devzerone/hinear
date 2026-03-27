@@ -6,13 +6,7 @@ import type {
   CreateCommentInput,
   CreateIssueInput,
   DeleteIssueInput,
-  GetIssuesByProjectPageInput,
   IssuesRepository,
-  ListIssuesByAssigneeInput,
-  ListIssuesByLabelInput,
-  ListIssuesByPriorityInput,
-  ListIssuesByStatusInput,
-  SearchIssuesInput,
   UpdateIssueInput,
 } from "@/features/issues/contracts";
 import { createLabelKey, getLabelColor } from "@/features/issues/lib/labels";
@@ -28,13 +22,9 @@ import type {
   Label,
 } from "@/features/issues/types";
 import { GitHubSyncService } from "@/lib/github/sync-service";
+import { trackQuery } from "@/lib/performance/query-tracker";
 import type { AppSupabaseServerClient } from "@/lib/supabase/server-client";
-import type {
-  Json,
-  TableInsert,
-  TableRow,
-  TableUpdate,
-} from "@/lib/supabase/types";
+import type { Json, TableInsert, TableUpdate } from "@/lib/supabase/types";
 
 function assertQuerySucceeded(
   context: string,
@@ -56,7 +46,7 @@ function assertDataPresent<T>(context: string, data: T | null): T {
   return data;
 }
 
-function mapIssue(row: TableRow<"issues">): Issue {
+function mapIssue(row: any): Issue {
   return {
     id: row.id,
     projectId: row.project_id,
@@ -81,7 +71,7 @@ function mapIssue(row: TableRow<"issues">): Issue {
   };
 }
 
-function mapLabel(row: TableRow<"labels">): Label {
+function mapLabel(row: any): Label {
   return {
     id: row.id,
     name: row.name,
@@ -89,7 +79,7 @@ function mapLabel(row: TableRow<"labels">): Label {
   };
 }
 
-function mapComment(row: TableRow<"comments">): Comment {
+function mapComment(row: any): Comment {
   return {
     id: row.id,
     issueId: row.issue_id,
@@ -100,13 +90,13 @@ function mapComment(row: TableRow<"comments">): Comment {
   };
 }
 
-function mapActivityLogEntry(row: TableRow<"activity_logs">): ActivityLogEntry {
+function mapActivityLogEntry(row: any): ActivityLogEntry {
   return {
     id: row.id,
     issueId: row.issue_id,
     projectId: row.project_id,
     actorId: row.actor_id,
-    type: row.type,
+    type: row.type as ActivityLogEntry["type"],
     field: row.field,
     from: row.from_value,
     to: row.to_value,
@@ -172,30 +162,6 @@ export class SupabaseIssuesRepository implements IssuesRepository {
       });
   }
 
-  async listCommentsByIssueId(issueId: string): Promise<Comment[]> {
-    const { data, error } = await this.client
-      .from("comments")
-      .select()
-      .eq("issue_id", issueId)
-      .order("created_at", { ascending: false });
-
-    assertQuerySucceeded("Failed to load issue comments", error);
-
-    return (data ?? []).map(mapComment);
-  }
-
-  async listActivityLogByIssueId(issueId: string): Promise<ActivityLogEntry[]> {
-    const { data, error } = await this.client
-      .from("activity_logs")
-      .select()
-      .eq("issue_id", issueId)
-      .order("created_at", { ascending: false });
-
-    assertQuerySucceeded("Failed to load issue activity log", error);
-
-    return (data ?? []).map(mapActivityLogEntry);
-  }
-
   private async listLabelsByIssueIds(
     issueIds: string[],
     projectId: string
@@ -223,7 +189,7 @@ export class SupabaseIssuesRepository implements IssuesRepository {
 
     const { data: labelRows, error: labelError } = await this.client
       .from("labels")
-      .select()
+      .select("id, name, color, name_key")
       .eq("project_id", projectId)
       .in("id", labelIds);
 
@@ -293,7 +259,7 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     const labelKeys = labelNames.map((name) => createLabelKey(name));
     const { data: existingRows, error: existingError } = await this.client
       .from("labels")
-      .select()
+      .select("id, name, color, name_key")
       .eq("project_id", projectId)
       .in("name_key", labelKeys);
 
@@ -323,7 +289,7 @@ export class SupabaseIssuesRepository implements IssuesRepository {
 
     const { data: labelRows, error: labelError } = await this.client
       .from("labels")
-      .select()
+      .select("id, name, color, name_key")
       .eq("project_id", projectId)
       .in("name_key", labelKeys);
 
@@ -339,79 +305,56 @@ export class SupabaseIssuesRepository implements IssuesRepository {
   }
 
   async createIssue(input: CreateIssueInput): Promise<Issue> {
-    const { data, error } = await this.client
-      .from("issues")
-      .insert({
-        assignee_id: input.assigneeId ?? null,
-        created_by: input.createdBy,
-        description: input.description ?? "",
-        due_date: input.dueDate ?? null,
-        priority: input.priority ?? "No Priority",
-        project_id: input.projectId,
-        status: input.status ?? "Triage",
-        title: input.title,
-        updated_by: input.createdBy,
-      })
-      .select()
-      .single();
+    return trackQuery("createIssue", async () => {
+      const { data, error } = await this.client
+        .from("issues")
+        .insert({
+          assignee_id: input.assigneeId ?? null,
+          created_by: input.createdBy,
+          description: input.description ?? "",
+          due_date: input.dueDate ?? null,
+          priority: input.priority ?? "No Priority",
+          project_id: input.projectId,
+          status: input.status ?? "Triage",
+          title: input.title,
+          updated_by: input.createdBy,
+        })
+        .select()
+        .single();
 
-    assertQuerySucceeded("Failed to create issue", error);
+      assertQuerySucceeded("Failed to create issue", error);
 
-    const issue = mapIssue(assertDataPresent("Failed to create issue", data));
-    const labels = await this.resolveProjectLabels(
-      input.projectId,
-      input.createdBy,
-      input.labels ?? []
-    );
+      const issue = mapIssue(assertDataPresent("Failed to create issue", data));
+      const labels = await this.resolveProjectLabels(
+        input.projectId,
+        input.createdBy,
+        input.labels ?? []
+      );
 
-    if (labels.length > 0) {
-      const { error: issueLabelsError } = await this.client
-        .from("issue_labels")
-        .insert(
-          labels.map((label) => ({
-            issue_id: issue.id,
-            label_id: label.id,
-            project_id: issue.projectId,
-          }))
-        );
+      if (labels.length > 0) {
+        const { error: issueLabelsError } = await this.client
+          .from("issue_labels")
+          .insert(
+            labels.map((label) => ({
+              issue_id: issue.id,
+              label_id: label.id,
+              project_id: issue.projectId,
+            }))
+          );
 
-      assertQuerySucceeded("Failed to link issue labels", issueLabelsError);
-    }
+        assertQuerySucceeded("Failed to link issue labels", issueLabelsError);
+      }
 
-    this.syncIssueCreationToGitHub({
-      ...issue,
-      labels,
+      this.syncIssueCreationToGitHub({
+        ...issue,
+        labels,
+      });
+
+      return {
+        ...issue,
+        labels,
+      };
     });
-
-    return {
-      ...issue,
-      labels,
-    };
-  }
-
-  async listIssuesByProject(projectId: string): Promise<Issue[]> {
-    const { data, error } = await this.client
-      .from("issues")
-      .select()
-      .eq("project_id", projectId)
-      .order("issue_number", { ascending: true });
-
-    assertQuerySucceeded("Failed to load project issues", error);
-
-    const issues = (data ?? []).map(mapIssue);
-
-    // 병렬로 관련 데이터 페칭
-    const [labelsByIssueId] = await Promise.all([
-      this.listLabelsByIssueIds(
-        issues.map((issue) => issue.id),
-        projectId
-      ),
-    ]);
-
-    return issues.map((issue) => ({
-      ...issue,
-      labels: labelsByIssueId.get(issue.id) ?? [],
-    }));
   }
 
   async createComment(input: CreateCommentInput): Promise<Comment> {
@@ -434,13 +377,25 @@ export class SupabaseIssuesRepository implements IssuesRepository {
   async getCommentById(commentId: string): Promise<Comment> {
     const { data, error } = await this.client
       .from("comments")
-      .select()
+      .select("id, issue_id, project_id, author_id, body, created_at")
       .eq("id", commentId)
       .single();
 
     assertQuerySucceeded("Failed to get comment", error);
 
     return mapComment(assertDataPresent("Failed to get comment", data));
+  }
+
+  async listCommentsByIssueId(issueId: string): Promise<Comment[]> {
+    const { data, error } = await this.client
+      .from("comments")
+      .select("id, issue_id, project_id, author_id, body, created_at")
+      .eq("issue_id", issueId)
+      .order("created_at", { ascending: true });
+
+    assertQuerySucceeded("Failed to list comments", error);
+
+    return data ? data.map(mapComment) : [];
   }
 
   async updateComment(
@@ -502,195 +457,238 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     );
   }
 
-  async updateIssue(issueId: string, input: UpdateIssueInput): Promise<Issue> {
-    const currentIssue = await this.getIssueById(issueId);
-
-    if (!currentIssue) {
-      throw createRepositoryError("ISSUE_NOT_FOUND", "Issue not found.");
-    }
-
-    const issueUpdates: TableUpdate<"issues"> = {
-      updated_by: input.updatedBy,
-    };
-    const activityEntries: Array<Omit<ActivityLogEntry, "id" | "createdAt">> =
-      [];
-
-    if (input.title !== undefined && input.title !== currentIssue.title) {
-      issueUpdates.title = input.title;
-      activityEntries.push({
-        issueId: currentIssue.id,
-        projectId: currentIssue.projectId,
-        actorId: input.updatedBy,
-        type: "issue.title.updated",
-        field: "title",
-        from: currentIssue.title,
-        to: input.title,
-        summary: `제목을 "${currentIssue.title}"에서 "${input.title}"(으)로 변경했습니다`,
-      });
-    }
-
-    if (input.status !== undefined && input.status !== currentIssue.status) {
-      issueUpdates.status = input.status;
-      activityEntries.push({
-        issueId: currentIssue.id,
-        projectId: currentIssue.projectId,
-        actorId: input.updatedBy,
-        type: "issue.status.updated",
-        field: "status",
-        from: currentIssue.status,
-        to: input.status,
-        summary: `상태를 "${currentIssue.status}"에서 "${input.status}"(으)로 변경했습니다`,
-      });
-    }
-
-    if (
-      input.priority !== undefined &&
-      input.priority !== currentIssue.priority
-    ) {
-      issueUpdates.priority = input.priority;
-      activityEntries.push({
-        issueId: currentIssue.id,
-        projectId: currentIssue.projectId,
-        actorId: input.updatedBy,
-        type: "issue.priority.updated",
-        field: "priority",
-        from: currentIssue.priority,
-        to: input.priority,
-        summary: `우선순위를 "${currentIssue.priority}"에서 "${input.priority}"(으)로 변경했습니다`,
-      });
-    }
-
-    if (
-      input.description !== undefined &&
-      input.description !== currentIssue.description
-    ) {
-      issueUpdates.description = input.description;
-      activityEntries.push({
-        issueId: currentIssue.id,
-        projectId: currentIssue.projectId,
-        actorId: input.updatedBy,
-        type: "issue.description.updated",
-        field: "description",
-        from: currentIssue.description,
-        to: input.description,
-        summary: getDescriptionUpdateSummary(
-          currentIssue.description,
-          input.description
-        ),
-      });
-    }
-
-    if (
-      input.assigneeId !== undefined &&
-      input.assigneeId !== currentIssue.assigneeId
-    ) {
-      issueUpdates.assignee_id = input.assigneeId;
-      activityEntries.push({
-        issueId: currentIssue.id,
-        projectId: currentIssue.projectId,
-        actorId: input.updatedBy,
-        type: "issue.assignee.updated",
-        field: "assigneeId",
-        from: currentIssue.assigneeId,
-        to: input.assigneeId,
-        summary: input.assigneeId
-          ? "담당자를 배정했습니다"
-          : "담당자를 해제했습니다",
-      });
-    }
-
-    if (input.dueDate !== undefined && input.dueDate !== currentIssue.dueDate) {
-      issueUpdates.due_date = input.dueDate;
-      const previousDate = currentIssue.dueDate
-        ? new Date(currentIssue.dueDate).toLocaleDateString("ko-KR")
-        : "없음";
-      const newDate = input.dueDate
-        ? new Date(input.dueDate).toLocaleDateString("ko-KR")
-        : "없음";
-      activityEntries.push({
-        issueId: currentIssue.id,
-        projectId: currentIssue.projectId,
-        actorId: input.updatedBy,
-        type: "issue.dueDate.updated",
-        field: "dueDate",
-        from: currentIssue.dueDate,
-        to: input.dueDate,
-        summary: `마감일을 "${previousDate}"에서 "${newDate}"(으)로 변경했습니다`,
-      });
-    }
-
-    if (Object.keys(issueUpdates).length === 1) {
-      return currentIssue;
-    }
-
-    issueUpdates.version = currentIssue.version + 1;
-
+  async listActivityLogByIssueId(issueId: string): Promise<ActivityLogEntry[]> {
     const { data, error } = await this.client
-      .from("issues")
-      .update(issueUpdates)
-      .eq("id", issueId)
-      .eq("version", input.version)
-      .select()
-      .maybeSingle();
+      .from("activity_logs")
+      .select("*")
+      .eq("issue_id", issueId)
+      .order("created_at", { ascending: false });
 
-    assertQuerySucceeded("Failed to update issue", error);
+    assertQuerySucceeded("Failed to list activity log", error);
 
-    if (!data) {
-      const latestIssue = await this.getIssueById(issueId);
+    return data ? data.map(mapActivityLogEntry) : [];
+  }
 
-      if (!latestIssue) {
+  async updateIssue(issueId: string, input: UpdateIssueInput): Promise<Issue> {
+    return trackQuery("updateIssue", async () => {
+      const currentIssue = await this.getIssueById(issueId);
+
+      if (!currentIssue) {
         throw createRepositoryError("ISSUE_NOT_FOUND", "Issue not found.");
       }
 
-      const conflictError: ConflictError = {
-        currentIssue: latestIssue,
-        currentVersion: latestIssue.version,
-        message: "This issue has changed since you loaded it.",
-        requestedVersion: input.version,
-        type: "CONFLICT",
+      const issueUpdates: TableUpdate<"issues"> = {
+        updated_by: input.updatedBy,
+      };
+      const activityEntries: Array<Omit<ActivityLogEntry, "id" | "createdAt">> =
+        [];
+
+      if (input.title !== undefined && input.title !== currentIssue.title) {
+        issueUpdates.title = input.title;
+        activityEntries.push({
+          issueId: currentIssue.id,
+          projectId: currentIssue.projectId,
+          actorId: input.updatedBy,
+          type: "issue.title.updated",
+          field: "title",
+          from: currentIssue.title,
+          to: input.title,
+          summary: `제목을 "${currentIssue.title}"에서 "${input.title}"(으)로 변경했습니다`,
+        });
+      }
+
+      if (input.status !== undefined && input.status !== currentIssue.status) {
+        issueUpdates.status = input.status;
+        activityEntries.push({
+          issueId: currentIssue.id,
+          projectId: currentIssue.projectId,
+          actorId: input.updatedBy,
+          type: "issue.status.updated",
+          field: "status",
+          from: currentIssue.status,
+          to: input.status,
+          summary: `상태를 "${currentIssue.status}"에서 "${input.status}"(으)로 변경했습니다`,
+        });
+      }
+
+      if (
+        input.priority !== undefined &&
+        input.priority !== currentIssue.priority
+      ) {
+        issueUpdates.priority = input.priority;
+        activityEntries.push({
+          issueId: currentIssue.id,
+          projectId: currentIssue.projectId,
+          actorId: input.updatedBy,
+          type: "issue.priority.updated",
+          field: "priority",
+          from: currentIssue.priority,
+          to: input.priority,
+          summary: `우선순위를 "${currentIssue.priority}"에서 "${input.priority}"(으)로 변경했습니다`,
+        });
+      }
+
+      if (
+        input.description !== undefined &&
+        input.description !== currentIssue.description
+      ) {
+        issueUpdates.description = input.description;
+        activityEntries.push({
+          issueId: currentIssue.id,
+          projectId: currentIssue.projectId,
+          actorId: input.updatedBy,
+          type: "issue.description.updated",
+          field: "description",
+          from: currentIssue.description,
+          to: input.description,
+          summary: getDescriptionUpdateSummary(
+            currentIssue.description,
+            input.description
+          ),
+        });
+      }
+
+      if (
+        input.assigneeId !== undefined &&
+        input.assigneeId !== currentIssue.assigneeId
+      ) {
+        issueUpdates.assignee_id = input.assigneeId;
+        activityEntries.push({
+          issueId: currentIssue.id,
+          projectId: currentIssue.projectId,
+          actorId: input.updatedBy,
+          type: "issue.assignee.updated",
+          field: "assigneeId",
+          from: currentIssue.assigneeId,
+          to: input.assigneeId,
+          summary: input.assigneeId
+            ? "담당자를 배정했습니다"
+            : "담당자를 해제했습니다",
+        });
+      }
+
+      if (
+        input.dueDate !== undefined &&
+        input.dueDate !== currentIssue.dueDate
+      ) {
+        issueUpdates.due_date = input.dueDate;
+        const previousDate = currentIssue.dueDate
+          ? new Date(currentIssue.dueDate).toLocaleDateString("ko-KR")
+          : "없음";
+        const newDate = input.dueDate
+          ? new Date(input.dueDate).toLocaleDateString("ko-KR")
+          : "없음";
+        activityEntries.push({
+          issueId: currentIssue.id,
+          projectId: currentIssue.projectId,
+          actorId: input.updatedBy,
+          type: "issue.dueDate.updated",
+          field: "dueDate",
+          from: currentIssue.dueDate,
+          to: input.dueDate,
+          summary: `마감일을 "${previousDate}"에서 "${newDate}"(으)로 변경했습니다`,
+        });
+      }
+
+      if (Object.keys(issueUpdates).length === 1) {
+        return currentIssue;
+      }
+
+      issueUpdates.version = currentIssue.version + 1;
+
+      const { data, error } = await this.client
+        .from("issues")
+        .update(issueUpdates)
+        .eq("id", issueId)
+        .eq("version", input.version)
+        .select()
+        .maybeSingle();
+
+      assertQuerySucceeded("Failed to update issue", error);
+
+      if (!data) {
+        const latestIssue = await this.getIssueById(issueId);
+
+        if (!latestIssue) {
+          throw createRepositoryError("ISSUE_NOT_FOUND", "Issue not found.");
+        }
+
+        const conflictError: ConflictError = {
+          currentIssue: latestIssue,
+          currentVersion: latestIssue.version,
+          message: "This issue has changed since you loaded it.",
+          requestedVersion: input.version,
+          type: "CONFLICT",
+        };
+
+        throw conflictError;
+      }
+
+      for (const activityEntry of activityEntries) {
+        await this.appendActivityLog(activityEntry);
+      }
+
+      const issue = {
+        ...mapIssue(assertDataPresent("Failed to update issue", data)),
+        labels: currentIssue.labels,
       };
 
-      throw conflictError;
-    }
+      this.syncIssueUpdateToGitHub(issue);
 
-    for (const activityEntry of activityEntries) {
-      await this.appendActivityLog(activityEntry);
-    }
-
-    const issue = {
-      ...mapIssue(assertDataPresent("Failed to update issue", data)),
-      labels: currentIssue.labels,
-    };
-
-    this.syncIssueUpdateToGitHub(issue);
-
-    return issue;
+      return issue;
+    });
   }
 
   async getIssueById(issueId: string): Promise<Issue | null> {
+    return trackQuery("getIssueById", async () => {
+      const { data, error } = await this.client
+        .from("issues")
+        .select(
+          "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
+        )
+        .eq("id", issueId)
+        .maybeSingle();
+
+      assertQuerySucceeded("Failed to load issue", error);
+
+      if (!data) {
+        return null;
+      }
+
+      const issue = mapIssue(data);
+
+      // 병렬로 관련 데이터 페칭
+      const [labels] = await Promise.all([
+        this.listIssueLabels(issue.id, issue.projectId),
+      ]);
+
+      return {
+        ...issue,
+        labels,
+      };
+    });
+  }
+
+  async listIssuesByProject(projectId: string): Promise<Issue[]> {
     const { data, error } = await this.client
       .from("issues")
-      .select()
-      .eq("id", issueId)
-      .maybeSingle();
+      .select(
+        "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
+      )
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: false });
 
-    assertQuerySucceeded("Failed to load issue", error);
+    assertQuerySucceeded("Failed to list issues by project", error);
 
     if (!data) {
-      return null;
+      return [];
     }
 
-    const issue = mapIssue(data);
+    // 병렬로 라벨 로드
+    const issues = data.map(mapIssue);
+    const issuesWithLabels = await this.attachLabelsToIssues(issues);
 
-    // 병렬로 관련 데이터 페칭
-    const [labels] = await Promise.all([
-      this.listIssueLabels(issue.id, issue.projectId),
-    ]);
-
-    return {
-      ...issue,
-      labels,
-    };
+    return issuesWithLabels;
   }
 
   async listIssuesByStatus(input: {
@@ -699,7 +697,9 @@ export class SupabaseIssuesRepository implements IssuesRepository {
   }): Promise<Issue[]> {
     const { data, error } = await this.client
       .from("issues")
-      .select()
+      .select(
+        "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
+      )
       .eq("project_id", input.projectId)
       .eq("status", input.status)
       .order("issue_number", { ascending: true });
@@ -727,7 +727,9 @@ export class SupabaseIssuesRepository implements IssuesRepository {
   }): Promise<Issue[]> {
     const { data, error } = await this.client
       .from("issues")
-      .select()
+      .select(
+        "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
+      )
       .eq("project_id", input.projectId)
       .eq("assignee_id", input.assigneeId)
       .order("issue_number", { ascending: true });
@@ -755,7 +757,9 @@ export class SupabaseIssuesRepository implements IssuesRepository {
   }): Promise<Issue[]> {
     const { data, error } = await this.client
       .from("issues")
-      .select()
+      .select(
+        "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
+      )
       .eq("project_id", input.projectId)
       .eq("priority", input.priority)
       .order("issue_number", { ascending: true });
@@ -799,7 +803,9 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     // 해당 이슈들을 가져옴
     const { data, error } = await this.client
       .from("issues")
-      .select()
+      .select(
+        "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
+      )
       .eq("project_id", input.projectId)
       .in("id", issueIds)
       .order("issue_number", { ascending: true });
@@ -827,7 +833,9 @@ export class SupabaseIssuesRepository implements IssuesRepository {
   }): Promise<Issue[]> {
     const { data, error } = await this.client
       .from("issues")
-      .select()
+      .select(
+        "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
+      )
       .eq("project_id", input.projectId)
       .or(`title.ilike.%${input.query}%,description.ilike.%${input.query}%`)
       .order("issue_number", { ascending: true });
@@ -860,58 +868,64 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     limit: number;
     totalPages: number;
   }> {
-    // 전체 개수를 먼저 가져옴
-    const { count, error: countError } = await this.client
-      .from("issues")
-      .select("*", { count: "exact", head: true })
-      .eq("project_id", input.projectId);
+    return trackQuery("getIssuesByProjectPage", async () => {
+      // 전체 개수를 먼저 가져옴
+      const { count, error: countError } = await this.client
+        .from("issues")
+        .select("*", { count: "exact", head: true })
+        .eq("project_id", input.projectId);
 
-    assertQuerySucceeded("Failed to count issues", countError);
+      assertQuerySucceeded("Failed to count issues", countError);
 
-    const totalCount = count ?? 0;
-    const offset = input.page * input.limit;
-    const totalPages = Math.ceil(totalCount / input.limit);
+      const totalCount = count ?? 0;
+      const offset = input.page * input.limit;
+      const totalPages = Math.ceil(totalCount / input.limit);
 
-    // 페이지네이션된 이슈들을 가져옴
-    const { data, error } = await this.client
-      .from("issues")
-      .select()
-      .eq("project_id", input.projectId)
-      .order("issue_number", { ascending: true })
-      .range(offset, offset + input.limit - 1);
+      // 페이지네이션된 이슈들을 가져옴
+      const { data, error } = await this.client
+        .from("issues")
+        .select(
+          "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
+        )
+        .eq("project_id", input.projectId)
+        .order("issue_number", { ascending: true })
+        .range(offset, offset + input.limit - 1);
 
-    assertQuerySucceeded("Failed to load issues page", error);
+      assertQuerySucceeded("Failed to load issues page", error);
 
-    const issues = (data ?? []).map(mapIssue);
+      const issues = (data ?? []).map(mapIssue);
 
-    const [labelsByIssueId] = await Promise.all([
-      this.listLabelsByIssueIds(
-        issues.map((issue) => issue.id),
-        input.projectId
-      ),
-    ]);
+      const [labelsByIssueId] = await Promise.all([
+        this.listLabelsByIssueIds(
+          issues.map((issue) => issue.id),
+          input.projectId
+        ),
+      ]);
 
-    return {
-      issues: issues.map((issue) => ({
-        ...issue,
-        labels: labelsByIssueId.get(issue.id) ?? [],
-      })),
-      totalCount,
-      page: input.page,
-      limit: input.limit,
-      totalPages,
-    };
+      return {
+        issues: issues.map((issue) => ({
+          ...issue,
+          labels: labelsByIssueId.get(issue.id) ?? [],
+        })),
+        totalCount,
+        page: input.page,
+        limit: input.limit,
+        totalPages,
+      };
+    });
   }
 
   async countIssuesByProject(projectId: string): Promise<number> {
-    const { count, error } = await this.client
-      .from("issues")
-      .select("*", { count: "exact", head: true })
-      .eq("project_id", projectId);
+    return trackQuery("countIssuesByProject", async () => {
+      const { count, error } = await this.client
+        .from("issues")
+        .select("*", { count: "exact", head: true })
+        .eq("project_id", projectId);
 
-    assertQuerySucceeded("Failed to count project issues", error);
+      assertQuerySucceeded("Failed to count project issues", error);
 
-    return count ?? 0;
+      return count ?? 0;
+    });
   }
 
   async countIssuesByStatus(
@@ -978,7 +992,9 @@ export class SupabaseIssuesRepository implements IssuesRepository {
   }): Promise<Issue[]> {
     let query = this.client
       .from("issues")
-      .select("*")
+      .select(
+        "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
+      )
       .eq("project_id", input.projectId);
 
     // 상태 필터
@@ -997,7 +1013,7 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     }
 
     // 검색어 필터
-    if (input.searchQuery && input.searchQuery.trim()) {
+    if (input.searchQuery?.trim()) {
       const searchTerm = `%${input.searchQuery.trim()}%`;
       query = query.or(
         `title.ilike.${searchTerm},description.ilike.${searchTerm}`
@@ -1063,4 +1079,11 @@ export class SupabaseIssuesRepository implements IssuesRepository {
 
     return issuesWithLabels;
   }
+}
+
+// Factory function
+export function createIssuesRepository(
+  client: AppSupabaseServerClient
+): IssuesRepository {
+  return new SupabaseIssuesRepository(client);
 }

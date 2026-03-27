@@ -1,4 +1,4 @@
-import { randomBytes } from "crypto";
+import { randomBytes } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 
 /**

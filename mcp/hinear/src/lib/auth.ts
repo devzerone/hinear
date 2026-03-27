@@ -43,7 +43,7 @@ export async function resolveAccessToken(
         .eq("token_hash", tokenHash);
 
       return { userId: data.user_id };
-    } catch (error) {
+    } catch (_error) {
       return { userId: null, error: "Failed to validate token" };
     }
   }
@@ -58,7 +58,7 @@ export async function resolveAccessToken(
     }
 
     return { userId: data.user.id };
-  } catch (error) {
+  } catch (_error) {
     return { userId: null, error: "Failed to validate token" };
   }
 }

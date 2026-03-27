@@ -51,7 +51,7 @@ export function buildIssueFilterExpression(
   }
 
   // 검색어 필터 (제목 또는 설명)
-  if (filter.searchQuery && filter.searchQuery.trim()) {
+  if (filter.searchQuery?.trim()) {
     const searchKey = "search";
     conditions.push(
       `or(title.ilike.${searchKey},description.ilike.${searchKey})`

@@ -5,10 +5,7 @@ import type {
   AttachmentUploadResult,
   IssueAttachmentsRepository,
 } from "@/features/issues/contracts";
-import {
-  createPostgrestRepositoryError,
-  createRepositoryError,
-} from "@/features/issues/lib/repository-errors";
+import { createRepositoryError } from "@/features/issues/lib/repository-errors";
 import type { AppSupabaseServerClient } from "@/lib/supabase/server-client";
 
 export class SupabaseIssueAttachmentsRepository
@@ -19,9 +16,9 @@ export class SupabaseIssueAttachmentsRepository
   async uploadAttachment(
     input: AttachmentUploadInput
   ): Promise<AttachmentUploadResult> {
-    const { issueId, projectId, file, uploadedBy } = input;
+    const { issueId, file } = input;
     const attachmentId = crypto.randomUUID();
-    const fileExt = file.name.split(".").pop() ?? "png";
+    const _fileExt = file.name.split(".").pop() ?? "png";
     const storagePath = `${issueId}/${attachmentId}/${file.name}`;
 
     // Validate file type
@@ -44,7 +41,7 @@ export class SupabaseIssueAttachmentsRepository
     }
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await this.client.storage
+    const { error: uploadError } = await this.client.storage
       .from("issue-attachments")
       .upload(storagePath, file);
 
@@ -72,7 +69,7 @@ export class SupabaseIssueAttachmentsRepository
     return result;
   }
 
-  async deleteAttachment(storagePath: string, issueId: string): Promise<void> {
+  async deleteAttachment(storagePath: string, _issueId: string): Promise<void> {
     const { error } = await this.client.storage
       .from("issue-attachments")
       .remove([storagePath]);

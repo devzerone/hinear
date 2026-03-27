@@ -151,12 +151,15 @@ export interface IssuesRepository {
   createIssue(input: CreateIssueInput): Promise<Issue>;
   createComment(input: CreateCommentInput): Promise<Comment>;
   getCommentById(commentId: string): Promise<Comment>;
+  listCommentsByIssueId(issueId: string): Promise<Comment[]>;
   updateComment(commentId: string, updates: { body: string }): Promise<Comment>;
   deleteComment(commentId: string): Promise<void>;
   appendActivityLog(
     entry: Omit<ActivityLogEntry, "id" | "createdAt">
   ): Promise<ActivityLogEntry>;
+  listActivityLogByIssueId(issueId: string): Promise<ActivityLogEntry[]>;
   getIssueById(issueId: string): Promise<Issue | null>;
+  listIssuesByProject(projectId: string): Promise<Issue[]>;
   updateIssue(issueId: string, input: UpdateIssueInput): Promise<Issue>;
   deleteIssue(input: DeleteIssueInput): Promise<void>;
 

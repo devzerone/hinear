@@ -19,6 +19,7 @@ import type {
   ProjectMember,
   ProjectMemberSummary,
 } from "@/features/projects/types";
+import { trackQuery } from "@/lib/performance/query-tracker";
 import type { AppSupabaseServerClient } from "@/lib/supabase/server-client";
 import type { TableInsert, TableRow } from "@/lib/supabase/types";
 
@@ -197,7 +198,7 @@ async function listProfilesByIds(
 
   const { data, error } = await client
     .from("profiles")
-    .select()
+    .select("*")
     .in("id", uniqueIds);
 
   assertQuerySucceeded("Failed to load profiles", error);
@@ -290,21 +291,25 @@ export class SupabaseProjectsRepository implements ProjectsRepository {
   }
 
   async getProjectById(projectId: string): Promise<Project | null> {
-    const { data, error } = await this.client
-      .from("projects")
-      .select()
-      .eq("id", projectId)
-      .maybeSingle();
+    return trackQuery("getProjectById", async () => {
+      const { data, error } = await this.client
+        .from("projects")
+        .select(
+          "id, key, name, type, issue_seq, created_by, created_at, updated_at, github_repo_owner, github_repo_name, github_integration_enabled"
+        )
+        .eq("id", projectId)
+        .maybeSingle();
 
-    assertQuerySucceeded("Failed to load project", error);
+      assertQuerySucceeded("Failed to load project", error);
 
-    return data ? mapProject(data) : null;
+      return data ? mapProject(data) : null;
+    });
   }
 
   async listProjectMembers(projectId: string): Promise<ProjectMemberSummary[]> {
     const { data, error } = await this.client
       .from("project_members")
-      .select()
+      .select("project_id, user_id, role, created_at")
       .eq("project_id", projectId);
 
     assertQuerySucceeded("Failed to load project members", error);
@@ -334,7 +339,9 @@ export class SupabaseProjectsRepository implements ProjectsRepository {
   ): Promise<ProjectInvitationSummary[]> {
     const { data, error } = await this.client
       .from("project_invitations")
-      .select()
+      .select(
+        "id, project_id, email, invited_by, status, token, expires_at, created_at"
+      )
       .eq("project_id", projectId)
       .eq("status", "pending");
 
@@ -489,7 +496,9 @@ export class SupabaseProjectsRepository implements ProjectsRepository {
   async getProjectByKey(key: string): Promise<Project | null> {
     const { data, error } = await this.client
       .from("projects")
-      .select()
+      .select(
+        "id, key, name, type, issue_seq, created_by, created_at, updated_at, github_repo_owner, github_repo_name, github_integration_enabled"
+      )
       .eq("key", key)
       .maybeSingle();
 
@@ -501,7 +510,9 @@ export class SupabaseProjectsRepository implements ProjectsRepository {
   async listProjects(): Promise<Project[]> {
     const { data, error } = await this.client
       .from("projects")
-      .select()
+      .select(
+        "id, key, name, type, issue_seq, created_by, created_at, updated_at, github_repo_owner, github_repo_name, github_integration_enabled"
+      )
       .order("created_at", { ascending: false });
 
     assertQuerySucceeded("Failed to list projects", error);
@@ -544,7 +555,9 @@ export class SupabaseProjectsRepository implements ProjectsRepository {
   async listProjectsByType(type: Project["type"]): Promise<Project[]> {
     const { data, error } = await this.client
       .from("projects")
-      .select()
+      .select(
+        "id, key, name, type, issue_seq, created_by, created_at, updated_at, github_repo_owner, github_repo_name, github_integration_enabled"
+      )
       .eq("type", type)
       .order("created_at", { ascending: false });
 
@@ -587,4 +600,11 @@ export class SupabaseProjectsRepository implements ProjectsRepository {
 
     return data !== null;
   }
+}
+
+// Factory function
+export function createProjectsRepository(
+  client: AppSupabaseServerClient
+): ProjectsRepository {
+  return new SupabaseProjectsRepository(client);
 }

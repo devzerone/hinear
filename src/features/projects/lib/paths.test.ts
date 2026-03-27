@@ -12,7 +12,7 @@ describe("project paths", () => {
   it("builds the canonical project routes", () => {
     expect(getProjectPath("project-1")).toBe("/projects/project-1");
     expect(getProjectOverviewPath("project-1")).toBe(
-      "/projects/project-1/dashboard"
+      "/projects/project-1/overview"
     );
     expect(getProjectSettingsPath("project-1")).toBe(
       "/projects/project-1/settings"
@@ -21,7 +21,7 @@ describe("project paths", () => {
       "/projects/project-1/issues/new"
     );
     expect(getIssuePath("project-1", "issue-9")).toBe(
-      "/projects/project-1/issues/issue-9"
+      "/projects/project-1?issueId=issue-9"
     );
   });
 });

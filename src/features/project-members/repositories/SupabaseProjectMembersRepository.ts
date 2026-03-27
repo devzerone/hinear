@@ -19,7 +19,7 @@ import type {
   ProjectMember,
 } from "@/features/project-members/types";
 import type { AppSupabaseServerClient } from "@/lib/supabase/server-client";
-import type { TableInsert, TableRow } from "@/lib/supabase/types";
+import type { TableRow } from "@/lib/supabase/types";
 
 function assertQuerySucceeded(
   context: string,
