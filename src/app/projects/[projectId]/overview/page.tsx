@@ -1,5 +1,5 @@
-import { ProjectOverviewScreen } from "@/features/projects/components/project-overview-screen";
 import { loadProjectWorkspace } from "@/features/projects/lib/load-project-workspace";
+import { ProjectOverviewScreen } from "@/features/projects/overview/screens/project-overview-screen";
 
 interface ProjectOverviewPageProps {
   params: Promise<{

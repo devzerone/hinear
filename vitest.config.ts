@@ -69,7 +69,9 @@ export default defineConfig({
         ],
         test: {
           name: "storybook",
-          exclude: ["src/features/issues/components/kanban-board.stories.tsx"],
+          exclude: [
+            "src/features/issues/board/components/kanban-board.stories.tsx",
+          ],
           browser: {
             enabled: true,
             headless: true,

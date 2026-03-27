@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 
-import { IssueDetailErrorScreen } from "@/features/issues/components/issue-detail-screen";
+import { IssueDetailErrorScreen } from "@/features/issues/detail/screens/issue-detail-screen";
 
 interface IssueDetailErrorPageProps {
   error: Error & { digest?: string };

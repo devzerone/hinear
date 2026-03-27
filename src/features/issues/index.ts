@@ -4,8 +4,6 @@
 
 // Actions
 export { createIssueAction } from "./actions/create-issue-action";
-// Components
-export * from "./components";
 
 // Contracts
 export type {

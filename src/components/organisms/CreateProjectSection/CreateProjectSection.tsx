@@ -3,7 +3,7 @@ import type * as React from "react";
 import {
   CreateProjectFormCard,
   CreateProjectNextStepsCard,
-} from "@/features/projects/components/project-operation-cards";
+} from "@/features/projects/create/components/project-create-cards";
 import type { ProjectType } from "@/features/projects/types";
 import { cn } from "@/lib/utils";
 

@@ -1,10 +1,9 @@
 import * as React from "react";
-
-import { IssueAssigneePill } from "@/features/issues/components/IssueAssigneePill";
-import { IssueIdentifierBadge } from "@/features/issues/components/IssueIdentifierBadge";
-import { IssueLabelChip } from "@/features/issues/components/IssueLabelChip";
-import { IssuePriorityBadge } from "@/features/issues/components/IssuePriorityBadge";
-import { IssueStatusBadge } from "@/features/issues/components/IssueStatusBadge";
+import { IssueIdentifierBadge } from "@/features/issues/detail/components/IssueIdentifierBadge";
+import { IssuePriorityBadge } from "@/features/issues/detail/components/IssuePriorityBadge";
+import { IssueStatusBadge } from "@/features/issues/detail/components/IssueStatusBadge";
+import { IssueAssigneePill } from "@/features/issues/shared/components/IssueAssigneePill";
+import { IssueLabelChip } from "@/features/issues/shared/components/IssueLabelChip";
 import { cn } from "@/lib/utils";
 import type {
   IssuePriority,

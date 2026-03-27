@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { buildAuthPath } from "@/features/auth/lib/next-path";
 import { createProjectAction } from "@/features/projects/actions/create-project-action";
-import { ProjectCreateScreen } from "@/features/projects/components/project-create-screen";
+import { ProjectCreateScreen } from "@/features/projects/create/screens/project-create-screen";
 import { getAuthenticatedActorIdOrNull } from "@/lib/supabase/server-auth";
 
 interface NewProjectPageProps {

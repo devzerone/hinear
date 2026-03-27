@@ -1,4 +1,4 @@
-import { IssueDetailFullPageScreen } from "@/features/issues/components/issue-detail-full-page-screen";
+import { IssueDetailFullPageScreen } from "@/features/issues/detail/screens/issue-detail-full-page-screen";
 import { loadIssueDetail } from "@/features/issues/lib/issue-detail-loader";
 
 interface IssueDetailPageProps {

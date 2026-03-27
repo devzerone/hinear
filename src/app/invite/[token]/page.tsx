@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-
-import { InvitationAcceptCard } from "@/features/projects/components/project-operation-cards";
 import { getServiceProjectsRepository } from "@/features/projects/repositories/service-projects-repository";
+import { InvitationAcceptCard } from "@/features/projects/shared/components/invitation-accept-card";
 import { createServiceRoleSupabaseClient } from "@/lib/supabase/server-client";
 
 interface InvitePageProps {

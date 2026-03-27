@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 
-import { IssueDetailNotFoundScreen } from "@/features/issues/components/issue-detail-screen";
+import { IssueDetailNotFoundScreen } from "@/features/issues/detail/screens/issue-detail-screen";
 import {
   getProjectIssueCreatePath,
   getProjectPath,
