@@ -1,3 +1,4 @@
+import type { CursorPaginationMeta } from "@/app/api/_lib/contracts";
 import type {
   ActivityLogEntry,
   Comment,
@@ -115,6 +116,7 @@ export interface ListIssuesByLabelInput extends ListIssuesByProjectInput {
 }
 
 export interface SearchIssuesInput extends ListIssuesByProjectInput {
+  limit?: number;
   query: string;
 }
 
@@ -216,4 +218,46 @@ export function isConflictError(error: unknown): error is ConflictError {
       "type" in error &&
       (error as { type?: string }).type === "CONFLICT"
   );
+}
+
+export interface IssueResource {
+  createdAt: string;
+  description: string;
+  id: string;
+  identifier: string;
+  priority: IssuePriority;
+  projectId: string;
+  status: IssueStatus;
+  title: string;
+  updatedAt: string;
+  version: number;
+}
+
+export interface CreateIssueRequest {
+  assigneeId?: string | null;
+  description?: string;
+  priority?: IssuePriority;
+  status?: IssueStatus;
+  title: string;
+}
+
+export interface UpdateIssueRequest {
+  assigneeId?: string | null;
+  description?: string;
+  priority?: IssuePriority;
+  status?: IssueStatus;
+  title?: string;
+  version: number;
+}
+
+export interface IssueCollectionQuery {
+  cursor?: string;
+  limit?: number;
+  priority?: IssuePriority;
+  status?: IssueStatus;
+}
+
+export interface IssueCollectionResponse {
+  items: IssueResource[];
+  pagination: CursorPaginationMeta;
 }

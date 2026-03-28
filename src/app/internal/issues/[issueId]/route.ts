@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { toBoardIssue } from "@/features/issues/lib/issue-contract-adapter";
 import {
@@ -183,6 +184,57 @@ export async function PUT(request: Request, context: RouteContext) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to update issue.";
+    const code = inferMutationErrorCode(error);
+    const status = getMutationErrorStatus(code);
+
+    return NextResponse.json(
+      {
+        code,
+        error: message,
+      },
+      { status }
+    );
+  }
+}
+
+export async function DELETE(_request: Request, context: RouteContext) {
+  const actorId = await getAuthenticatedActorIdOrNull();
+
+  if (!actorId) {
+    return NextResponse.json(
+      {
+        code: "AUTH_REQUIRED",
+        error: "Authentication required.",
+      },
+      { status: 401 }
+    );
+  }
+
+  try {
+    const { issueId } = await context.params;
+    const repository = await getServerIssuesRepository();
+    const currentIssue = await repository.getIssueById(issueId);
+
+    if (!currentIssue) {
+      return NextResponse.json(
+        { code: "ISSUE_NOT_FOUND", error: "Issue not found." },
+        { status: 404 }
+      );
+    }
+
+    await repository.deleteIssue({
+      issueId,
+      deletedBy: actorId,
+    });
+
+    revalidatePath(`/projects/${currentIssue.projectId}`);
+    revalidatePath(`/projects/${currentIssue.projectId}/overview`);
+    revalidatePath(`/projects/${currentIssue.projectId}/issues/${issueId}`);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to delete issue.";
     const code = inferMutationErrorCode(error);
     const status = getMutationErrorStatus(code);
 

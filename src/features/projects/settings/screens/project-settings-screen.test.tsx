@@ -232,6 +232,9 @@ describe("ProjectSettingsScreen", () => {
     await Promise.resolve();
     await Promise.resolve();
 
+    expect(fetch).toHaveBeenCalledWith("/internal/projects/project-1", {
+      method: "DELETE",
+    });
     expect(toastErrorMock).toHaveBeenCalledWith("Failed to delete project.");
     expect(pushMock).not.toHaveBeenCalled();
 

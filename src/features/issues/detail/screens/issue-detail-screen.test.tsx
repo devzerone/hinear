@@ -1,21 +1,24 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { pushMock, toastErrorMock } = vi.hoisted(() => ({
+const { pushMock, toastErrorMock, toastSuccessMock } = vi.hoisted(() => ({
   pushMock: vi.fn(),
   toastErrorMock: vi.fn(),
+  toastSuccessMock: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: pushMock,
+    refresh: vi.fn(),
   }),
 }));
 
 vi.mock("sonner", () => ({
   toast: {
     error: toastErrorMock,
-    success: vi.fn(),
+    success: toastSuccessMock,
   },
 }));
 
@@ -34,10 +37,13 @@ describe("IssueDetailScreen", () => {
 
   // Clean up test-specific MSW handlers after each test
   afterEach(() => {
-    vi.runOnlyPendingTimers();
+    if (vi.isFakeTimers()) {
+      vi.runOnlyPendingTimers();
+    }
     vi.useRealTimers();
     vi.clearAllMocks();
     server.resetHandlers();
+    vi.unstubAllGlobals();
   });
 
   it("renders the issue detail shell with empty comment and activity states", () => {
@@ -165,5 +171,61 @@ describe("IssueDetailScreen", () => {
       "href",
       "/projects/project-1/issues/new"
     );
+  });
+
+  it("sends a delete request and shows success feedback after deleting an issue", async () => {
+    vi.useRealTimers();
+    const user = userEvent.setup();
+
+    vi.stubGlobal("confirm", vi.fn().mockReturnValue(true));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        })
+      )
+    );
+
+    render(
+      <IssueDetailScreen
+        boardHref="/projects/project-1"
+        issue={{
+          id: "issue-1",
+          projectId: "project-1",
+          issueNumber: 1,
+          identifier: "WEB-1",
+          title: "Delete me",
+          status: "Triage",
+          priority: "No Priority",
+          assigneeId: null,
+          labels: [],
+          description: "",
+          dueDate: null,
+          createdBy: "user-1",
+          updatedBy: "user-1",
+          createdAt: "2026-03-20T00:00:00.000Z",
+          updatedAt: "2026-03-20T00:00:00.000Z",
+          version: 1,
+        }}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "Delete this issue" }));
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith("/internal/issues/issue-1", {
+        method: "DELETE",
+      });
+    });
+
+    await waitFor(() => {
+      expect(toastSuccessMock).toHaveBeenCalledWith(
+        "Issue deleted successfully."
+      );
+    });
   });
 });

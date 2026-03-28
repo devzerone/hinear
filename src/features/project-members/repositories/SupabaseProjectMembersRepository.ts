@@ -68,6 +68,19 @@ export class SupabaseProjectMembersRepository
   constructor(private readonly client: AppSupabaseServerClient) {}
 
   async addMember(input: AddMemberInput): Promise<ProjectMember> {
+    const canManageMembers = await this.hasProjectPermission(
+      input.projectId,
+      input.addedBy,
+      "manage_members"
+    );
+
+    if (!canManageMembers) {
+      throw createRepositoryError(
+        "FORBIDDEN",
+        "Only project owners can add members."
+      );
+    }
+
     // Check if user is already a member
     const existing = await this.getMemberById(input.projectId, input.userId);
 
@@ -105,6 +118,19 @@ export class SupabaseProjectMembersRepository
   }
 
   async removeMember(input: RemoveMemberInput): Promise<void> {
+    const canManageMembers = await this.hasProjectPermission(
+      input.projectId,
+      input.removedBy,
+      "manage_members"
+    );
+
+    if (!canManageMembers) {
+      throw createRepositoryError(
+        "FORBIDDEN",
+        "Only project owners can remove members."
+      );
+    }
+
     // Check if removing the last owner
     const member = await this.getMemberById(input.projectId, input.userId);
 

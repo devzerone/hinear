@@ -22,10 +22,10 @@ vi.mock("@/features/projects/repositories/server-projects-repository", () => ({
   getServerProjectsRepository: getServerProjectsRepositoryMock,
 }));
 
-import { POST } from "@/app/internal/projects/[projectId]/delete/route";
+import { DELETE } from "@/app/internal/projects/[projectId]/route";
 import { createRepositoryError } from "@/features/issues/lib/repository-errors";
 
-describe("POST /internal/projects/[projectId]/delete", () => {
+describe("DELETE /internal/projects/[projectId]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getServerProjectsRepositoryMock.mockResolvedValue({
@@ -37,7 +37,7 @@ describe("POST /internal/projects/[projectId]/delete", () => {
   it("returns 401 when the request has no authenticated actor", async () => {
     getAuthenticatedActorIdOrNullMock.mockResolvedValue(null);
 
-    const response = await POST(new Request("https://hinear.test/internal"), {
+    const response = await DELETE(new Request("https://hinear.test/internal"), {
       params: Promise.resolve({ projectId: "project-1" }),
     });
 
@@ -52,7 +52,7 @@ describe("POST /internal/projects/[projectId]/delete", () => {
     getAuthenticatedActorIdOrNullMock.mockResolvedValue("user-1");
     getProjectByIdMock.mockResolvedValue(null);
 
-    const response = await POST(new Request("https://hinear.test/internal"), {
+    const response = await DELETE(new Request("https://hinear.test/internal"), {
       params: Promise.resolve({ projectId: "project-1" }),
     });
 
@@ -74,7 +74,7 @@ describe("POST /internal/projects/[projectId]/delete", () => {
       type: "team",
     });
 
-    const response = await POST(new Request("https://hinear.test/internal"), {
+    const response = await DELETE(new Request("https://hinear.test/internal"), {
       params: Promise.resolve({ projectId: "project-1" }),
     });
 
@@ -97,7 +97,7 @@ describe("POST /internal/projects/[projectId]/delete", () => {
     });
     deleteProjectMock.mockResolvedValue(undefined);
 
-    const response = await POST(new Request("https://hinear.test/internal"), {
+    const response = await DELETE(new Request("https://hinear.test/internal"), {
       params: Promise.resolve({ projectId: "project-1" }),
     });
 
@@ -122,7 +122,7 @@ describe("POST /internal/projects/[projectId]/delete", () => {
       createRepositoryError("FORBIDDEN", "policy denied delete")
     );
 
-    const response = await POST(new Request("https://hinear.test/internal"), {
+    const response = await DELETE(new Request("https://hinear.test/internal"), {
       params: Promise.resolve({ projectId: "project-1" }),
     });
 

@@ -79,7 +79,12 @@ export function buildOrderBy(sortOptions?: ProjectSortOptions): {
   ascending: boolean;
 } {
   return {
-    column: sortOptions?.field === "name" ? "name" : "created_at",
+    column:
+      sortOptions?.field === "name"
+        ? "name"
+        : sortOptions?.field === "updatedAt"
+          ? "updated_at"
+          : "created_at",
     ascending: sortOptions?.order === "asc",
   };
 }

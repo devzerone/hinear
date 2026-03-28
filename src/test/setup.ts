@@ -2,6 +2,8 @@ import "@testing-library/jest-dom/vitest";
 import { afterEach, vi } from "vitest";
 import { server } from "@/mocks/server";
 
+vi.mock("server-only", () => ({}));
+
 // Establish API mocking before all tests
 beforeAll(() => server.listen({ onUnhandledRequest: "warn" }));
 

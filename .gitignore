@@ -20,6 +20,7 @@
 
 # production
 /build
+/dist
 /public/sw.js
 /public/workbox-*.js
 /public/worker-*.js
@@ -62,4 +63,4 @@ public/src/
 mcp/hinear/.env.local
 mcp/hinear/dist/
 mcp/hinear/*.tsbuildinfo
-
+.playwright-cli/

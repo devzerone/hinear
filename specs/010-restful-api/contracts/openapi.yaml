@@ -1,0 +1,172 @@
+openapi: 3.1.0
+info:
+  title: Hinear REST API
+  version: "1.0"
+  description: Version 1 REST API for projects, project members, and issues.
+servers:
+  - url: /api/v1
+paths:
+  /projects:
+    get:
+      summary: List projects
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - in: query
+          name: sort
+          schema:
+            type: string
+            enum: [createdAt, updatedAt, name]
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+      responses:
+        "200":
+          description: Project collection
+    post:
+      summary: Create project
+      responses:
+        "201":
+          description: Project created
+  /projects/{projectId}:
+    get:
+      summary: Get project
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Project resource
+        "404":
+          description: Project not found
+    patch:
+      summary: Update project
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Updated project
+    delete:
+      summary: Delete project
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "204":
+          description: Project deleted
+  /projects/{projectId}/members:
+    get:
+      summary: List project members
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Member collection
+    post:
+      summary: Add project member
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "201":
+          description: Member created
+  /projects/{projectId}/members/{memberId}:
+    delete:
+      summary: Remove project member
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/MemberId"
+      responses:
+        "204":
+          description: Member removed
+  /projects/{projectId}/issues:
+    get:
+      summary: List project issues
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+        - in: query
+          name: cursor
+          schema:
+            type: string
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: priority
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Issue collection
+    post:
+      summary: Create issue
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "201":
+          description: Issue created
+  /projects/{projectId}/issues/{issueId}:
+    get:
+      summary: Get issue
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/IssueId"
+      responses:
+        "200":
+          description: Issue resource
+    patch:
+      summary: Update issue
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/IssueId"
+      responses:
+        "200":
+          description: Updated issue
+        "409":
+          description: Optimistic locking conflict
+    delete:
+      summary: Delete issue
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+        - $ref: "#/components/parameters/IssueId"
+      responses:
+        "204":
+          description: Issue deleted
+components:
+  parameters:
+    ProjectId:
+      in: path
+      name: projectId
+      required: true
+      schema:
+        type: string
+    MemberId:
+      in: path
+      name: memberId
+      required: true
+      schema:
+        type: string
+    IssueId:
+      in: path
+      name: issueId
+      required: true
+      schema:
+        type: string

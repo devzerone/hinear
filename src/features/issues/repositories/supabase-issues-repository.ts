@@ -117,8 +117,67 @@ function getDescriptionUpdateSummary(previous: string, next: string): string {
   return "설명을 업데이트했습니다";
 }
 
+function buildIssueSearchQuery(query: string): string {
+  return query
+    .trim()
+    .split(/\s+/)
+    .map((token) => token.replaceAll("'", ""))
+    .filter(Boolean)
+    .join(" ");
+}
+
 export class SupabaseIssuesRepository implements IssuesRepository {
   constructor(private readonly client: AppSupabaseServerClient) {}
+
+  async listIssuesCursorPage(input: {
+    projectId: string;
+    limit: number;
+    status?: Issue["status"];
+    priority?: Issue["priority"];
+    after?: { createdAt: string; id: string };
+  }): Promise<{ issues: Issue[]; hasMore: boolean }> {
+    let query = this.client
+      .from("issues")
+      .select(
+        "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
+      )
+      .eq("project_id", input.projectId);
+
+    if (input.status) {
+      query = query.eq("status", input.status);
+    }
+
+    if (input.priority) {
+      query = query.eq("priority", input.priority);
+    }
+
+    if (input.after) {
+      query = query.or(
+        `created_at.gt.${input.after.createdAt},and(created_at.eq.${input.after.createdAt},id.gt.${input.after.id})`
+      );
+    }
+
+    const { data, error } = await query
+      .order("created_at", { ascending: true })
+      .order("id", { ascending: true })
+      .limit(input.limit + 1);
+
+    assertQuerySucceeded("Failed to load cursor page of issues", error);
+
+    const pageIssues = (data ?? []).slice(0, input.limit).map(mapIssue);
+    const labelsByIssueId = await this.listLabelsByIssueIds(
+      pageIssues.map((issue) => issue.id),
+      input.projectId
+    );
+
+    return {
+      issues: pageIssues.map((issue) => ({
+        ...issue,
+        labels: labelsByIssueId.get(issue.id) ?? [],
+      })),
+      hasMore: (data ?? []).length > input.limit,
+    };
+  }
 
   private syncIssueCreationToGitHub(issue: Issue): void {
     const syncService = new GitHubSyncService(this.client);
@@ -460,7 +519,9 @@ export class SupabaseIssuesRepository implements IssuesRepository {
   async listActivityLogByIssueId(issueId: string): Promise<ActivityLogEntry[]> {
     const { data, error } = await this.client
       .from("activity_logs")
-      .select("*")
+      .select(
+        "id, issue_id, project_id, actor_id, type, field, from_value, to_value, summary, created_at"
+      )
       .eq("issue_id", issueId)
       .order("created_at", { ascending: false });
 
@@ -830,15 +891,26 @@ export class SupabaseIssuesRepository implements IssuesRepository {
   async searchIssues(input: {
     projectId: string;
     query: string;
+    limit?: number;
   }): Promise<Issue[]> {
+    const trimmedQuery = buildIssueSearchQuery(input.query);
+
+    if (!trimmedQuery) {
+      return [];
+    }
+
     const { data, error } = await this.client
       .from("issues")
       .select(
         "id, project_id, issue_number, identifier, title, status, priority, assignee_id, description, due_date, created_by, updated_by, created_at, updated_at, version"
       )
       .eq("project_id", input.projectId)
-      .or(`title.ilike.%${input.query}%,description.ilike.%${input.query}%`)
-      .order("issue_number", { ascending: true });
+      .textSearch("search_vector", trimmedQuery, {
+        config: "simple",
+        type: "websearch",
+      })
+      .order("issue_number", { ascending: true })
+      .limit(input.limit ?? 50);
 
     assertQuerySucceeded("Failed to search issues", error);
 
@@ -878,7 +950,7 @@ export class SupabaseIssuesRepository implements IssuesRepository {
       assertQuerySucceeded("Failed to count issues", countError);
 
       const totalCount = count ?? 0;
-      const offset = input.page * input.limit;
+      const offset = Math.max(0, (input.page - 1) * input.limit);
       const totalPages = Math.ceil(totalCount / input.limit);
 
       // 페이지네이션된 이슈들을 가져옴
@@ -965,12 +1037,20 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     }
 
     // 이슈 삭제 (cascade로 관련 데이터도 함께 삭제됨)
-    const { error } = await this.client
+    const { data, error } = await this.client
       .from("issues")
       .delete()
-      .eq("id", input.issueId);
+      .eq("id", input.issueId)
+      .select("id");
 
     assertQuerySucceeded("Failed to delete issue", error);
+
+    if (!data?.length) {
+      throw createRepositoryError(
+        "FORBIDDEN",
+        "You do not have permission to delete this issue."
+      );
+    }
   }
 
   /**
@@ -990,6 +1070,11 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     limit?: number;
     offset?: number;
   }): Promise<Issue[]> {
+    const normalizedLimit =
+      input.limit !== undefined && input.limit > 0 ? input.limit : 100;
+    const normalizedSearchQuery = input.searchQuery
+      ? buildIssueSearchQuery(input.searchQuery)
+      : "";
     let query = this.client
       .from("issues")
       .select(
@@ -1013,11 +1098,11 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     }
 
     // 검색어 필터
-    if (input.searchQuery?.trim()) {
-      const searchTerm = `%${input.searchQuery.trim()}%`;
-      query = query.or(
-        `title.ilike.${searchTerm},description.ilike.${searchTerm}`
-      );
+    if (normalizedSearchQuery) {
+      query = query.textSearch("search_vector", normalizedSearchQuery, {
+        config: "simple",
+        type: "websearch",
+      });
     }
 
     // 마감일 범위 필터
@@ -1036,6 +1121,16 @@ export class SupabaseIssuesRepository implements IssuesRepository {
 
     if (input.createdBefore) {
       query = query.lte("created_at", input.createdBefore);
+    }
+
+    query = query.order("created_at", { ascending: true }).order("id", {
+      ascending: true,
+    });
+
+    if (input.offset !== undefined && input.offset >= 0) {
+      query = query.range(input.offset, input.offset + normalizedLimit - 1);
+    } else {
+      query = query.limit(normalizedLimit);
     }
 
     // 라벨 필터 (별도 쿼리 필요)

@@ -1,3 +1,4 @@
+import type { OffsetPaginationMeta } from "@/app/api/_lib/contracts";
 import type {
   Project,
   ProjectInvitation,
@@ -98,4 +99,37 @@ export interface GitHubIntegrationSettings {
   repoOwner?: string | null;
   repoName?: string | null;
   connected?: boolean;
+}
+
+export interface ProjectResource {
+  created_at: string;
+  id: string;
+  key: string;
+  name: string;
+  type: ProjectType;
+  updated_at: string;
+}
+
+export interface CreateProjectRequest {
+  key: string;
+  name: string;
+  type: ProjectType;
+}
+
+export interface UpdateProjectRequest {
+  key?: string;
+  name?: string;
+  type?: ProjectType;
+}
+
+export interface ProjectCollectionQuery {
+  limit?: number;
+  order?: "asc" | "desc";
+  page?: number;
+  sort?: "createdAt" | "name" | "updatedAt";
+}
+
+export interface ProjectCollectionResponse {
+  items: ProjectResource[];
+  pagination: OffsetPaginationMeta;
 }
