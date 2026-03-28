@@ -2,6 +2,7 @@
  * ProjectMember domain input/output contracts
  */
 
+import type { ProjectMemberRole } from "@/features/projects/types";
 import type { MemberRole, ProjectMember } from "./types";
 
 export interface AddMemberInput {
@@ -78,4 +79,16 @@ export interface Project {
   id: string;
   name: string;
   key: string;
+}
+
+export interface ProjectMemberResource {
+  createdAt: string;
+  projectId: string;
+  role: ProjectMemberRole;
+  userId: string;
+}
+
+export interface AddProjectMemberRequest {
+  role: ProjectMemberRole;
+  userId: string;
 }

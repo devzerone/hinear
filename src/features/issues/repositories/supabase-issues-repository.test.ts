@@ -59,6 +59,7 @@ function createSeedIssue(overrides: Partial<IssuesRow> = {}): IssuesRow {
 }
 
 function createFakeIssuesClient(options?: {
+  deleteAffectsNoRows?: boolean;
   issueRows?: IssuesRow[];
   labelRows?: LabelsRow[];
   issueLabelRows?: IssueLabelsRow[];
@@ -273,6 +274,73 @@ function createFakeIssuesClient(options?: {
               },
             };
           },
+          delete() {
+            return {
+              eq(column: string, value: unknown) {
+                return {
+                  async select() {
+                    const error = maybeError("issues");
+                    if (error) {
+                      return { data: null, error };
+                    }
+
+                    if (column !== "id") {
+                      return { data: [], error: null };
+                    }
+
+                    const rowIndex = issueRows.findIndex(
+                      (issue) => issue.id === value
+                    );
+
+                    if (rowIndex === -1) {
+                      return { data: [], error: null };
+                    }
+
+                    if (options?.deleteAffectsNoRows) {
+                      return { data: [], error: null };
+                    }
+
+                    const [deletedIssue] = issueRows.splice(rowIndex, 1);
+
+                    for (
+                      let index = issueLabelRows.length - 1;
+                      index >= 0;
+                      index -= 1
+                    ) {
+                      if (issueLabelRows[index]?.issue_id === value) {
+                        issueLabelRows.splice(index, 1);
+                      }
+                    }
+
+                    for (
+                      let index = commentRows.length - 1;
+                      index >= 0;
+                      index -= 1
+                    ) {
+                      if (commentRows[index]?.issue_id === value) {
+                        commentRows.splice(index, 1);
+                      }
+                    }
+
+                    for (
+                      let index = activityRows.length - 1;
+                      index >= 0;
+                      index -= 1
+                    ) {
+                      if (activityRows[index]?.issue_id === value) {
+                        activityRows.splice(index, 1);
+                      }
+                    }
+
+                    return {
+                      data: deletedIssue ? [{ id: deletedIssue.id }] : [],
+                      error: null,
+                    };
+                  },
+                };
+              },
+            };
+          },
         };
       }
 
@@ -421,6 +489,7 @@ function createFakeIssuesClient(options?: {
   return {
     activityRows,
     client: client as unknown as AppSupabaseServerClient,
+    commentRows,
     issueLabelRows,
     issueRows,
     labelRows,
@@ -605,5 +674,57 @@ describe("SupabaseIssuesRepository", () => {
     expect((error as Error).message).toContain(
       "Failed to list issues by project: new row violates row-level security policy"
     );
+  });
+
+  it("deletes an issue and its related records", async () => {
+    const fake = createFakeIssuesClient({
+      commentsRows: [
+        {
+          author_id: "user-1",
+          body: "comment",
+          created_at: "2026-03-20T00:00:00.000Z",
+          id: "comment-1",
+          issue_id: "issue-1",
+          parent_comment_id: null,
+          project_id: "project-1",
+          thread_id: null,
+          updated_at: "2026-03-20T00:00:00.000Z",
+        },
+      ],
+      issueLabelRows: [
+        {
+          created_at: "2026-03-20T00:00:00.000Z",
+          issue_id: "issue-1",
+          label_id: "label-1",
+          project_id: "project-1",
+        },
+      ],
+    });
+    const repository = new SupabaseIssuesRepository(fake.client);
+
+    await repository.deleteIssue({
+      deletedBy: "user-1",
+      issueId: "issue-1",
+    });
+
+    expect(fake.issueRows).toHaveLength(0);
+    expect(fake.issueLabelRows).toHaveLength(0);
+    expect(fake.commentRows).toHaveLength(0);
+  });
+
+  it("throws forbidden when delete affects no rows", async () => {
+    const fake = createFakeIssuesClient({
+      deleteAffectsNoRows: true,
+    });
+    const repository = new SupabaseIssuesRepository(fake.client);
+
+    await expect(
+      repository.deleteIssue({
+        deletedBy: "user-1",
+        issueId: "issue-1",
+      })
+    ).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
   });
 });

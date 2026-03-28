@@ -73,6 +73,7 @@ UI design is based on `pen/Hinear.pen` file created with Pen design tool. This f
 - TypeScript 5.x (002-mcp-phase2-features)
 - Supabase PostgreSQL (already configured) (002-mcp-phase2-features)
 - TypeScript 5.x + Next.js 16.2.0 (App Router), React 19.2.4, Supabase (PostgreSQL), @tanstack/react-query 5.95.2 (003-performance-audit)
+- TypeScript 5.x + Next.js 16.2.0 (App Router), Supabase (PostgreSQL), React 19.2.4 (010-restful-api)
 
 ## Recent Changes
 - 002-mcp-phase2-features: Added TypeScript 5.x

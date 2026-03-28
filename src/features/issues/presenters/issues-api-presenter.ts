@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { ProjectIssuesData } from "../containers/load-project-issues-container";
+import type { Issue, IssuePriority, IssueStatus } from "../types";
 
 /**
  * Presenter: 응답 포맷팅 로직 담당
@@ -41,6 +42,38 @@ export const IssuesApiPresenter = {
     );
   },
 };
+
+export interface RestIssueResource {
+  createdAt: string;
+  description: string;
+  id: string;
+  identifier: string;
+  priority: IssuePriority;
+  projectId: string;
+  status: IssueStatus;
+  title: string;
+  updatedAt: string;
+  version: number;
+}
+
+export function toRestIssueResource(issue: Issue): RestIssueResource {
+  return {
+    createdAt: issue.createdAt,
+    description: issue.description,
+    id: issue.id,
+    identifier: issue.identifier,
+    priority: issue.priority,
+    projectId: issue.projectId,
+    status: issue.status,
+    title: issue.title,
+    updatedAt: issue.updatedAt,
+    version: issue.version,
+  };
+}
+
+export function toRestIssueResources(issues: Issue[]) {
+  return issues.map(toRestIssueResource);
+}
 
 function getErrorStatus(code: string): number {
   const statusMap: Record<string, number> = {

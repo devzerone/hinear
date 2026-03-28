@@ -443,18 +443,9 @@ export function IssueDetailScreen({
 
     startSavingTransition(async () => {
       try {
-        const response = await fetch(
-          `/internal/issues/${issueState.id}/delete`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              projectId: issueState.projectId,
-            }),
-          }
-        );
+        const response = await fetch(`/internal/issues/${issueState.id}`, {
+          method: "DELETE",
+        });
 
         const data = (await response.json()) as unknown;
 
@@ -470,6 +461,11 @@ export function IssueDetailScreen({
         }
 
         toast.success("Issue deleted successfully.");
+
+        if (boardHref) {
+          router.push(boardHref);
+          router.refresh();
+        }
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to delete issue."

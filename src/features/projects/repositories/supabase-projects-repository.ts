@@ -246,6 +246,25 @@ export class SupabaseProjectsRepository implements ProjectsRepository {
       throw createRepositoryError("PROJECT_NOT_FOUND", "Project not found.");
     }
 
+    const { data: membership, error: membershipError } = await this.client
+      .from("project_members")
+      .select("role")
+      .eq("project_id", input.projectId)
+      .eq("user_id", input.deletedBy)
+      .maybeSingle();
+
+    assertQuerySucceeded(
+      "Failed to verify project deletion access",
+      membershipError
+    );
+
+    if (!membership || membership.role !== "owner") {
+      throw createRepositoryError(
+        "ACCESS_DENIED",
+        "Only project owners can delete a project."
+      );
+    }
+
     // 프로젝트 삭제 (cascade로 관련 데이터도 함께 삭제됨)
     const { error } = await this.client
       .from("projects")

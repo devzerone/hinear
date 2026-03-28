@@ -4,6 +4,7 @@ import type { Issue } from "@/features/issues/types";
 
 const {
   createRequestSupabaseServerClientMock,
+  deleteIssueMock,
   getIssueByIdMock,
   getAuthenticatedActorIdOrNullMock,
   getServerIssuesRepositoryMock,
@@ -12,6 +13,7 @@ const {
   updateIssueMock,
 } = vi.hoisted(() => ({
   createRequestSupabaseServerClientMock: vi.fn(),
+  deleteIssueMock: vi.fn(),
   getIssueByIdMock: vi.fn(),
   getAuthenticatedActorIdOrNullMock: vi.fn(),
   getServerIssuesRepositoryMock: vi.fn(),
@@ -21,6 +23,9 @@ const {
 }));
 
 vi.mock("server-only", () => ({}));
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}));
 
 vi.mock("@/lib/supabase/server-auth", () => ({
   getAuthenticatedActorIdOrNull: getAuthenticatedActorIdOrNullMock,
@@ -52,7 +57,7 @@ vi.mock("@/features/issues/presenters/issue-detail-presenter", () => ({
   },
 }));
 
-import { PUT } from "@/app/internal/issues/[issueId]/route";
+import { DELETE, PUT } from "@/app/internal/issues/[issueId]/route";
 
 describe("PUT /internal/issues/[issueId]", () => {
   beforeEach(() => {
@@ -250,6 +255,116 @@ describe("PUT /internal/issues/[issueId]", () => {
       code: "FORBIDDEN",
       error:
         "Failed to update issue: new row violates row-level security policy",
+    });
+  });
+});
+
+describe("DELETE /internal/issues/[issueId]", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns 401 when the request has no authenticated actor", async () => {
+    getAuthenticatedActorIdOrNullMock.mockResolvedValue(null);
+
+    const response = await DELETE(
+      new Request("https://hinear.test/internal", {
+        method: "DELETE",
+      }),
+      {
+        params: Promise.resolve({ issueId: "issue-1" }),
+      }
+    );
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      code: "AUTH_REQUIRED",
+      error: "Authentication required.",
+    });
+  });
+
+  it("returns 404 when the issue does not exist", async () => {
+    getAuthenticatedActorIdOrNullMock.mockResolvedValue("user-1");
+    getServerIssuesRepositoryMock.mockResolvedValue({
+      deleteIssue: deleteIssueMock,
+      getIssueById: getIssueByIdMock,
+    });
+    getIssueByIdMock.mockResolvedValue(null);
+
+    const response = await DELETE(
+      new Request("https://hinear.test/internal", {
+        method: "DELETE",
+      }),
+      {
+        params: Promise.resolve({ issueId: "issue-1" }),
+      }
+    );
+
+    expect(deleteIssueMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(404);
+    await expect(response.json()).resolves.toEqual({
+      code: "ISSUE_NOT_FOUND",
+      error: "Issue not found.",
+    });
+  });
+
+  it("returns success when the issue is deleted", async () => {
+    getAuthenticatedActorIdOrNullMock.mockResolvedValue("user-1");
+    getServerIssuesRepositoryMock.mockResolvedValue({
+      deleteIssue: deleteIssueMock,
+      getIssueById: getIssueByIdMock,
+    });
+    getIssueByIdMock.mockResolvedValue({
+      projectId: "project-1",
+    });
+    deleteIssueMock.mockResolvedValue(undefined);
+
+    const response = await DELETE(
+      new Request("https://hinear.test/internal", {
+        method: "DELETE",
+      }),
+      {
+        params: Promise.resolve({ issueId: "issue-1" }),
+      }
+    );
+
+    expect(deleteIssueMock).toHaveBeenCalledWith({
+      deletedBy: "user-1",
+      issueId: "issue-1",
+    });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ success: true });
+  });
+
+  it("returns 403 when the repository reports a permission failure", async () => {
+    getAuthenticatedActorIdOrNullMock.mockResolvedValue("user-1");
+    getServerIssuesRepositoryMock.mockResolvedValue({
+      deleteIssue: deleteIssueMock,
+      getIssueById: getIssueByIdMock,
+    });
+    getIssueByIdMock.mockResolvedValue({
+      projectId: "project-1",
+    });
+    deleteIssueMock.mockRejectedValue(
+      new Error(
+        "Failed to delete issue: new row violates row-level security policy"
+      )
+    );
+
+    const response = await DELETE(
+      new Request("https://hinear.test/internal", {
+        method: "DELETE",
+      }),
+      {
+        params: Promise.resolve({ issueId: "issue-1" }),
+      }
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      code: "FORBIDDEN",
+      error:
+        "Failed to delete issue: new row violates row-level security policy",
     });
   });
 });

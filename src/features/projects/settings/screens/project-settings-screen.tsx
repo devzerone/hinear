@@ -100,15 +100,9 @@ export function ProjectSettingsScreen({
 
     startDeletingTransition(async () => {
       try {
-        const response = await fetch(
-          `/internal/projects/${project.id}/delete`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        const response = await fetch(`/internal/projects/${project.id}`, {
+          method: "DELETE",
+        });
 
         if (!response.ok) {
           const data = await response.json();

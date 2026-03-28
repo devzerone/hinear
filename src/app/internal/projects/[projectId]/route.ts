@@ -9,7 +9,7 @@ interface RouteContext {
   }>;
 }
 
-export async function POST(_request: Request, context: RouteContext) {
+export async function DELETE(_request: Request, context: RouteContext) {
   const actorId = await getAuthenticatedActorIdOrNull();
 
   if (!actorId) {

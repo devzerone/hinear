@@ -878,7 +878,7 @@ export class SupabaseIssuesRepository implements IssuesRepository {
       assertQuerySucceeded("Failed to count issues", countError);
 
       const totalCount = count ?? 0;
-      const offset = input.page * input.limit;
+      const offset = Math.max(0, (input.page - 1) * input.limit);
       const totalPages = Math.ceil(totalCount / input.limit);
 
       // 페이지네이션된 이슈들을 가져옴
@@ -965,12 +965,20 @@ export class SupabaseIssuesRepository implements IssuesRepository {
     }
 
     // 이슈 삭제 (cascade로 관련 데이터도 함께 삭제됨)
-    const { error } = await this.client
+    const { data, error } = await this.client
       .from("issues")
       .delete()
-      .eq("id", input.issueId);
+      .eq("id", input.issueId)
+      .select("id");
 
     assertQuerySucceeded("Failed to delete issue", error);
+
+    if (!data?.length) {
+      throw createRepositoryError(
+        "FORBIDDEN",
+        "You do not have permission to delete this issue."
+      );
+    }
   }
 
   /**
@@ -1036,6 +1044,19 @@ export class SupabaseIssuesRepository implements IssuesRepository {
 
     if (input.createdBefore) {
       query = query.lte("created_at", input.createdBefore);
+    }
+
+    query = query.order("created_at", { ascending: true }).order("id", {
+      ascending: true,
+    });
+
+    if (
+      input.offset !== undefined &&
+      input.limit !== undefined &&
+      input.limit > 0 &&
+      input.offset >= 0
+    ) {
+      query = query.range(input.offset, input.offset + input.limit - 1);
     }
 
     // 라벨 필터 (별도 쿼리 필요)

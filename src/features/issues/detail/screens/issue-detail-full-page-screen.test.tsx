@@ -2,15 +2,19 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { pushMock, toastErrorMock, toastSuccessMock } = vi.hoisted(() => ({
-  pushMock: vi.fn(),
-  toastErrorMock: vi.fn(),
-  toastSuccessMock: vi.fn(),
-}));
+const { pushMock, refreshMock, toastErrorMock, toastSuccessMock } = vi.hoisted(
+  () => ({
+    pushMock: vi.fn(),
+    refreshMock: vi.fn(),
+    toastErrorMock: vi.fn(),
+    toastSuccessMock: vi.fn(),
+  })
+);
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: pushMock,
+    refresh: refreshMock,
   }),
 }));
 
@@ -186,6 +190,8 @@ const baseIssue = {
 
 describe("IssueDetailFullPageScreen", () => {
   beforeEach(() => {
+    pushMock.mockReset();
+    refreshMock.mockReset();
     pushMock.mockReset();
     toastErrorMock.mockReset();
     toastSuccessMock.mockReset();
@@ -438,5 +444,31 @@ describe("IssueDetailFullPageScreen", () => {
     await waitFor(() => {
       expect(toastSuccessMock).toHaveBeenCalledWith("Comment posted.");
     });
+  });
+
+  it("replaces to the board and refreshes after deleting an issue", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <IssueDetailFullPageScreen
+        boardHref="/projects/project-1"
+        initialNow={Date.now()}
+        issue={baseIssue}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "Delete this issue" }));
+
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith("/internal/issues/issue-1", {
+        method: "DELETE",
+      });
+    });
+
+    expect(toastSuccessMock).toHaveBeenCalledWith(
+      "Issue deleted successfully."
+    );
+    expect(pushMock).toHaveBeenCalledWith("/projects/project-1");
+    expect(refreshMock).toHaveBeenCalled();
   });
 });
