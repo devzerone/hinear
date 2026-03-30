@@ -15,10 +15,17 @@ const matchMediaMock = vi.fn().mockImplementation((query: string) => ({
   removeListener: vi.fn(),
 }));
 
+const pushManagerMock = {
+  getSubscription: vi.fn<() => Promise<PushSubscription | null>>(),
+  permissionState: vi.fn<() => Promise<PermissionState>>(),
+  subscribe: vi.fn<() => Promise<PushSubscription>>(),
+} satisfies Pick<
+  PushManager,
+  "getSubscription" | "permissionState" | "subscribe"
+>;
+
 const serviceWorkerReady = Promise.resolve({
-  pushManager: {
-    subscribe: vi.fn(),
-  },
+  pushManager: pushManagerMock as PushManager,
 } satisfies Partial<ServiceWorkerRegistration>);
 
 Object.defineProperty(window, "matchMedia", {
