@@ -26,6 +26,23 @@ describe("GET /internal/projects/[projectId]/issues", () => {
     vi.clearAllMocks();
   });
 
+  function createMockSupabaseClient({
+    issuesError = null,
+    issuesData = [],
+  }: {
+    issuesError?: { message: string; code?: string } | null;
+    issuesData?: Array<Record<string, unknown>>;
+  }) {
+    return {
+      rpc: vi.fn(() =>
+        Promise.resolve({
+          data: issuesData,
+          error: issuesError,
+        })
+      ),
+    };
+  }
+
   it("returns 401 when the request has no authenticated actor", async () => {
     getAuthenticatedActorIdOrNullMock.mockResolvedValue(null);
 
@@ -41,38 +58,28 @@ describe("GET /internal/projects/[projectId]/issues", () => {
   });
 
   it("returns project issues mapped to the board contract", async () => {
-    const mockSupabaseClient = {
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            order: vi.fn(() =>
-              Promise.resolve({
-                data: [
-                  {
-                    id: "issue-1",
-                    project_id: "project-1",
-                    issue_number: 12,
-                    identifier: "WEB-12",
-                    title: "Persist labels on board",
-                    status: "Todo",
-                    priority: "Medium",
-                    assignee_id: "user-1",
-                    description: "",
-                    due_date: null,
-                    created_by: "user-1",
-                    updated_by: "user-1",
-                    created_at: "2026-03-20T00:00:00.000Z",
-                    updated_at: "2026-03-20T01:00:00.000Z",
-                    version: 1,
-                  },
-                ],
-                error: null,
-              })
-            ),
-          })),
-        })),
-      })),
-    };
+    const mockSupabaseClient = createMockSupabaseClient({
+      issuesData: [
+        {
+          id: "issue-1",
+          project_id: "project-1",
+          issue_number: 12,
+          identifier: "WEB-12",
+          title: "Persist labels on board",
+          status: "Todo",
+          priority: "Medium",
+          assignee: {
+            id: "user-1",
+            name: "Assignee",
+            avatarUrl: "https://example.com/avatar.png",
+          },
+          labels: [],
+          due_date: null,
+          created_at: "2026-03-20T00:00:00.000Z",
+          updated_at: "2026-03-20T01:00:00.000Z",
+        },
+      ],
+    });
 
     getAuthenticatedActorIdOrNullMock.mockResolvedValue("user-1");
     createRequestSupabaseServerClientMock.mockResolvedValue(
@@ -99,23 +106,13 @@ describe("GET /internal/projects/[projectId]/issues", () => {
   });
 
   it("returns a structured error payload when database query fails", async () => {
-    const mockSupabaseClient = {
-      from: vi.fn(() => ({
-        select: vi.fn(() => ({
-          eq: vi.fn(() => ({
-            order: vi.fn(() =>
-              Promise.resolve({
-                data: null,
-                error: {
-                  message: "permission denied for table issues",
-                  code: "42501",
-                },
-              })
-            ),
-          })),
-        })),
-      })),
-    };
+    const mockSupabaseClient = createMockSupabaseClient({
+      issuesData: [],
+      issuesError: {
+        message: "permission denied for table issues",
+        code: "42501",
+      },
+    });
 
     getAuthenticatedActorIdOrNullMock.mockResolvedValue("user-1");
     createRequestSupabaseServerClientMock.mockResolvedValue(
