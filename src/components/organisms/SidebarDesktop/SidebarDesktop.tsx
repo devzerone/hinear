@@ -8,6 +8,7 @@ import {
   SidebarItem,
   type SidebarItemVariant,
 } from "@/components/molecules/SidebarItem";
+import { McpConnectSidebarAction } from "@/features/mcp/components/mcp-connect-sidebar-action";
 import { cn } from "@/lib/utils";
 
 export interface SidebarDesktopProps
@@ -100,6 +101,7 @@ export const SidebarDesktop = React.forwardRef<
           </div>
 
           <div className="mt-auto flex w-full flex-col gap-1 pt-4">
+            <McpConnectSidebarAction />
             <SidebarItem
               active={settingsActive}
               className="w-full"
